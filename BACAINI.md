@@ -1,2 +1,0 @@
-# Pengganti readme
-wkwk
