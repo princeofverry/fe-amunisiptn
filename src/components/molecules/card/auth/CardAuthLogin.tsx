@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import Link from "next/link";
+import FormAuthLogin from "../../form/auth/FormAuthLogin";
 
 export default function CardAuthLogin() {
   return (
@@ -23,22 +24,7 @@ export default function CardAuthLogin() {
             <h3 className="text-2xl font-bold">Masuk</h3>
           </div>
           <div className="space-y-6">
-            <div className="space-y-3">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Masukkan email" />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Masukkan password"
-              />
-            </div>
-
-            <Button className="w-full" size={"lg"}>
-              Masuk
-            </Button>
+            <FormAuthLogin />
 
             <div className="flex items-center gap-3">
               <Separator className="flex-1" />
