@@ -25,12 +25,7 @@ export default function CardAuthLogin() {
           <div className="space-y-6">
             <div className="space-y-3">
               <Label htmlFor="email">Email</Label>
-              <Input
-                size={10}
-                id="email"
-                type="email"
-                placeholder="Masukkan email"
-              />
+              <Input id="email" type="email" placeholder="Masukkan email" />
             </div>
             <div className="space-y-3">
               <Label htmlFor="password">Password</Label>
@@ -51,7 +46,7 @@ export default function CardAuthLogin() {
               <Separator className="flex-1" />
             </div>
 
-            <Button variant="outline" className="w-full gap-2.5">
+            <Button variant="outline" className="w-full gap-2.5" size={"lg"}>
               <svg
                 width="15"
                 height="15"
