@@ -1,7 +1,9 @@
+import AuthLoginWrapper from "@/components/organisms/auth/AuthLoginWrapper";
+
 export default function LoginPage() {
   return (
     <main>
-      <h3>Login Page</h3>
+      <AuthLoginWrapper />
     </main>
   );
 }
