@@ -1,7 +1,9 @@
+import AuthRegisterWrapper from "@/components/organisms/auth/AuthRegisterWrapper";
+
 export default function RegisterPage() {
   return (
     <main>
-      <h3>Register Page</h3>
+      <AuthRegisterWrapper />
     </main>
   );
 }
