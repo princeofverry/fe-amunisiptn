@@ -123,28 +123,17 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
         {session?.user.role === "admin" && (
           <>
             <SidebarGroup>
-              <SidebarGroupLabel>Manajemen Data</SidebarGroupLabel>
+              <SidebarGroupLabel>Manajemen Tryout</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
-                      className={buttonClass("/dashboard/admin/users")}
+                      className={buttonClass("/dashboard/admin/subtest")}
                     >
-                      <Link href="/dashboard/admin/users">
-                        <Users />
-                        <span>Pengguna</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      className={buttonClass("/dashboard/admin/packages")}
-                    >
-                      <Link href="/dashboard/admin/packages">
-                        <BookCopy />
-                        <span>Paket</span>
+                      <Link href="/dashboard/admin/subtest">
+                        <Book />
+                        <span>Subtes</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -167,6 +156,36 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       <Link href="/dashboard/admin/question-bank">
                         <BookKey />
                         <span>Bank Soal</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Manajemen Data</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={buttonClass("/dashboard/admin/users")}
+                    >
+                      <Link href="/dashboard/admin/users">
+                        <Users />
+                        <span>Pengguna</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={buttonClass("/dashboard/admin/packages")}
+                    >
+                      <Link href="/dashboard/admin/packages">
+                        <BookCopy />
+                        <span>Paket</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
