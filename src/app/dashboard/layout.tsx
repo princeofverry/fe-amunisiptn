@@ -21,7 +21,7 @@ export default async function DashboardLayout({
       <SidebarInset className="min-w-0 overflow-x-hidden">
         <BreadcrumbProvider>
           <BreadcrumbNav />
-          <main className="min-w-0 px-5 py-6 overflow-x-hidden bg-[#fafafa] min-h-screen">
+          <main className="min-w-0 px-5 pt-20 pb-6 md:pt-10 overflow-x-hidden bg-[#fafafa] min-h-screen">
             {children}
           </main>
         </BreadcrumbProvider>
