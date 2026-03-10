@@ -69,7 +69,7 @@ export const questionBankColumns: ColumnDef<QuestionBank>[] = [
 
           <DropdownMenuItem asChild>
             <Link
-              href={`/dashboard/admin/subtests/${data.id}`}
+              href={`/dashboard/admin/question-bank/${data.id}`}
               className="flex items-center text-gray-700 hover:underline"
             >
               <Eye className="h-4 w-4 text-gray-700" />

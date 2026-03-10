@@ -1,3 +1,6 @@
+import { Subtest } from "../subtest/subtest";
+import { User } from "../user/user";
+
 export interface QuestionBankOption {
   id: string;
   option_key: string;
@@ -17,6 +20,8 @@ export interface QuestionBank {
   difficulty: string;
   is_active: boolean;
   options: QuestionBankOption[];
+  subtest: Subtest;
+  creator: User;
   created_at: Date;
   updated_at: Date;
 }
