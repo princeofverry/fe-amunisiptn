@@ -2,59 +2,77 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Eye, SquarePen } from "lucide-react";
 
 import ActionButton from "@/components/molecules/datatable/ActionButton";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { SubtestByTryout } from "@/types/subtest/subtest";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Tryout } from "@/types/tryout/tryout";
 import { Badge } from "@/components/ui/badge";
 
-export const tryoutColumns: ColumnDef<Tryout>[] = [
+export const subtestTryoutColumns: ColumnDef<SubtestByTryout>[] = [
   {
     id: "index",
     header: "No",
     cell: ({ row }) => <p suppressHydrationWarning>{row.index + 1}</p>,
   },
   {
-    id: "title",
-    header: "Judul Tryout",
+    id: "name",
+    header: "Nama Subtes",
     cell: ({ row }) => (
       <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-        {row.original.title}
+        {row.original.subtest.name}
       </p>
     ),
   },
   {
-    id: "description",
-    header: "Deskripsi",
+    id: "category",
+    header: "Kategori",
     cell: ({ row }) => {
       return (
         <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-          {row.original.description}
+          {row.original.subtest.category}
         </p>
       );
     },
   },
   {
-    id: "is_published",
+    id: "duration_minutes",
+    header: "Durasi Menit",
+    cell: ({ row }) => (
+      <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+        {row.original.duration_minutes} menit
+      </p>
+    ),
+  },
+  {
+    id: "order_no",
+    header: "Urutan Subtes",
+    cell: ({ row }) => (
+      <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+        {row.original.order_no}
+      </p>
+    ),
+  },
+  {
+    id: "order_no",
     header: "Status",
     cell: ({ row }) => {
-      const isPublished = row.original.is_published;
+      const isActive = row.original.is_active;
 
       return (
         <Badge
           className={
-            isPublished
+            isActive
               ? "bg-green-100 text-green-700 hover:bg-green-100 text-xs"
               : "bg-red-100 text-red-700 hover:bg-red-100 text-xs"
           }
         >
-          {isPublished ? "Dipublish" : "Draft"}
+          {isActive ? "Aktif" : "Tidak Aktif"}
         </Badge>
       );
     },
@@ -89,11 +107,11 @@ export const tryoutColumns: ColumnDef<Tryout>[] = [
 
           <DropdownMenuItem asChild>
             <Link
-              href={`/dashboard/admin/try-out/${data.id}`}
-              className="flex items-center text-gray-700 hover:underline"
+              href={`/dashboard/admin/try-out/${data.id}/edit`}
+              className="flex cursor-pointer items-center text-yellow-700 hover:underline hover:text-yellow-900"
             >
-              <Eye className="h-4 w-4 text-gray-700" />
-              <span className="ml-2">Detail</span>
+              <SquarePen className="h-4 w-4 text-yellow-700 hover:text-yellow-900" />
+              <span className="ml-2">Edit</span>
             </Link>
           </DropdownMenuItem>
         </ActionButton>
