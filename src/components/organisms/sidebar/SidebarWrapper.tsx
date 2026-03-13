@@ -248,12 +248,6 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                         <span>Try Out</span>
                       </Link>
                     </SidebarMenuButton>
-                    {/* Badge positioning adjustment */}
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <SidebarMenuBadge className="bg-primary text-white rounded-full text-[10px] px-1.5 min-w-[18px] flex items-center justify-center">
-                        2
-                      </SidebarMenuBadge>
-                    </div>
                   </SidebarMenuItem>
 
                   <SidebarMenuItem className="w-full relative">
