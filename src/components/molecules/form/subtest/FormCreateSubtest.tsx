@@ -41,6 +41,7 @@ export default function FormCreateSubtest() {
     defaultValues: {
       name: "",
       category: "",
+      max_questions: 15,
     },
     mode: "onChange",
   });
@@ -133,6 +134,31 @@ export default function FormCreateSubtest() {
                       <SelectItem value="Literasi">Literasi</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {fieldState.error && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="max_questions"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>
+                    Maksimal Soal <span className="text-red-500">*</span>
+                  </FieldLabel>
+
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="Masukkan jumlah maksimal soal"
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
 
                   {fieldState.error && (
                     <FieldError errors={[fieldState.error]} />

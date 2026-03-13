@@ -2,6 +2,7 @@ export interface Subtest {
   id: string;
   name: string;
   category: string;
+  max_questions: number;
   created_at: Date;
   updated_at: Date;
 }
