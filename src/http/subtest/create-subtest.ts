@@ -7,7 +7,7 @@ import { Subtest } from "@/types/subtest/subtest";
 import { SubtestType } from "@/validators/subtest/subtest-validator";
 
 interface CreateSubtestResponse {
-  data: Subtest;
+  subtest: Subtest;
 }
 
 export const CreateSubtestHandler = async (

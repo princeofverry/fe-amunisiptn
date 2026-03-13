@@ -104,7 +104,15 @@ export const subtestTryoutColumns: ColumnDef<SubtestByTryout>[] = [
       return (
         <ActionButton>
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/dashboard/admin/try-out/${data.tryout_id}/subtests/${data.id}`}
+              className="flex items-center text-gray-700 hover:underline"
+            >
+              <Eye className="h-4 w-4 text-gray-700" />
+              <span className="ml-2">Detail</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
               href={`/dashboard/admin/try-out/${data.id}/edit`}

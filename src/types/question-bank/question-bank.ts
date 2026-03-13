@@ -25,3 +25,14 @@ export interface QuestionBank {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface QuestionBankBySubtestTryout {
+  id: string;
+  tryout_subtest_id: string;
+  question_bank_id: string;
+  order_no: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  question_bank: QuestionBank;
+}

@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import {
   subtestSchema,
@@ -31,6 +32,10 @@ import {
 } from "@/components/ui/field";
 
 export default function FormCreateSubtest() {
+  const [actionType, setActionType] = useState<
+    "default" | "add-again" | "add-question"
+  >("default");
+
   const form = useForm<SubtestType>({
     resolver: zodResolver(subtestSchema),
     defaultValues: {
@@ -44,21 +49,34 @@ export default function FormCreateSubtest() {
   const router = useRouter();
 
   const { mutate: createItemHandler, isPending } = useCreateSubtest({
-    onError: (error: any) => {
-      const message = error.response?.data.meta.message ?? "Terjadi kesalahan.";
+    onError: (error) => {
+      const message = error.response?.data.message ?? "Terjadi kesalahan.";
 
       toast.error("Gagal menambahkan subtes!", {
         description: message,
       });
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const id = res?.subtest?.id;
+
       toast.success("Berhasil menambahkan subtes!");
 
       queryClient.invalidateQueries({
         queryKey: ["get-all-subtests"],
       });
 
-      router.push("/dashboard/admin/subtest");
+      if (actionType === "add-again") {
+        form.reset();
+        router.refresh();
+      }
+
+      if (actionType === "add-question") {
+        router.push(`/dashboard/admin/subtest/${id}/create`);
+      }
+
+      if (actionType === "default") {
+        router.push("/dashboard/admin/subtest");
+      }
     },
   });
 
@@ -92,6 +110,7 @@ export default function FormCreateSubtest() {
                 </Field>
               )}
             />
+
             <Controller
               control={form.control}
               name="category"
@@ -123,9 +142,34 @@ export default function FormCreateSubtest() {
             />
           </FieldGroup>
 
-          <div className="flex justify-end">
-            <Button type="submit" size="lg" disabled={isPending}>
-              {isPending ? "Loading..." : "Tambahkan"}
+          <div className="flex justify-end gap-3">
+            <Button
+              type="submit"
+              size="lg"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => setActionType("add-again")}
+            >
+              Simpan & Tambah Subtes Baru
+            </Button>
+
+            <Button
+              type="submit"
+              size="lg"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => setActionType("add-question")}
+            >
+              Simpan & Tambah Pertanyaan
+            </Button>
+
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isPending}
+              onClick={() => setActionType("default")}
+            >
+              Simpan Subtes
             </Button>
           </div>
         </form>
