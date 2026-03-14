@@ -1,7 +1,6 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { api } from "@/lib/axios";
-import { Subtest } from "@/types/subtest/subtest";
 import { QuestionBank } from "@/types/question-bank/question-bank";
 
 interface GetDetailQuestionBankResponse {

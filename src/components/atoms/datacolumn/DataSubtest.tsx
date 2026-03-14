@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 
 import ActionButton from "@/components/molecules/datatable/ActionButton";
 import {
@@ -40,6 +40,17 @@ export const subtestColumns: ColumnDef<Subtest>[] = [
     },
   },
   {
+    id: "max_questions",
+    header: "Maksimal Soal",
+    cell: ({ row }) => {
+      return (
+        <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+          {row.original.max_questions} soal
+        </p>
+      );
+    },
+  },
+  {
     accessorKey: "created_at",
     header: "Tanggal Dibuat",
     cell: ({ row }) => (
@@ -64,12 +75,21 @@ export const subtestColumns: ColumnDef<Subtest>[] = [
       const data = row.original;
 
       return (
-        <ActionButton>
+        <ActionButton contentClassName="w-50">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/dashboard/admin/subtest/${data.id}/create`}
+              className="flex items-center text-gray-700 hover:underline"
+            >
+              <Plus className="h-4 w-4 text-gray-700" />
+              <span className="ml-2">Tambah Pertanyaan</span>
+            </Link>
+          </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
             <Link
-              href={`/dashboard/admin/subtests/${data.id}`}
+              href={`/dashboard/admin/subtest/${data.id}`}
               className="flex items-center text-gray-700 hover:underline"
             >
               <Eye className="h-4 w-4 text-gray-700" />

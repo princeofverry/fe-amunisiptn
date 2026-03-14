@@ -11,7 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const ActionButton = ({ children }: PropsWithChildren) => {
+import { cn } from "@/lib/utils";
+
+type ActionButtonProps = PropsWithChildren<{
+  contentClassName?: string;
+}>;
+
+const ActionButton = ({ children, contentClassName }: ActionButtonProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -20,7 +26,11 @@ const ActionButton = ({ children }: PropsWithChildren) => {
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="font-poppins" align="end">
+
+      <DropdownMenuContent
+        align="end"
+        className={cn("font-poppins", contentClassName)}
+      >
         {children}
       </DropdownMenuContent>
     </DropdownMenu>
