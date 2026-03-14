@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackHandler() {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -40,12 +40,24 @@ export default function OAuthCallbackPage() {
           </div>
         </div>
 
-        <div className="text-center space-y-1">
-          <p className="text-sm text-muted-foreground">
-            Sedang memproses login...
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Sedang memproses login...
+        </p>
       </div>
     </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <OAuthCallbackHandler />
+    </Suspense>
   );
 }
