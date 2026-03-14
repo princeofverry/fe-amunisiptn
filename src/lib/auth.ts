@@ -45,7 +45,15 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger, session }) => {
+      // Intercept purely front-end fields on session update and store them in the JWT token
+      if (trigger === "update" && session?.user) {
+        token.userOverrides = {
+          ...(token.userOverrides as any || {}),
+          ...session.user,
+        };
+      }
+
       if (user) {
         token.access_token = (user as any).token;
         token.sub = String((user as any).id);
@@ -56,7 +64,11 @@ export const authOptions: NextAuthOptions = {
       const access_token = token.access_token as string;
       const auth = await getAuthApiHandler(access_token);
 
-      return { ...session, user: auth, access_token };
+      // Merge fresh backend data with any front-end only overrides (like province, city) we stored
+      const overrides = (token.userOverrides as any) || {};
+      const mergedUser = { ...auth, ...overrides };
+
+      return { ...session, user: mergedUser, access_token };
     },
   },
 };

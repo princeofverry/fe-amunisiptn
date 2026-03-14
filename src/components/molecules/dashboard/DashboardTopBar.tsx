@@ -33,17 +33,15 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
       {/* Right side wrapper covering Search + Notification + Profile */}
       <div className="flex flex-1 items-center justify-end gap-3 md:gap-4">
         
-        {/* Search Bar - aligned right next to notification */}
-        <div className="w-full max-w-md hidden sm:block">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Mau belajar apa hari ini?"
-              className="w-full pl-10 pr-4 py-2 text-sm bg-[#EDF5FF] border-none rounded-full text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-              readOnly
-            />
-          </div>
+        {/* Search Bar */}
+        <div className="w-full max-w-md hidden sm:block relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Mau belajar apa hari ini?"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-[#EDF5FF] border-none rounded-full text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+            readOnly
+          />
         </div>
 
         {/* Notification Bell */}

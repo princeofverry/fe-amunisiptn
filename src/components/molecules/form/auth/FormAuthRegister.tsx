@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -44,27 +43,13 @@ export default function FormAuthRegister() {
     try {
       await registerApiHandler(body);
 
-      const res = await signIn("credentials", {
-        email: body.email,
-        password: body.password,
-        redirect: false,
-      });
-
       setIsLoading(false);
 
-      if (!res || res.error) {
-        toast.success("Registrasi Berhasil!", {
-          description: "Silakan login dengan akun yang baru dibuat.",
-        });
-        router.push("/login");
-        return;
-      }
-
       toast.success("Registrasi Berhasil!", {
-        description: "Selamat datang, anda akan diarahkan ke dashboard.",
+        description: "Silakan login dengan akun yang baru dibuat.",
       });
 
-      router.push("/dashboard");
+      router.push("/login");
     } catch (error: any) {
       setIsLoading(false);
 
