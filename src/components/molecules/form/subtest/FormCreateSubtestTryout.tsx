@@ -25,15 +25,15 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { toast } from "sonner";
 
@@ -47,7 +47,7 @@ import { useGetAllSubtest } from "@/http/subtest/get-all-subtest";
 
 import { useState } from "react";
 import { useCreateSubtestTryout } from "@/http/subtest/create-subtest-tryout";
-import { set } from "zod";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FormCreateSubtestTryoutProps {
   tryoutId: string;
@@ -60,8 +60,6 @@ export default function FormCreateSubtestTryout({
 }: FormCreateSubtestTryoutProps) {
   const { data: session, status } = useSession();
 
-  const [openSubtest, setOpenSubtest] = useState(false);
-
   const { data } = useGetAllSubtest({
     token: session?.access_token as string,
     options: {
@@ -69,30 +67,38 @@ export default function FormCreateSubtestTryout({
     },
   });
 
+  const [openSubtest, setOpenSubtest] = useState<number | null>(null);
+
   const form = useForm<SubtestTryoutType>({
     resolver: zodResolver(subtestTryoutSchema),
-    mode: "onChange",
     defaultValues: {
-      subtest_id: "",
-      duration_minutes: 30,
-      order_no: 1,
-      is_active: true,
+      subtests: [
+        {
+          subtest_id: "",
+          duration_minutes: 30,
+          is_active: true,
+        },
+      ],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "subtests",
+  });
+
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   const { mutate: createHandler, isPending } = useCreateSubtestTryout({
     onError: (error: any) => {
       const message = error.response?.data?.message ?? "Terjadi kesalahan.";
 
-      toast.error("Gagal menambahkan subtest ke tryout!", {
+      toast.error("Gagal menambahkan subtest!", {
         description: message,
       });
     },
     onSuccess: () => {
-      toast.success("Subtest berhasil ditambahkan ke tryout!");
+      toast.success("Subtest berhasil ditambahkan!");
 
       queryClient.invalidateQueries({
         queryKey: ["get-subtest-by-tryout"],
@@ -107,133 +113,164 @@ export default function FormCreateSubtestTryout({
   };
 
   return (
-    <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
-      <FieldGroup>
-        <Controller
-          control={form.control}
-          name="subtest_id"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>
-                Subtest <span className="text-red-500">*</span>
-              </FieldLabel>
+    <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+      <ScrollArea className="h-[420px]">
+        <div className="space-y-4">
+          {fields.map((item, index) => (
+            <Card key={item.id} className="overflow-visible">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-semibold">
+                  Subtest #{index + 1}
+                </CardTitle>
 
-              <Popover open={openSubtest} onOpenChange={setOpenSubtest}>
-                <PopoverTrigger asChild>
+                {fields.length > 1 && (
                   <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between"
+                    type="button"
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => remove(index)}
                   >
-                    {field.value
-                      ? data?.data?.find((item) => item.id === field.value)
-                          ?.name
-                      : "Pilih subtest"}
-
-                    <ChevronsUpDown className="opacity-50" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                </PopoverTrigger>
+                )}
+              </CardHeader>
 
-                <PopoverContent className="p-0">
-                  <Command>
-                    <CommandInput placeholder="Cari subtest..." />
-                    <CommandEmpty>Subtest tidak ditemukan</CommandEmpty>
+              <CardContent className="space-y-4">
+                <FieldGroup>
+                  {/* SUBTEST SELECT */}
+                  <Controller
+                    control={form.control}
+                    name={`subtests.${index}.subtest_id`}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Subtest</FieldLabel>
 
-                    <CommandGroup>
-                      {data?.data?.map((subtest) => (
-                        <CommandItem
-                          key={subtest.id}
-                          value={subtest.name}
-                          onSelect={() => {
-                            field.onChange(subtest.id);
-                            setOpenSubtest(false);
-                          }}
+                        <Popover
+                          open={openSubtest === index}
+                          onOpenChange={(open) =>
+                            setOpenSubtest(open ? index : null)
+                          }
                         >
-                          {subtest.name}
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between"
+                            >
+                              {field.value
+                                ? data?.data?.find((s) => s.id === field.value)
+                                    ?.name
+                                : "Pilih subtest"}
 
-                          <Check
-                            className={cn(
-                              "ml-auto",
-                              field.value === subtest.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+
+                          <PopoverContent className="p-0">
+                            <Command>
+                              <CommandInput placeholder="Cari subtest..." />
+                              <CommandEmpty>Tidak ditemukan</CommandEmpty>
+
+                              <CommandGroup>
+                                {data?.data?.map((subtest) => (
+                                  <CommandItem
+                                    key={subtest.id}
+                                    value={subtest.name}
+                                    onSelect={() => {
+                                      field.onChange(subtest.id);
+                                      setOpenSubtest(null);
+                                    }}
+                                  >
+                                    {subtest.name}
+
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        field.value === subtest.id
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
+                        {fieldState.error && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  {/* DURATION */}
+                  <Controller
+                    control={form.control}
+                    name={`subtests.${index}.duration_minutes`}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Durasi (Menit)</FieldLabel>
+
+                        <Input
+                          type="number"
+                          value={field.value}
+                          onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber)
+                          }
+                        />
+
+                        {fieldState.error && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  {/* STATUS */}
+                  <Controller
+                    control={form.control}
+                    name={`subtests.${index}.is_active`}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Status</FieldLabel>
+
+                        <div className="flex items-center gap-3">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
                           />
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
 
-              {fieldState.error && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
+                          <span className="text-sm text-muted-foreground">
+                            {field.value ? "Aktif" : "Tidak Aktif"}
+                          </span>
+                        </div>
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
 
-        <Controller
-          control={form.control}
-          name="duration_minutes"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>
-                Durasi (Menit) <span className="text-red-500">*</span>
-              </FieldLabel>
-
-              <Input
-                type="number"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                placeholder="Contoh: 30"
-              />
-
-              {fieldState.error && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="order_no"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>
-                Urutan Subtest <span className="text-red-500">*</span>
-              </FieldLabel>
-
-              <Input
-                type="number"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                placeholder="Contoh: 1"
-              />
-
-              {fieldState.error && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="is_active"
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Status</FieldLabel>
-
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-
-                <span className="text-sm text-muted-foreground">
-                  {field.value ? "Aktif" : "Tidak Aktif"}
-                </span>
-              </div>
-            </Field>
-          )}
-        />
-      </FieldGroup>
+      {/* ADD SUBTEST */}
+      <Button
+        type="button"
+        variant="secondary"
+        className="w-full"
+        onClick={() =>
+          append({
+            subtest_id: "",
+            duration_minutes: 30,
+            is_active: true,
+          })
+        }
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Tambah Subtest
+      </Button>
 
       <div className="flex justify-end">
         <Button type="submit" size="lg" disabled={isPending}>

@@ -7,7 +7,7 @@ import { SubtestByTryout } from "@/types/subtest/subtest";
 import { SubtestTryoutType } from "@/validators/subtest/subtest-tryout-validator";
 
 interface CreateSubtestTryoutResponse {
-  data: SubtestByTryout;
+  data: SubtestByTryout[];
 }
 
 export const CreateSubtestTryoutHandler = async (
@@ -20,6 +20,7 @@ export const CreateSubtestTryoutHandler = async (
       Authorization: `Bearer ${token}`,
     },
   });
+
   return data;
 };
 
