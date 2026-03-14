@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import DialogCreateSubtestTryout from "@/components/atoms/dialog/subtest/DialogCreateSubtestTryout";
+import Image from "next/image";
 
 interface DashboardAdminTryoutDetailWrapperProps {
   id: string;
@@ -100,6 +101,39 @@ export default function DashboardAdminTryoutDetailWrapper({
                     )
                   : "-"}
               </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="text-muted-foreground">Tanggal Mulai</h3>
+              <span className="font-medium">
+                {data?.data.start_date
+                  ? format(
+                      new Date(data.data.start_date),
+                      "dd MMM yyyy HH:mm",
+                      {
+                        locale: IdLocale,
+                      },
+                    )
+                  : "-"}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="text-muted-foreground">Tanggal Selesai</h3>
+              <span className="font-medium">
+                {data?.data.end_date
+                  ? format(new Date(data.data.end_date), "dd MMM yyyy HH:mm", {
+                      locale: IdLocale,
+                    })
+                  : "-"}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="text-muted-foreground">Thumbnail</h3>
+              <Image
+                src={data?.data.image_url ?? ""}
+                alt="Thumbnail"
+                width={200}
+                height={100}
+              />
             </div>
           </div>
           <div className="space-y-3">

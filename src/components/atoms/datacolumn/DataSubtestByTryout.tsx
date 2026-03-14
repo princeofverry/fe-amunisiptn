@@ -51,15 +51,6 @@ export const subtestTryoutColumns: ColumnDef<SubtestByTryout>[] = [
   },
   {
     id: "order_no",
-    header: "Urutan Subtes",
-    cell: ({ row }) => (
-      <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-        {row.original.order_no}
-      </p>
-    ),
-  },
-  {
-    id: "order_no",
     header: "Status",
     cell: ({ row }) => {
       const isActive = row.original.is_active;

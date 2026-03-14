@@ -19,7 +19,7 @@ export default function DialogCreateSubtestTryout({
 }: DialogCreateSubtestTryoutProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl overflow-visible">
         <DialogHeader>
           <DialogTitle>Tambah Subtes ke Tryout</DialogTitle>
         </DialogHeader>

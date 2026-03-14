@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +14,6 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { tryoutSchema, TryoutType } from "@/validators/tryout/tryout-validator";
-
 import { useCreateTryout } from "@/http/tryout/create-tryout";
 
 import {
@@ -21,6 +22,16 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { id } from "date-fns/locale";
 
 export default function FormCreateTryout() {
   const form = useForm<TryoutType>({
@@ -28,17 +39,34 @@ export default function FormCreateTryout() {
     defaultValues: {
       title: "",
       description: "",
+      category: "",
+      start_date: "",
+      end_date: "",
       is_published: false,
+      image: null,
     },
     mode: "onChange",
   });
+
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const image = form.watch("image");
+
+  useEffect(() => {
+    if (image instanceof File) {
+      const url = URL.createObjectURL(image);
+      setPreview(url);
+
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [image]);
 
   const queryClient = useQueryClient();
   const router = useRouter();
 
   const { mutate: createItemHandler, isPending } = useCreateTryout({
-    onError: (error: any) => {
-      const message = error.response?.data.meta.message ?? "Terjadi kesalahan.";
+    onError: (error) => {
+      const message = error.response?.data.message ?? "Terjadi kesalahan.";
 
       toast.error("Gagal menambahkan tryout!", {
         description: message,
@@ -87,11 +115,158 @@ export default function FormCreateTryout() {
               name="description"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>
-                    Deskripsi <span className="text-red-500">*</span>
-                  </FieldLabel>
+                  <FieldLabel>Deskripsi</FieldLabel>
 
                   <Input {...field} placeholder="Masukkan deskripsi tryout" />
+
+                  {fieldState.error && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="category"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Kategori</FieldLabel>
+
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="Contoh: UTBK / CPNS"
+                  />
+
+                  {fieldState.error && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="start_date"
+              render={({ field, fieldState }) => {
+                const date = field.value ? new Date(field.value) : undefined;
+
+                return (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Tanggal Mulai</FieldLabel>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+
+                          {date
+                            ? format(date, "dd MMMM yyyy", { locale: id })
+                            : "Pilih tanggal"}
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={(d) => {
+                            if (!d) return;
+                            field.onChange(format(d, "yyyy-MM-dd"));
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    {fieldState.error && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+
+            <Controller
+              control={form.control}
+              name="end_date"
+              render={({ field, fieldState }) => {
+                const date = field.value ? new Date(field.value) : undefined;
+
+                return (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Tanggal Selesai</FieldLabel>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+
+                          {date
+                            ? format(date, "dd MMMM yyyy", { locale: id })
+                            : "Pilih tanggal"}
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={(d) => {
+                            if (!d) return;
+                            field.onChange(format(d, "yyyy-MM-dd"));
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    {fieldState.error && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+
+            <Controller
+              control={form.control}
+              name="image"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Thumbnail Tryout</FieldLabel>
+
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      field.onChange(file);
+                    }}
+                  />
+
+                  {preview && (
+                    <img
+                      src={preview}
+                      alt="preview"
+                      className="mt-3 h-40 w-full rounded-lg object-cover border"
+                    />
+                  )}
 
                   {fieldState.error && (
                     <FieldError errors={[fieldState.error]} />
