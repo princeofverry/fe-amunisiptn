@@ -6,18 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginType, loginSchema } from "@/validators/auth/login-validator";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
 import {
   Field,
   FieldError,
