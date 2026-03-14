@@ -24,20 +24,31 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
+        token: { label: "Token", type: "text" },
       },
       authorize: async (credentials) => {
-        const { email, password } = credentials as LoginType;
-        if (!email || !password) return null;
+        if (!credentials) return null;
 
         try {
+          if (credentials.token) {
+            return {
+              id: "oauth-user",
+              token: credentials.token,
+            };
+          }
+
+          const { email, password } = credentials as LoginType;
+
+          if (!email || !password) return null;
+
           const res = await loginApiHandler({ email, password });
+
           if (!res?.user) return null;
-          const user = {
+
+          return {
             id: res.user.id,
             token: res.token,
           };
-
-          return user;
         } catch {
           return null;
         }

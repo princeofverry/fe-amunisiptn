@@ -1,13 +1,30 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import Link from "next/link";
 import FormAuthLogin from "../../form/auth/FormAuthLogin";
+import { useGetGoogleRedirect } from "@/http/auth/login-google";
+import { toast } from "sonner";
 
 export default function CardAuthLogin() {
+  const { refetch: googleLogin, isFetching: isGoogleLoading } =
+    useGetGoogleRedirect({});
+
+  const handleGoogleLogin = async () => {
+    try {
+      const res = await googleLogin();
+
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      }
+    } catch {
+      toast.error("Login Google gagal");
+    }
+  };
+
   return (
     <div className="space-y-6 w-full max-w-md h-full mx-auto">
       <div className="flex items-center justify-center">
@@ -32,7 +49,14 @@ export default function CardAuthLogin() {
               <Separator className="flex-1" />
             </div>
 
-            <Button variant="outline" className="w-full gap-2.5" size={"lg"}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading}
+              className="w-full gap-2.5 cursor-pointer"
+              size={"lg"}
+            >
               <svg
                 width="15"
                 height="15"
