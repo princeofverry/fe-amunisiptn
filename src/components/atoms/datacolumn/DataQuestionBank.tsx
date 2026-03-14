@@ -9,11 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Subtest } from "@/types/subtest/subtest";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { QuestionBank } from "@/types/question-bank/question-bank";
 
-export const questionBankColumns: ColumnDef<QuestionBank>[] = [
+export const questionBankColumns: ColumnDef<Subtest>[] = [
   {
     id: "index",
     header: "No",
@@ -21,20 +21,31 @@ export const questionBankColumns: ColumnDef<QuestionBank>[] = [
   },
   {
     id: "name",
-    header: "Pertanyaan",
+    header: "Nama Bank Soal",
     cell: ({ row }) => (
       <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-        {row.original.question_text}
+        {row.original.name}
       </p>
     ),
   },
   {
     id: "category",
-    header: "Level",
+    header: "Kategori",
     cell: ({ row }) => {
       return (
         <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-          {row.original.difficulty}
+          {row.original.category}
+        </p>
+      );
+    },
+  },
+  {
+    id: "max_questions",
+    header: "Maksimal Soal",
+    cell: ({ row }) => {
+      return (
+        <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+          {row.original.max_questions} soal
         </p>
       );
     },
@@ -66,7 +77,6 @@ export const questionBankColumns: ColumnDef<QuestionBank>[] = [
       return (
         <ActionButton>
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-
           <DropdownMenuItem asChild>
             <Link
               href={`/dashboard/admin/question-bank/${data.id}`}
