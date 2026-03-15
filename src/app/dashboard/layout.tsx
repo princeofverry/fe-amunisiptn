@@ -21,18 +21,18 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <SidebarWrapper session={session!} />
 
-      <SidebarInset className="min-w-0 overflow-x-hidden">
+      <SidebarInset className="min-w-0">
         {isAdmin ? (
           <BreadcrumbProvider>
             <BreadcrumbNav />
-            <main className="min-w-0 px-5 pt-20 pb-6 md:pt-10 overflow-x-hidden bg-[#fafafa] min-h-screen">
+            <main className="min-w-0 px-5 pt-20 pb-6 md:pt-10 flex-col bg-[#fafafa] min-h-screen">
               {children}
             </main>
           </BreadcrumbProvider>
         ) : (
           <>
             <DashboardTopBar userName={session.user.name ?? "Amunisian"} />
-            <main className="min-w-0 px-4 md:px-6 py-6 overflow-x-hidden bg-[#fafafa] min-h-screen">
+            <main className="min-w-0 px-4 md:px-6 py-6 flex-col bg-[#fafafa] min-h-screen">
               {children}
             </main>
           </>
