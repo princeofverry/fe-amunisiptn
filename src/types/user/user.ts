@@ -16,6 +16,8 @@ export interface User {
   target_university_2?: string;
   target_major_1?: string;
   target_major_2?: string;
+  province?: string;
+  city?: string;
   created_at: Date;
   updated_at: Date;
 }
