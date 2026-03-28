@@ -73,13 +73,33 @@ export const authOptions: NextAuthOptions = {
     },
     session: async ({ session, token }) => {
       const access_token = token.access_token as string;
-      const auth = await getAuthApiHandler(access_token);
 
-      // Merge fresh backend data with any front-end only overrides (like province, city) we stored
-      const overrides = (token.userOverrides as any) || {};
-      const mergedUser = { ...auth, ...overrides };
+      try {
+        const auth = await getAuthApiHandler(access_token);
 
-      return { ...session, user: mergedUser, access_token };
+        // Merge fresh backend data with any front-end only overrides (like province, city) we stored
+        const overrides = (token.userOverrides as any) || {};
+        const mergedUser = { ...auth, ...overrides };
+
+        return { ...session, user: mergedUser, access_token };
+      } catch (error: any) {
+        // If BE returns 401 or is unreachable, return a degraded session
+        // This prevents the entire app from crashing
+        console.warn("[auth] Failed to fetch user from BE:", error?.message || error);
+
+        const overrides = (token.userOverrides as any) || {};
+        return {
+          ...session,
+          user: {
+            id: token.sub || "",
+            name: overrides?.name || session?.user?.name || "Amunisian",
+            email: overrides?.email || session?.user?.email || "",
+            role: overrides?.role || "user",
+            ...overrides,
+          } as any,
+          access_token,
+        };
+      }
     },
   },
 };
