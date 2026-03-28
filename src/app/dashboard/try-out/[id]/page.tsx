@@ -3,7 +3,10 @@
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, Clock, FileText, Info, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { useTickets } from "@/hooks/useTickets";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function TryoutDetailPage({
   params,
@@ -49,6 +52,14 @@ export default function TryoutDetailPage({
   const [isTPSOpen, setIsTPSOpen] = useState(true);
   const [isLiterasiOpen, setIsLiterasiOpen] = useState(true);
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  
+  const { ticketCount, addTicket, deductTicket } = useTickets();
+
+  // Gratis tryouts don't need tickets
+  const isGratis = currentTryout.type === "Gratis";
+
   useEffect(() => {
     const updateStatus = () => {
       const now = new Date().getTime();
@@ -73,6 +84,31 @@ export default function TryoutDetailPage({
   const formatDate = (dateMs: number) => {
     const d = new Date(dateMs);
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) + `, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`;
+  };
+
+  const router = useRouter();
+
+  const handleActionClick = () => {
+    if (isGratis) return; // Should not reach here if UI is updated, but safe guard
+
+    if (ticketCount > 0) {
+      setIsConfirmOpen(true);
+    } else {
+      setIsAlertOpen(true);
+    }
+  };
+
+  const confirmRegistration = () => {
+    if (deductTicket(1)) {
+      setIsConfirmOpen(false);
+      // Immediately redirect to instruction page upon consuming ticket
+      router.push(`/dashboard/try-out/${tryoutId}/start`);
+    }
+  };
+
+  const buyTicketMock = () => {
+    addTicket(1);
+    setIsAlertOpen(false);
   };
 
   return (
@@ -138,10 +174,12 @@ export default function TryoutDetailPage({
       </div>
 
       {/* Info Banner */}
-      <div className="bg-[#F4F6F9] rounded-xl p-4 flex items-center gap-3 text-sm text-gray-700">
-        <Info className="w-5 h-5 text-[#2A3547] flex-shrink-0 fill-[#2A3547] text-white" />
-        <p>Yuk, daftar tryout ini! Klik <strong>Pakai Tiket</strong> di bawah.</p>
-      </div>
+      {!isGratis && (
+        <div className="bg-[#F4F6F9] rounded-xl p-4 flex items-center gap-3 text-sm text-gray-700">
+          <div className="bg-[#2A3547] rounded-full p-1"><Info className="w-4 h-4 text-white flex-shrink-0" /></div>
+          <p>Yuk, ikut tryout ini! Klik <strong className="font-semibold text-gray-900 border-b border-gray-400">Pakai Tiket</strong> di bawah untuk mulai.</p>
+        </div>
+      )}
 
       {/* Subjects Section: TPS */}
       <div className="space-y-4">
@@ -242,12 +280,86 @@ export default function TryoutDetailPage({
         )}
       </div>
 
-      {/* Action Button */}
+      {/* Action Button Area */}
       <div className="pt-6 w-full flex justify-center">
-        <button className="w-full bg-[#004AAB] hover:bg-[#003B8A] transition-colors text-white py-3.5 rounded-xl text-sm font-bold shadow-md text-center">
-          Pakai Tiket
-        </button>
+        {isGratis ? (
+          <Link href={`/dashboard/try-out/${tryoutId}/start`} className="block w-full">
+            <button className="w-full bg-[#3B9245] hover:bg-[#317a3a] transition-colors text-white py-3.5 rounded-xl text-sm font-bold shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 text-center">
+              Mulai Try Out
+            </button>
+          </Link>
+        ) : (
+          <button 
+            onClick={handleActionClick}
+            className="w-full bg-[#004AAB] hover:bg-[#003B8A] transition-colors text-white py-3.5 rounded-xl text-sm font-bold shadow-[0_4px_0_0_#002b66] active:shadow-none active:translate-y-1 text-center"
+          >
+            Pakai Tiket
+          </button>
+        )}
       </div>
+
+      {/* Ticket Not Enough Modal */}
+      <Dialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <DialogContent showCloseButton={false} className="sm:max-w-md text-center p-8 rounded-2xl">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="w-16 h-16 bg-[#FFF4E5] rounded-full flex items-center justify-center">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <DialogTitle className="text-xl font-bold text-gray-900 mt-2">
+              Maaf Tiket Kamu Tidak Cukup
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mb-4 whitespace-pre-line px-4">
+              Untuk mengikuti tryout ini kamu membutuhkan minimal 1 tiket.
+              Silakan beli tiket terlebih dahulu agar dapat mendaftar.
+            </DialogDescription>
+            <div className="flex w-full gap-3 pt-2">
+              <button 
+                onClick={() => setIsAlertOpen(false)}
+                className="flex-1 bg-[#F4F6F9] hover:bg-gray-200 text-[#004AAB] font-semibold py-3 rounded-xl transition-colors"
+              >
+                Kembali
+              </button>
+              <button 
+                onClick={buyTicketMock}
+                className="flex-1 bg-[#004AAB] hover:bg-[#003B8A] text-white font-semibold py-3 rounded-xl transition-colors shadow-sm"
+              >
+                Beli Tiket
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Registration Modal */}
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent showCloseButton={false} className="sm:max-w-md text-center p-8 rounded-2xl">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="w-16 h-16 flex items-center justify-center mb-1">
+              <span className="text-4xl">🚀</span>
+            </div>
+            <DialogTitle className="text-xl font-bold text-gray-900 mt-2">
+              Yakin Ingin Mendaftar Tryout?
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mb-4">
+              Tryout ini akan menggunakan 1 tiket dari akunmu.
+            </DialogDescription>
+            <div className="flex w-full gap-3 pt-2">
+              <button 
+                onClick={() => setIsConfirmOpen(false)}
+                className="flex-1 bg-[#F4F6F9] hover:bg-gray-200 text-[#8492A6] font-semibold py-3 rounded-xl transition-colors"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={confirmRegistration}
+                className="flex-1 bg-[#004AAB] hover:bg-[#003B8A] text-white font-semibold py-3 rounded-xl transition-colors shadow-sm"
+              >
+                Pakai Tiket
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

@@ -25,8 +25,8 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
     defaultValues: {
       name: session?.user?.name || "",
       phone_number: session?.user?.phone_number || "",
-      grade_level: session?.user?.grade_level?.split(' ')[0] || "SMA",
-      class_level: session?.user?.grade_level?.split(' ')[1] ? `Kelas ${session?.user?.grade_level?.split(' ')[1]}` : "Kelas 12",
+      grade_level: session?.user?.grade_level === 'Gap Year' ? 'Gap Year' : "SMA/SMK",
+      class_level: session?.user?.grade_level?.includes('Kelas ') ? `Kelas ${session?.user?.grade_level?.split('Kelas ')[1]}` : "Kelas 12",
       school_origin: session?.user?.school_origin || "",
       gender: session?.user?.gender || "L",
       birth_date: session?.user?.birth_date || "",
@@ -54,7 +54,7 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
             name: body.name,
             phone_number: body.phone_number,
             school_origin: body.school_origin,
-            grade_level: `${body.grade_level} ${body.class_level}`,
+            grade_level: body.grade_level === 'Gap Year' ? 'Gap Year' : `${body.grade_level} ${body.class_level || ''}`.trim(),
             // We may not get these from DB sync immediately depending on the GET API, so we manually optimistic update the session
             gender: body.gender,
             birth_date: body.birth_date,
@@ -82,7 +82,7 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
           name: body.name,
           phone_number: body.phone_number,
           school_origin: body.school_origin,
-          grade_level: `${body.grade_level} ${body.class_level}`,
+          grade_level: body.grade_level === 'Gap Year' ? 'Gap Year' : `${body.grade_level} ${body.class_level || ''}`.trim(),
           gender: body.gender,
           birth_date: body.birth_date,
           province: body.province,
@@ -145,21 +145,31 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
             render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                 <FieldLabel>Jenjang</FieldLabel>
-                <div className="grid grid-cols-1 gap-2">
-                    <label 
-                        className={`flex items-center justify-center gap-2 border rounded-full py-2 cursor-pointer transition-colors ${field.value === 'SMA' ? 'border-primary bg-primary/5 text-primary font-medium' : 'border-input hover:bg-muted'}`}
-                    >
-                        <input 
-                            type="radio" 
-                            name="grade_level" 
-                            value="SMA" 
-                            className="hidden"
-                            onChange={field.onChange}
-                            checked={field.value === 'SMA'} 
-                        />
-                        <div className={`w-2 h-2 rounded-full ${field.value === 'SMA' ? 'bg-primary' : 'bg-muted-foreground'}`}/>
-                        SMA
-                    </label>
+                <div className="grid grid-cols-2 gap-2">
+                    {['SMA/SMK', 'Gap Year'].map((level) => (
+                        <label 
+                            key={level}
+                            className={`flex items-center justify-center gap-2 border rounded-full py-2 cursor-pointer transition-colors text-xs sm:text-sm ${field.value === level ? 'border-primary bg-primary/5 text-primary font-medium' : 'border-input hover:bg-muted text-muted-foreground'}`}
+                        >
+                            <input 
+                                type="radio" 
+                                name="grade_level" 
+                                value={level} 
+                                className="hidden"
+                                onChange={(e) => {
+                                    field.onChange(e);
+                                    if (e.target.value === 'Gap Year') {
+                                        form.setValue('class_level', '');
+                                        form.clearErrors('class_level');
+                                    } else {
+                                        form.setValue('class_level', 'Kelas 12');
+                                    }
+                                }}
+                                checked={field.value === level} 
+                            />
+                            {level}
+                        </label>
+                    ))}
                 </div>
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
                 </Field>
@@ -167,32 +177,33 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
             />
         </div>
 
-        <Controller
-          control={form.control}
-          name="class_level"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Pilih Kelas</FieldLabel>
-              <div className="grid grid-cols-3 gap-2">
-                {['Kelas 10', 'Kelas 11', 'Kelas 12'].map((kls) => (
-                    <label key={kls} className={`flex items-center justify-center gap-2 border rounded-full py-2 cursor-pointer transition-colors text-xs sm:text-sm ${field.value === kls ? 'border-primary bg-primary/5 text-primary font-medium' : 'border-input hover:bg-muted text-muted-foreground'}`}>
-                        <input 
-                            type="radio" 
-                            name="class_level" 
-                            value={kls} 
-                            className="hidden"
-                            onChange={field.onChange}
-                            checked={field.value === kls} 
-                        />
-                        <div className={`w-2 h-2 rounded-full ${field.value === kls ? 'bg-primary' : 'bg-muted-foreground'}`}/>
-                        {kls}
-                    </label>
-                ))}
-              </div>
-              {fieldState.error && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
+        {form.watch('grade_level') !== 'Gap Year' && (
+          <Controller
+            control={form.control}
+            name="class_level"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Pilih Kelas</FieldLabel>
+                <div className="grid grid-cols-3 gap-2">
+                  {['Kelas 10', 'Kelas 11', 'Kelas 12'].map((kls) => (
+                      <label key={kls} className={`flex items-center justify-center gap-2 border rounded-full py-2 cursor-pointer transition-colors text-xs sm:text-sm ${field.value === kls ? 'border-primary bg-primary/5 text-primary font-medium' : 'border-input hover:bg-muted text-muted-foreground'}`}>
+                          <input 
+                              type="radio" 
+                              name="class_level" 
+                              value={kls} 
+                              className="hidden"
+                              onChange={field.onChange}
+                              checked={field.value === kls} 
+                          />
+                          {kls}
+                      </label>
+                  ))}
+                </div>
+                {fieldState.error && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        )}
 
         <Controller
           control={form.control}
@@ -219,8 +230,8 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
                 <FieldLabel>Jenis Kelamin</FieldLabel>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: 'Laki-laki', value: 'L' },
-                    { label: 'Perempuan', value: 'P' }
+                    { label: 'L', value: 'L' },
+                    { label: 'P', value: 'P' }
                   ].map((gender) => (
                     <label 
                       key={gender.value}
@@ -234,7 +245,6 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
                         onChange={field.onChange}
                         checked={field.value === gender.value} 
                       />
-                      <div className={`w-2 h-2 rounded-full ${field.value === gender.value ? 'bg-primary' : 'bg-muted-foreground'}`}/>
                       {gender.label}
                     </label>
                   ))}
