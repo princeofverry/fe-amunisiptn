@@ -12,6 +12,7 @@ export const tryoutSchema = z.object({
     .max(500, "Deskripsi maksimal 500 karakter"),
 
   is_published: z.boolean(),
+  is_free: z.boolean(),
 
   start_date: z
     .string()

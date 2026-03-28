@@ -42,6 +42,10 @@ export const CreateTryoutHandler = async (
     formData.append("is_published", body.is_published ? "1" : "0");
   }
 
+  if (body.is_free !== undefined) {
+    formData.append("is_free", body.is_free ? "1" : "0");
+  }
+
   const { data } = await api.post("/admin/tryouts", formData, {
     headers: {
       Authorization: `Bearer ${token}`,

@@ -295,6 +295,27 @@ export default function FormCreateTryout() {
                 </Field>
               )}
             />
+
+            <Controller
+              control={form.control}
+              name="is_free"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Gratis / Berbayar?</FieldLabel>
+
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+
+                    <span className="text-sm text-muted-foreground">
+                      {field.value ? "Gratis" : "Berbayar"}
+                    </span>
+                  </div>
+                </Field>
+              )}
+            />
           </FieldGroup>
 
           <div className="flex justify-end">
