@@ -1,8 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { generateFallbackFromName } from "@/utils/generate-name";
-import { Bell, Search, LogOut, Settings, Home, User } from "lucide-react";
+import { Bell, Search, LogOut, Settings, Home, User, Ticket } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { useTickets } from "@/hooks/useTickets";
 
 interface DashboardTopBarProps {
   userName?: string;
@@ -22,6 +22,7 @@ interface DashboardTopBarProps {
 
 export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
   const name = userName || "Amunisian";
+  const { ticketCount } = useTickets();
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 bg-white border-b border-gray-100 px-4 md:px-6 py-3">
@@ -43,6 +44,12 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
             readOnly
           />
         </div>
+
+        {/* Ticket Badge */}
+        <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer">
+          <Ticket className="h-5 w-5 text-gray-700" />
+          <span className="font-bold text-gray-800 text-sm">{ticketCount}</span>
+        </button>
 
         {/* Notification Bell */}
         <button className="relative p-2 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors flex-shrink-0 text-gray-600">

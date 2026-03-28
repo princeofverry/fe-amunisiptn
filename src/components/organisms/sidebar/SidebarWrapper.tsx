@@ -254,14 +254,14 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                     <SidebarMenuButton
                       asChild
                       className={`h-11 justify-start px-4 rounded-xl transition-all w-full flex items-center ${
-                        pathname.startsWith("/dashboard/berlangganan")
+                        pathname.startsWith("/dashboard/pembelian")
                           ? "bg-[#EBF4FF] text-[#004AAB] font-semibold"
                           : "text-[#9695A5] hover:bg-[#EBF4FF] hover:text-[#004AAB]"
                       }`}
                     >
-                      <Link href="/dashboard/berlangganan" className="flex items-center w-full gap-3">
-                        <Crown className="w-5 h-5 flex-shrink-0" />
-                        <span>Berlangganan</span>
+                      <Link href="/dashboard/pembelian" className="flex items-center w-full gap-3">
+                        <ShoppingCart className="w-5 h-5 flex-shrink-0" />
+                        <span>Pembelian</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

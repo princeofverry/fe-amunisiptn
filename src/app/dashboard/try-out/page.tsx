@@ -4,6 +4,8 @@ import { useState } from "react";
 import { ChevronLeft, History, Search } from "lucide-react";
 import Link from "next/link";
 import TryoutCard from "@/components/molecules/card/TryoutCard";
+import { useSession } from "next-auth/react";
+import { useGetUserTryouts } from "@/http/tryout/get-user-tryouts";
 
 const FILTER_OPTIONS = [
   "Semua Tryout",
@@ -12,35 +14,17 @@ const FILTER_OPTIONS = [
   "Terdaftar",
 ];
 
-const MOCK_DATA = [
-  {
-    id: 1,
-    title: "Mini TO SNBT Episode 01",
-    type: "Gratis" as const,
-    startDate: "2026-04-01T00:00:00",
-    endDate: "2026-04-07T23:59:59",
-  },
-  {
-    id: 2,
-    title: "Mini TO SNBT Episode 02",
-    type: "Premium" as const,
-    startDate: "2026-04-08T00:00:00",
-    endDate: "2026-04-14T23:59:59",
-  },
-  {
-    id: 3,
-    title: "Mini TO SNBT Episode 03",
-    type: "Gratis" as const,
-    startDate: "2026-04-15T00:00:00",
-    endDate: "2026-04-21T23:59:59",
-  },
-];
-
 export default function TryoutPage() {
+  const { data: session } = useSession();
+  const token = (session?.user as any)?.access_token || "";
+
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredData = MOCK_DATA.filter(
+  const { data: tryoutsData, isLoading } = useGetUserTryouts({ token });
+  const tryouts = tryoutsData?.data || [];
+
+  const filteredData = tryouts.filter(
     (item) =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       (activeFilter === "Semua Tryout" ||
@@ -70,10 +54,13 @@ export default function TryoutPage() {
         </div>
 
         {/* History Button */}
-        <button className="flex items-center gap-2 bg-[#3C8D60] hover:bg-[#327851] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit md:mt-0">
+        <Link 
+          href="/dashboard/try-out/riwayat"
+          className="flex items-center gap-2 bg-[#3C8D60] hover:bg-[#327851] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit md:mt-0"
+        >
           <History className="w-4 h-4" />
           <span>Riwayat TO</span>
-        </button>
+        </Link>
       </div>
 
       {/* Search and Filters */}
