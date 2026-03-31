@@ -8,41 +8,20 @@ import ExamTimer from "@/components/molecules/exam/ExamTimer";
 import ExamSidebar from "@/components/molecules/exam/ExamSidebar";
 import QuestionView from "@/components/molecules/exam/QuestionView";
 import DialogFinishSubtest from "@/components/molecules/dialog/DialogFinishSubtest";
-import { useDataMode } from "@/components/providers/DataModeProvider";
 import { useSubmitAnswer } from "@/http/tryout/submit-answer";
 import { useFinishSubtest } from "@/http/tryout/finish-subtest";
 import { useStartSubtest } from "@/http/tryout/start-subtest";
 import { useGetExamQuestions } from "@/http/tryout/get-exam-questions";
+import { useGetUserTryoutDetail } from "@/http/tryout/get-user-tryout-detail";
 import type { ExamQuestion } from "@/types/exam/exam";
+import type { SubtestByTryout } from "@/types/subtest/subtest";
 
-// --- Mock subtests ---
-const MOCK_SUBTESTS = [
-  { id: "s1", name: "Penalaran Umum", category: "Tes Potensi Skolastik", duration: 30, questionCount: 30 },
-  { id: "s2", name: "Pengetahuan & Pemahaman Umum", category: "Tes Potensi Skolastik", duration: 20, questionCount: 20 },
-  { id: "s3", name: "Pemahaman Bacaan & Menulis", category: "Tes Potensi Skolastik", duration: 20, questionCount: 20 },
-  { id: "s4", name: "Pengetahuan Kuantitatif", category: "Tes Potensi Skolastik", duration: 20, questionCount: 20 },
-  { id: "s5", name: "Literasi Bahasa Indonesia", category: "Tes Literasi", duration: 30, questionCount: 30 },
-  { id: "s6", name: "Literasi Bahasa Inggris", category: "Tes Literasi", duration: 25, questionCount: 20 },
-  { id: "s7", name: "Penalaran Matematika", category: "Tes Literasi", duration: 30, questionCount: 20 },
-];
-
-function generateMockQuestions(subtestIndex: number, count: number): ExamQuestion[] {
-  const subtest = MOCK_SUBTESTS[subtestIndex];
-  return Array.from({ length: count }, (_, i) => ({
-    id: `q-${subtestIndex}-${i + 1}`,
-    question_text: `[${subtest?.name || 'Subtest'}] Soal nomor ${i + 1}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pilih jawaban yang paling tepat.`,
-    question_image: null,
-    question_image_url: null,
-    order_no: i + 1,
-    options: [
-      { id: `o-${subtestIndex}-${i}-a`, option_key: "A", option_text: `Pilihan A` },
-      { id: `o-${subtestIndex}-${i}-b`, option_key: "B", option_text: `Pilihan B` },
-      { id: `o-${subtestIndex}-${i}-c`, option_key: "C", option_text: `Pilihan C` },
-      { id: `o-${subtestIndex}-${i}-d`, option_key: "D", option_text: `Pilihan D` },
-      { id: `o-${subtestIndex}-${i}-e`, option_key: "E", option_text: `Pilihan E` },
-    ],
-    my_answer: null,
-  }));
+interface SubtestInfo {
+  id: string;
+  name: string;
+  category: string;
+  duration: number;
+  questionCount: number;
 }
 
 function ExamContent({ tryoutId }: { tryoutId: string }) {
@@ -50,7 +29,6 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
-  const { mode } = useDataMode();
 
   // Read subtest index from query param
   const subtestParam = parseInt(searchParams.get("subtest") || "0", 10);
@@ -63,10 +41,30 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timerSeconds, setTimerSeconds] = useState(0);
+  const [subtests, setSubtests] = useState<SubtestInfo[]>([]);
 
-  // In dummy mode use mock subtests, in BE mode will use real subtests
-  // For now, both use same subtests list (real BE subtests would come from tryout data)
-  const subtests = MOCK_SUBTESTS;
+  // Fetch tryout detail to get subtests list
+  const { data: tryoutDetail } = useGetUserTryoutDetail({
+    id: tryoutId,
+    token,
+  });
+
+  // Parse subtests from API when tryout detail loads
+  useEffect(() => {
+    if (tryoutDetail?.data?.tryout_subtests) {
+      const sorted = [...tryoutDetail.data.tryout_subtests]
+        .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
+        .map((ts: SubtestByTryout) => ({
+          id: ts.subtest_id,
+          name: ts.subtest.name,
+          category: ts.subtest.category === "TPS" ? "Tes Potensi Skolastik" : "Tes Literasi",
+          duration: ts.duration_minutes,
+          questionCount: ts.subtest.max_questions,
+        }));
+      setSubtests(sorted);
+    }
+  }, [tryoutDetail]);
+
   const currentSubtest = subtests[currentSubtestIndex];
   const totalSubtests = subtests.length;
 
@@ -80,7 +78,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
       },
       onError: (error: any) => {
         console.error("Failed to start subtest:", error);
-        // Fallback to mock duration
+        // Fallback to configured duration
         setTimerSeconds((currentSubtest?.duration || 30) * 60);
       },
     },
@@ -96,94 +94,68 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
     },
   });
 
-  // --- INIT: Load questions based on mode ---
+  // --- INIT: Load questions from backend ---
   useEffect(() => {
+    if (!currentSubtest) return;
+
     setIsLoading(true);
     setCurrentQuestionIndex(0);
     setAnswers({});
 
-    if (mode === "dummy") {
-      // === DUMMY MODE ===
-      const qs = generateMockQuestions(currentSubtestIndex, currentSubtest?.questionCount || 20);
-      setQuestions(qs);
-      setTimerSeconds((currentSubtest?.duration || 30) * 60);
+    // Start the subtest session (to get timer), then fetch questions
+    startSubtestMutation.mutate(
+      { tryoutId, subtestId: currentSubtest.id },
+      {
+        onSuccess: () => {
+          // Fetch exam questions
+          refetchExam().then((result) => {
+            if (result.data?.data?.questions) {
+              setQuestions(result.data.data.questions);
+              // Pre-fill answers from BE (my_answer field)
+              const preAnswers: Record<string, string | null> = {};
+              result.data.data.questions.forEach((q) => {
+                if (q.my_answer) preAnswers[q.id] = q.my_answer;
+              });
+              setAnswers(preAnswers);
 
-      // Load saved answers for this subtest
-      const saved = localStorage.getItem(`exam_answers_${tryoutId}_${currentSubtestIndex}`);
-      if (saved) {
-        try { setAnswers(JSON.parse(saved)); } catch { /* ignore */ }
+              // Use timer from BE data if available
+              if (result.data.data.timer) {
+                setTimerSeconds(result.data.data.timer.remaining_seconds);
+              }
+            }
+            setIsLoading(false);
+          }).catch(() => {
+            setQuestions([]);
+            setIsLoading(false);
+          });
+        },
+        onError: () => {
+          // Fallback: still try to fetch questions (maybe subtest was already started)
+          refetchExam().then((result) => {
+            if (result.data?.data?.questions) {
+              setQuestions(result.data.data.questions);
+              const preAnswers: Record<string, string | null> = {};
+              result.data.data.questions.forEach((q) => {
+                if (q.my_answer) preAnswers[q.id] = q.my_answer;
+              });
+              setAnswers(preAnswers);
+              if (result.data.data.timer) {
+                setTimerSeconds(result.data.data.timer.remaining_seconds);
+              }
+            } else {
+              setQuestions([]);
+              setTimerSeconds((currentSubtest?.duration || 30) * 60);
+            }
+            setIsLoading(false);
+          }).catch(() => {
+            setQuestions([]);
+            setTimerSeconds((currentSubtest?.duration || 30) * 60);
+            setIsLoading(false);
+          });
+        },
       }
-      setIsLoading(false);
-    } else {
-      // === BACKEND MODE ===
-      // Step 1: Start the subtest session (to get timer)
-      startSubtestMutation.mutate(
-        { tryoutId, subtestId: currentSubtest?.id || "" },
-        {
-          onSuccess: () => {
-            // Step 2: Fetch exam questions
-            refetchExam().then((result) => {
-              if (result.data?.data?.questions) {
-                setQuestions(result.data.data.questions);
-                // Pre-fill answers from BE (my_answer field)
-                const preAnswers: Record<string, string | null> = {};
-                result.data.data.questions.forEach((q) => {
-                  if (q.my_answer) preAnswers[q.id] = q.my_answer;
-                });
-                setAnswers(preAnswers);
-
-                // Use timer from BE data if available
-                if (result.data.data.timer) {
-                  setTimerSeconds(result.data.data.timer.remaining_seconds);
-                }
-              }
-              setIsLoading(false);
-            }).catch(() => {
-              // Fallback to mock if API fails
-              const qs = generateMockQuestions(currentSubtestIndex, currentSubtest?.questionCount || 20);
-              setQuestions(qs);
-              setTimerSeconds((currentSubtest?.duration || 30) * 60);
-              setIsLoading(false);
-            });
-          },
-          onError: () => {
-            // Fallback: still try to fetch questions (maybe subtest was already started)
-            refetchExam().then((result) => {
-              if (result.data?.data?.questions) {
-                setQuestions(result.data.data.questions);
-                const preAnswers: Record<string, string | null> = {};
-                result.data.data.questions.forEach((q) => {
-                  if (q.my_answer) preAnswers[q.id] = q.my_answer;
-                });
-                setAnswers(preAnswers);
-                if (result.data.data.timer) {
-                  setTimerSeconds(result.data.data.timer.remaining_seconds);
-                }
-              } else {
-                // Final fallback to mock
-                const qs = generateMockQuestions(currentSubtestIndex, currentSubtest?.questionCount || 20);
-                setQuestions(qs);
-                setTimerSeconds((currentSubtest?.duration || 30) * 60);
-              }
-              setIsLoading(false);
-            }).catch(() => {
-              const qs = generateMockQuestions(currentSubtestIndex, currentSubtest?.questionCount || 20);
-              setQuestions(qs);
-              setTimerSeconds((currentSubtest?.duration || 30) * 60);
-              setIsLoading(false);
-            });
-          },
-        }
-      );
-    }
-  }, [currentSubtestIndex, tryoutId, mode]);
-
-  // Save answers to localStorage in dummy mode
-  useEffect(() => {
-    if (mode === "dummy" && Object.keys(answers).length > 0) {
-      localStorage.setItem(`exam_answers_${tryoutId}_${currentSubtestIndex}`, JSON.stringify(answers));
-    }
-  }, [answers, mode, tryoutId, currentSubtestIndex]);
+    );
+  }, [currentSubtest?.id, tryoutId]);
 
   // --- Mutations ---
   const submitAnswerMutation = useSubmitAnswer({
@@ -203,13 +175,13 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   );
   const unansweredCount = questions.length - answeredQuestions.size;
 
-  // --- Handlers (IDENTICAL for both modes except API calls) ---
+  // --- Handlers ---
   const handleSelectAnswer = useCallback((answer: string | null) => {
     if (!currentQuestion) return;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
 
-    // In backend mode, also submit to API
-    if (mode === "backend" && currentSubtest) {
+    // Submit to API
+    if (currentSubtest) {
       submitAnswerMutation.mutate({
         tryoutId,
         subtestId: currentSubtest.id,
@@ -217,7 +189,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
         answer,
       });
     }
-  }, [currentQuestion, mode, currentSubtest, tryoutId]);
+  }, [currentQuestion, currentSubtest, tryoutId]);
 
   const navigateAfterSubtest = () => {
     const nextIndex = currentSubtestIndex + 1;
@@ -229,13 +201,12 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   };
 
   const handleTimeUp = useCallback(() => {
-    // Same for both modes: finish subtest, then navigate
-    if (mode === "backend" && currentSubtest) {
+    if (currentSubtest) {
       finishSubtestMutation.mutate({ tryoutId, subtestId: currentSubtest.id });
     } else {
       navigateAfterSubtest();
     }
-  }, [mode, currentSubtest, tryoutId, currentSubtestIndex, totalSubtests]);
+  }, [currentSubtest, tryoutId, currentSubtestIndex, totalSubtests]);
 
   const handleFinishSubtest = () => {
     setShowFinishDialog(true);
@@ -243,8 +214,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
 
   const confirmFinishSubtest = () => {
     setShowFinishDialog(false);
-    // Same for both modes: finish subtest, then navigate
-    if (mode === "backend" && currentSubtest) {
+    if (currentSubtest) {
       finishSubtestMutation.mutate({ tryoutId, subtestId: currentSubtest.id });
     } else {
       navigateAfterSubtest();

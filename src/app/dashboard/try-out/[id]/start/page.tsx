@@ -6,29 +6,10 @@ import { ChevronLeft, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useDataMode } from "@/components/providers/DataModeProvider";
 import { useStartTryout } from "@/http/tryout/start-tryout";
+import { useGetUserTryoutDetail } from "@/http/tryout/get-user-tryout-detail";
 import { toast } from "sonner";
-
-// Same mock data
-const MOCK_DATA = [
-  { id: "1", title: "Mini TO SNBT Episode 01" },
-  { id: "2", title: "Mini TO SNBT Episode 02" },
-  { id: "3", title: "Mini TO SNBT Episode 03" },
-];
-
-const SUBTESTS_TPS = [
-  { name: "Penalaran Umum", questions: 30 },
-  { name: "Pengetahuan & Pemahaman Umum", questions: 20 },
-  { name: "Pemahaman Bacaan & Menulis", questions: 20 },
-  { name: "Pengetahuan Kuantitatif", questions: 20 },
-];
-
-const SUBTESTS_LIT = [
-  { name: "Literasi Bahasa Indonesia", questions: 30 },
-  { name: "Literasi Bahasa Inggris", questions: 20 },
-  { name: "Penalaran Matematika", questions: 20 },
-];
+import type { SubtestByTryout } from "@/types/subtest/subtest";
 
 export default function TryoutStartPage({
   params,
@@ -39,16 +20,37 @@ export default function TryoutStartPage({
   const router = useRouter();
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
-  const { mode } = useDataMode();
 
   const [isChecked, setIsChecked] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
 
-  const currentTryout = MOCK_DATA.find(item => item.id === tryoutId) || MOCK_DATA[0];
+  // Fetch tryout detail from API
+  const { data: tryoutDetail, isLoading } = useGetUserTryoutDetail({
+    id: tryoutId,
+    token,
+  });
 
-  const totalQuestions = SUBTESTS_TPS.reduce((s, t) => s + t.questions, 0) + SUBTESTS_LIT.reduce((s, t) => s + t.questions, 0);
-  const totalDuration = 195; // minutes
+  const tryout = tryoutDetail?.data;
+  const tryoutTitle = tryout?.title || "Tryout";
+
+  // Parse subtests from API
+  const allSubtests = (tryout?.tryout_subtests || [])
+    .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
+    .map((ts: SubtestByTryout) => ({
+      name: ts.subtest.name,
+      questions: ts.subtest.max_questions,
+      duration: ts.duration_minutes,
+      category: ts.subtest.category,
+    }));
+
+  const subtestsTPS = allSubtests.filter((s: any) => s.category === "TPS");
+  const subtestsLIT = allSubtests.filter((s: any) => s.category === "Literasi");
+
+  const totalQuestions = allSubtests.reduce((s: number, t: any) => s + t.questions, 0);
+  const totalDuration = allSubtests.reduce((s: number, t: any) => s + t.duration, 0);
+  const tpsDuration = subtestsTPS.reduce((s: number, t: any) => s + t.duration, 0);
+  const litDuration = subtestsLIT.reduce((s: number, t: any) => s + t.duration, 0);
 
   const startTryoutMutation = useStartTryout({
     token,
@@ -67,14 +69,16 @@ export default function TryoutStartPage({
   const handleStartExam = async () => {
     setIsConfirmOpen(false);
     setIsStarting(true);
-
-    if (mode === "backend") {
-      startTryoutMutation.mutate(tryoutId);
-    } else {
-      // Dummy mode: direct navigation
-      router.push(`/dashboard/try-out/${tryoutId}/exam`);
-    }
+    startTryoutMutation.mutate(tryoutId);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB]" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-in fade-in duration-500 pb-12 bg-white min-h-screen">
@@ -95,7 +99,7 @@ export default function TryoutStartPage({
 
         {/* Title & Meta */}
         <div className="text-center space-y-4">
-          <h3 className="text-xl font-bold text-gray-900">{currentTryout.title}</h3>
+          <h3 className="text-xl font-bold text-gray-900">{tryoutTitle}</h3>
           <div className="flex items-center justify-center gap-4 text-xs md:text-sm text-[#004AAB] font-semibold">
             <div className="flex items-center gap-1.5">
               <span className="text-gray-500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
@@ -111,37 +115,41 @@ export default function TryoutStartPage({
 
         {/* Subtests Box */}
         <div className="border border-gray-200 rounded-xl p-6 md:p-8 space-y-8">
-          <div className="space-y-3">
-            <h4 className="font-bold text-gray-900 text-lg">Tes Potensi Skolastik (TPS)</h4>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>Jumlah Soal : {SUBTESTS_TPS.reduce((s, t) => s + t.questions, 0)} Soal</p>
-              <p>Durasi : 90 menit</p>
+          {subtestsTPS.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-bold text-gray-900 text-lg">Tes Potensi Skolastik (TPS)</h4>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>Jumlah Soal : {subtestsTPS.reduce((s: number, t: any) => s + t.questions, 0)} Soal</p>
+                <p>Durasi : {tpsDuration} menit</p>
+              </div>
+              <div className="pt-2">
+                <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
+                <ul className="text-sm text-gray-600 space-y-1.5">
+                  {subtestsTPS.map((s: any) => (
+                    <li key={s.name}>• {s.name} : {s.questions} soal</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className="pt-2">
-              <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
-              <ul className="text-sm text-gray-600 space-y-1.5">
-                {SUBTESTS_TPS.map(s => (
-                  <li key={s.name}>• {s.name} : {s.questions} soal</li>
-                ))}
-              </ul>
+          )}
+          {subtestsTPS.length > 0 && subtestsLIT.length > 0 && <hr className="border-gray-100" />}
+          {subtestsLIT.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-bold text-gray-900 text-lg">Tes Literasi</h4>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>Jumlah Soal : {subtestsLIT.reduce((s: number, t: any) => s + t.questions, 0)} Soal</p>
+                <p>Durasi : {litDuration} menit</p>
+              </div>
+              <div className="pt-2">
+                <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
+                <ul className="text-sm text-gray-600 space-y-1.5">
+                  {subtestsLIT.map((s: any) => (
+                    <li key={s.name}>• {s.name} : {s.questions} soal</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-          <hr className="border-gray-100" />
-          <div className="space-y-3">
-            <h4 className="font-bold text-gray-900 text-lg">Tes Literasi</h4>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>Jumlah Soal : {SUBTESTS_LIT.reduce((s, t) => s + t.questions, 0)} Soal</p>
-              <p>Durasi : 105 menit</p>
-            </div>
-            <div className="pt-2">
-              <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
-              <ul className="text-sm text-gray-600 space-y-1.5">
-                {SUBTESTS_LIT.map(s => (
-                  <li key={s.name}>• {s.name} : {s.questions} soal</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Rules */}

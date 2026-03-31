@@ -6,12 +6,12 @@ import { ChevronLeft, X, CheckCircle2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetDetailPackage } from "@/http/pembelian/get-detail-package";
-import { useDataMode } from "@/components/providers/DataModeProvider";
+import { useCreateOrder } from "@/http/pembelian/create-order";
+import { toast } from "sonner";
 
 export default function DetailPaketPage() {
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
-  const { mode } = useDataMode();
 
   const params = useParams();
   const pkgId = params?.id as string;
@@ -23,6 +23,23 @@ export default function DetailPaketPage() {
   const [referral, setReferral] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const createOrderMutation = useCreateOrder({
+    token,
+    options: {
+      onSuccess: (data) => {
+        // If snap_token is available, could integrate Midtrans here
+        // For now, show success
+        setDialogState("success");
+        setIsProcessing(false);
+      },
+      onError: (error: any) => {
+        const msg = error?.response?.data?.message || "Gagal memproses pembayaran";
+        toast.error(msg);
+        setIsProcessing(false);
+      },
+    },
+  });
+
   if (isLoading || !pkg) {
     return <div className="p-10 text-center text-slate-500">Memuat detail paket...</div>;
   }
@@ -30,23 +47,8 @@ export default function DetailPaketPage() {
   const discountAmount = pkg.originalPrice - pkg.price;
 
   const handlePayment = async () => {
-    if (mode === "backend") {
-      // In backend mode, would call POST /orders to get snap_token
-      // Since Midtrans client key isn't configured yet, simulate the flow
-      setIsProcessing(true);
-      try {
-        // Mock: simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setDialogState("success");
-      } catch {
-        alert("Gagal memproses pembayaran");
-      } finally {
-        setIsProcessing(false);
-      }
-    } else {
-      // Dummy mode: direct success
-      setDialogState("success");
-    }
+    setIsProcessing(true);
+    createOrderMutation.mutate({ package_id: pkgId });
   };
 
   return (
@@ -169,11 +171,11 @@ export default function DetailPaketPage() {
         </div>
       )}
 
-      {/* 2. Mock Midtrans Dialog */}
+      {/* 2. Payment Methods Dialog */}
       {dialogState === "midtrans" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200 p-4">
           <div className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col font-sans">
-            {/* Midtrans Header */}
+            {/* Header */}
             <div className="bg-[#002f6c] text-white p-4 flex flex-col gap-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">

@@ -2,69 +2,14 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, FileText, Clock, Ticket, Upload, ImageIcon } from "lucide-react";
+import { ChevronLeft, FileText, Clock, Ticket, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useDataMode } from "@/components/providers/DataModeProvider";
 import { useTickets } from "@/hooks/useTickets";
-import { useRegisteredTryouts } from "@/hooks/useRegisteredTryouts";
+import { useEnrollTryout } from "@/http/tryout/enroll-tryout";
+import { useGetUserTryoutDetail } from "@/http/tryout/get-user-tryout-detail";
 import { toast } from "sonner";
-
-// Mock data
-const MOCK_TRYOUT_DATA = [
-  {
-    id: "1",
-    title: "Mini TO SNBT Episode 01",
-    type: "Gratis" as const,
-    startDate: "2026-04-01T00:00:00",
-    endDate: "2026-04-07T23:59:59",
-    description: "Mini tryout SNBT episode pertama untuk mempersiapkan siswa menghadapi UTBK SNBT.",
-    subtests: [
-      { name: "Penalaran Umum", questions: 30, duration: 30, category: "TPS" },
-      { name: "Pengetahuan & Pemahaman Umum", questions: 20, duration: 20, category: "TPS" },
-      { name: "Pemahaman Bacaan & Menulis", questions: 20, duration: 20, category: "TPS" },
-      { name: "Pengetahuan Kuantitatif", questions: 20, duration: 20, category: "TPS" },
-      { name: "Literasi Bahasa Indonesia", questions: 30, duration: 30, category: "Literasi" },
-      { name: "Literasi Bahasa Inggris", questions: 20, duration: 25, category: "Literasi" },
-      { name: "Penalaran Matematika", questions: 20, duration: 30, category: "Literasi" },
-    ],
-  },
-  {
-    id: "2",
-    title: "Mini TO SNBT Episode 02",
-    type: "Premium" as const,
-    startDate: "2026-04-08T00:00:00",
-    endDate: "2026-04-14T23:59:59",
-    description: "Mini tryout SNBT episode kedua. Akses premium diperlukan.",
-    subtests: [
-      { name: "Penalaran Umum", questions: 30, duration: 30, category: "TPS" },
-      { name: "Pengetahuan & Pemahaman Umum", questions: 20, duration: 20, category: "TPS" },
-      { name: "Pemahaman Bacaan & Menulis", questions: 20, duration: 20, category: "TPS" },
-      { name: "Pengetahuan Kuantitatif", questions: 20, duration: 20, category: "TPS" },
-      { name: "Literasi Bahasa Indonesia", questions: 30, duration: 30, category: "Literasi" },
-      { name: "Literasi Bahasa Inggris", questions: 20, duration: 25, category: "Literasi" },
-      { name: "Penalaran Matematika", questions: 20, duration: 30, category: "Literasi" },
-    ],
-  },
-  {
-    id: "3",
-    title: "Mini TO SNBT Episode 03",
-    type: "Gratis" as const,
-    startDate: "2026-04-15T00:00:00",
-    endDate: "2026-04-21T23:59:59",
-    description: "Mini tryout SNBT episode ketiga.",
-    subtests: [
-      { name: "Penalaran Umum", questions: 30, duration: 30, category: "TPS" },
-      { name: "Pengetahuan & Pemahaman Umum", questions: 20, duration: 20, category: "TPS" },
-      { name: "Pemahaman Bacaan & Menulis", questions: 20, duration: 20, category: "TPS" },
-      { name: "Pengetahuan Kuantitatif", questions: 20, duration: 20, category: "TPS" },
-      { name: "Literasi Bahasa Indonesia", questions: 30, duration: 30, category: "Literasi" },
-      { name: "Literasi Bahasa Inggris", questions: 20, duration: 25, category: "Literasi" },
-      { name: "Penalaran Matematika", questions: 20, duration: 30, category: "Literasi" },
-    ],
-  },
-];
+import type { SubtestByTryout } from "@/types/subtest/subtest";
 
 export default function TryoutDetailPage({
   params,
@@ -73,61 +18,66 @@ export default function TryoutDetailPage({
 }) {
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
-  const { mode } = useDataMode();
-  const { ticketCount, deductTicket } = useTickets();
-  const { checkIsRegistered, registerTryout } = useRegisteredTryouts();
+  const token = (session?.user as any)?.access_token || "";
+  const { ticketCount } = useTickets();
 
-  const [isEnrolled, setIsEnrolled] = useState(false);
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [proofImage, setProofImage] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
 
-  const mockData = MOCK_TRYOUT_DATA.find(item => item.id === tryoutId) || MOCK_TRYOUT_DATA[0];
-  const tryoutTitle = mockData.title;
-  const tryoutType = mockData.type;
-  const isFree = tryoutType === "Gratis";
-  const subtests = mockData.subtests;
+  // Fetch tryout detail from API
+  const { data: tryoutDetail, isLoading } = useGetUserTryoutDetail({
+    id: tryoutId,
+    token,
+  });
+
+  const tryout = tryoutDetail?.data;
+  const tryoutTitle = tryout?.title || "";
+  const isFree = tryout?.is_free ?? true;
+  const tryoutType = isFree ? "Gratis" : "Premium";
+
+  // Parse subtests from API data
+  const subtests = (tryout?.tryout_subtests || [])
+    .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
+    .map((ts: SubtestByTryout) => ({
+      name: ts.subtest.name,
+      questions: ts.subtest.max_questions,
+      duration: ts.duration_minutes,
+      category: ts.subtest.category,
+    }));
 
   // Calculate totals  
-  const tpsSubtests = subtests.filter(s => s.category === "TPS");
-  const litSubtests = subtests.filter(s => s.category === "Literasi");
-  const totalQuestions = subtests.reduce((sum, s) => sum + s.questions, 0);
-  const totalDuration = subtests.reduce((sum, s) => sum + s.duration, 0);
-  const tpsQuestions = tpsSubtests.reduce((sum, s) => sum + s.questions, 0);
-  const tpsDuration = tpsSubtests.reduce((sum, s) => sum + s.duration, 0);
-  const litQuestions = litSubtests.reduce((sum, s) => sum + s.questions, 0);
-  const litDuration = litSubtests.reduce((sum, s) => sum + s.duration, 0);
+  const tpsSubtests = subtests.filter((s: any) => s.category === "TPS");
+  const litSubtests = subtests.filter((s: any) => s.category === "Literasi");
+  const totalQuestions = subtests.reduce((sum: number, s: any) => sum + s.questions, 0);
+  const totalDuration = subtests.reduce((sum: number, s: any) => sum + s.duration, 0);
+  const tpsQuestions = tpsSubtests.reduce((sum: number, s: any) => sum + s.questions, 0);
+  const tpsDuration = tpsSubtests.reduce((sum: number, s: any) => sum + s.duration, 0);
+  const litQuestions = litSubtests.reduce((sum: number, s: any) => sum + s.questions, 0);
+  const litDuration = litSubtests.reduce((sum: number, s: any) => sum + s.duration, 0);
 
-  useEffect(() => {
-    if (mode === "dummy") {
-      setIsEnrolled(checkIsRegistered(tryoutId));
-    }
-  }, [mode, tryoutId, checkIsRegistered]);
-
-  const handleEnroll = () => {
-    if (isFree) {
-      // Free tryout - need proof image
-      if (mode === "dummy") {
-        registerTryout(tryoutId);
-        setIsEnrolled(true);
+  // Enroll mutation
+  const enrollMutation = useEnrollTryout({
+    token,
+    options: {
+      onSuccess: () => {
         setShowEnrollDialog(false);
         setProofImage(null);
         setProofPreview(null);
-        toast.success("Berhasil mendaftar tryout!");
-      }
-    } else {
-      // Premium tryout - need ticket
-      if (mode === "dummy") {
-        if (deductTicket(1)) {
-          registerTryout(tryoutId);
-          setIsEnrolled(true);
-          setShowEnrollDialog(false);
-          toast.success("Tiket berhasil digunakan! Kamu terdaftar untuk tryout ini.");
-        } else {
-          toast.error("Tiket tidak cukup! Silakan beli tiket terlebih dahulu.");
-        }
-      }
-    }
+        toast.success(isFree ? "Berhasil mendaftar tryout!" : "Tiket berhasil digunakan! Kamu terdaftar untuk tryout ini.");
+      },
+      onError: (error: any) => {
+        const msg = error?.response?.data?.message || "Gagal mendaftar tryout";
+        toast.error(msg);
+      },
+    },
+  });
+
+  const handleEnroll = () => {
+    enrollMutation.mutate({
+      tryoutId,
+      proofImage: isFree ? proofImage || undefined : undefined,
+    });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,6 +89,25 @@ export default function TryoutDetailPage({
       reader.readAsDataURL(file);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB]" />
+      </div>
+    );
+  }
+
+  if (!tryout) {
+    return (
+      <div className="w-full max-w-3xl mx-auto py-12 px-4 text-center">
+        <p className="text-gray-500">Tryout tidak ditemukan.</p>
+        <Link href="/dashboard/try-out" className="text-[#004AAB] font-semibold mt-4 inline-block">
+          ← Kembali
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-in fade-in duration-500 pb-12 bg-white min-h-screen">
@@ -176,59 +145,54 @@ export default function TryoutDetailPage({
         {/* Subtests Info */}
         <div className="border border-gray-200 rounded-xl p-6 md:p-8 space-y-8">
           {/* TPS */}
-          <div className="space-y-3">
-            <h4 className="font-bold text-gray-900 text-lg">Tes Potensi Skolastik (TPS)</h4>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>Jumlah Soal : {tpsQuestions} Soal</p>
-              <p>Durasi : {tpsDuration} menit</p>
+          {tpsSubtests.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-bold text-gray-900 text-lg">Tes Potensi Skolastik (TPS)</h4>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>Jumlah Soal : {tpsQuestions} Soal</p>
+                <p>Durasi : {tpsDuration} menit</p>
+              </div>
+              <div className="pt-2">
+                <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
+                <ul className="text-sm text-gray-600 space-y-1.5">
+                  {tpsSubtests.map((s: any) => (
+                    <li key={s.name}>• {s.name} : {s.questions} soal</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className="pt-2">
-              <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
-              <ul className="text-sm text-gray-600 space-y-1.5">
-                {tpsSubtests.map((s) => (
-                  <li key={s.name}>• {s.name} : {s.questions} soal</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          )}
 
-          <hr className="border-gray-100" />
+          {tpsSubtests.length > 0 && litSubtests.length > 0 && <hr className="border-gray-100" />}
 
           {/* Literasi */}
-          <div className="space-y-3">
-            <h4 className="font-bold text-gray-900 text-lg">Tes Literasi</h4>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>Jumlah Soal : {litQuestions} Soal</p>
-              <p>Durasi : {litDuration} menit</p>
+          {litSubtests.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-bold text-gray-900 text-lg">Tes Literasi</h4>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>Jumlah Soal : {litQuestions} Soal</p>
+                <p>Durasi : {litDuration} menit</p>
+              </div>
+              <div className="pt-2">
+                <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
+                <ul className="text-sm text-gray-600 space-y-1.5">
+                  {litSubtests.map((s: any) => (
+                    <li key={s.name}>• {s.name} : {s.questions} soal</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className="pt-2">
-              <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
-              <ul className="text-sm text-gray-600 space-y-1.5">
-                {litSubtests.map((s) => (
-                  <li key={s.name}>• {s.name} : {s.questions} soal</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Action Button */}
         <div className="pt-4">
-          {isEnrolled ? (
-            <Link 
-              href={`/dashboard/try-out/${tryoutId}/start`}
-              className="w-full block py-3.5 rounded-xl font-bold text-sm text-center bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
-            >
-              Mulai Tryout
-            </Link>
-          ) : (
-            <button 
-              onClick={() => setShowEnrollDialog(true)}
-              className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
-            >
-              {isFree ? "Daftar Tryout (Gratis)" : `Daftar Tryout (1 Tiket)`}
-            </button>
-          )}
+          <button 
+            onClick={() => setShowEnrollDialog(true)}
+            className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
+          >
+            {isFree ? "Daftar Tryout (Gratis)" : `Daftar Tryout (1 Tiket)`}
+          </button>
         </div>
       </div>
 
@@ -293,10 +257,10 @@ export default function TryoutDetailPage({
               </button>
               <button
                 onClick={handleEnroll}
-                disabled={isFree && !proofImage && mode === "backend"}
+                disabled={enrollMutation.isPending || (isFree && !proofImage)}
                 className="flex-1 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
               >
-                {isFree ? "Daftar Sekarang" : "Gunakan Tiket"}
+                {enrollMutation.isPending ? "Memproses..." : isFree ? "Daftar Sekarang" : "Gunakan Tiket"}
               </button>
             </div>
           </div>

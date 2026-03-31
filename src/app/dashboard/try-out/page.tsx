@@ -32,7 +32,7 @@ export default function TryoutPage() {
       (activeFilter === "Semua Tryout" ||
         (activeFilter === "Tryout Premium" && item.type === "Premium") ||
         (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
-        activeFilter === "Terdaftar") // for Terdaftar we'll just show all in this mock
+        activeFilter === "Terdaftar")
   );
 
   return (

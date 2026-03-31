@@ -4,34 +4,8 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2, XCircle, MinusCircle, MessageSquareText } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useDataMode } from "@/components/providers/DataModeProvider";
 import { useGetTryoutReview } from "@/http/tryout/get-tryout-review";
 import type { ReviewQuestion } from "@/types/exam/exam";
-
-// Mock review for dummy mode
-const MOCK_REVIEW: ReviewQuestion[] = Array.from({ length: 10 }, (_, i) => ({
-  question_id: `q-${i + 1}`,
-  subtest: { id: "s1", name: i < 5 ? "Penalaran Umum" : "Pengetahuan & Pemahaman Umum" },
-  question: {
-    id: `q-${i + 1}`,
-    question_text: `Soal ${i + 1}: Ini adalah contoh soal review untuk latihan tryout. Pilih jawaban yang paling tepat.`,
-    question_image: null,
-    question_image_url: null,
-    discussion: `Jawaban yang benar adalah ${["A","B","C"][i % 3]}. Penjelasan: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna.`,
-    discussion_image: null,
-    discussion_image_url: null,
-    correct_answer: ["A","B","C"][i % 3],
-    options: [
-      { id: `o-${i}-a`, option_key: "A", option_text: `Pilihan A soal ${i + 1}` },
-      { id: `o-${i}-b`, option_key: "B", option_text: `Pilihan B soal ${i + 1}` },
-      { id: `o-${i}-c`, option_key: "C", option_text: `Pilihan C soal ${i + 1}` },
-      { id: `o-${i}-d`, option_key: "D", option_text: `Pilihan D soal ${i + 1}` },
-      { id: `o-${i}-e`, option_key: "E", option_text: `Pilihan E soal ${i + 1}` },
-    ],
-  },
-  my_answer: i % 4 === 3 ? null : ["A","B","C","D"][i % 4],
-  is_correct: i % 4 === 3 ? null : ["A","B","C"][i % 3] === ["A","B","C","D"][i % 4],
-}));
 
 export default function ReviewPage({
   params,
@@ -41,23 +15,20 @@ export default function ReviewPage({
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
-  const { mode } = useDataMode();
   const [selectedSubtest, setSelectedSubtest] = useState<string>("all");
 
   const { data: beReview, isLoading } = useGetTryoutReview({
     tryoutId,
     token,
-    options: { enabled: mode === "backend" },
   });
 
-  const reviewItems = mode === "backend" ? beReview?.data?.review || [] : MOCK_REVIEW;
-  const isLoadingData = mode === "backend" && isLoading;
+  const reviewItems = beReview?.data?.review || [];
 
   // Group subtests
   const subtestNames = Array.from(new Set(reviewItems.map((r) => r.subtest.name)));
   const filteredItems = selectedSubtest === "all" ? reviewItems : reviewItems.filter((r) => r.subtest.name === selectedSubtest);
 
-  if (isLoadingData) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB]" />

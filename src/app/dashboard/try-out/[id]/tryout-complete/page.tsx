@@ -3,7 +3,6 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useDataMode } from "@/components/providers/DataModeProvider";
 import { useFinishTryout } from "@/http/tryout/finish-tryout";
 import { Calendar, FileText, Clock } from "lucide-react";
 
@@ -15,7 +14,6 @@ export default function TryoutCompletePage({
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
-  const { mode } = useDataMode();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const finishTryoutMutation = useFinishTryout({
@@ -28,14 +26,12 @@ export default function TryoutCompletePage({
 
   // Auto-submit tryout on mount
   useEffect(() => {
-    if (mode === "backend" && !isSubmitted) {
+    if (!isSubmitted) {
       finishTryoutMutation.mutate(tryoutId);
-    } else {
-      setIsSubmitted(true);
     }
   }, []); // eslint-disable-line
 
-  // Calculate mock result release date (15 days from now)
+  // Calculate result release date (15 days from now)
   const releaseDate = new Date();
   releaseDate.setDate(releaseDate.getDate() + 15);
   const releaseDateStr = releaseDate.toLocaleDateString("id-ID", {
@@ -45,9 +41,8 @@ export default function TryoutCompletePage({
     day: "numeric",
   });
 
-  // Mock elapsed time
-  const elapsedTime = "02:45:12";
-  const totalQuestions = 160;
+  const elapsedTime = "—";
+  const totalQuestions = "—";
 
   return (
     <div className="w-full max-w-3xl mx-auto animate-in fade-in duration-500 py-8 px-4">

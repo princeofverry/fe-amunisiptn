@@ -1,34 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { ChevronLeft, Trophy, Target, CheckCircle2, XCircle, MinusCircle, Clock, BarChart3 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useDataMode } from "@/components/providers/DataModeProvider";
 import { useGetTryoutResult } from "@/http/tryout/get-tryout-result";
-
-// Mock result for dummy mode
-const MOCK_RESULT = {
-  tryout_id: "1",
-  tryout_title: "Mini TO SNBT Episode 01",
-  status: "finished",
-  started_at: "2026-04-01T10:00:00",
-  finished_at: "2026-04-01T13:15:00",
-  summary: {
-    total_questions: 160,
-    answered: 145,
-    correct: 98,
-    wrong: 47,
-    unanswered: 15,
-  },
-  irt_result: {
-    is_ready: true,
-    release_date: null,
-    total_participants_calculated: 250,
-    raw_score: 680,
-    final_score: 715,
-  },
-};
 
 export default function ResultPage({
   params,
@@ -38,18 +14,15 @@ export default function ResultPage({
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
-  const { mode } = useDataMode();
 
   const { data: beResult, isLoading } = useGetTryoutResult({
     tryoutId,
     token,
-    options: { enabled: mode === "backend" },
   });
 
-  const result = mode === "backend" ? beResult?.data : MOCK_RESULT;
-  const isLoadingData = mode === "backend" ? isLoading : false;
+  const result = beResult?.data;
 
-  if (isLoadingData) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB]" />
