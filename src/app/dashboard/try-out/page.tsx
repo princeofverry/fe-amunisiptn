@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, History, Search } from "lucide-react";
+import { ChevronLeft, History, Search, KeyRound } from "lucide-react";
 import Link from "next/link";
 import TryoutCard from "@/components/molecules/card/TryoutCard";
 import { useSession } from "next-auth/react";
 import { useGetUserTryouts } from "@/http/tryout/get-user-tryouts";
+import DialogRedeemCode from "@/components/molecules/dialog/DialogRedeemCode";
 
 const FILTER_OPTIONS = [
   "Semua Tryout",
@@ -20,6 +21,7 @@ export default function TryoutPage() {
 
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showRedeemDialog, setShowRedeemDialog] = useState(false);
 
   const { data: tryoutsData, isLoading } = useGetUserTryouts({ token });
   const tryouts = tryoutsData?.data || [];
@@ -30,7 +32,7 @@ export default function TryoutPage() {
       (activeFilter === "Semua Tryout" ||
         (activeFilter === "Tryout Premium" && item.type === "Premium") ||
         (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
-        activeFilter === "Terdaftar") // for Terdaftar we'll just show all in this mock
+        activeFilter === "Terdaftar")
   );
 
   return (
@@ -53,14 +55,23 @@ export default function TryoutPage() {
           </p>
         </div>
 
-        {/* History Button */}
-        <Link 
-          href="/dashboard/try-out/riwayat"
-          className="flex items-center gap-2 bg-[#3C8D60] hover:bg-[#327851] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit md:mt-0"
-        >
-          <History className="w-4 h-4" />
-          <span>Riwayat TO</span>
-        </Link>
+        {/* Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowRedeemDialog(true)}
+            className="flex items-center gap-2 bg-[#004AAB] hover:bg-[#003B8A] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit"
+          >
+            <KeyRound className="w-4 h-4" />
+            <span>Kode Akses</span>
+          </button>
+          <Link 
+            href="/dashboard/try-out/riwayat"
+            className="flex items-center gap-2 bg-[#3C8D60] hover:bg-[#327851] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit md:mt-0"
+          >
+            <History className="w-4 h-4" />
+            <span>Riwayat TO</span>
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -114,6 +125,10 @@ export default function TryoutPage() {
           <p>Tidak ada tryout yang ditemukan.</p>
         </div>
       )}
+
+      {/* Redeem Code Dialog */}
+      <DialogRedeemCode open={showRedeemDialog} onOpenChange={setShowRedeemDialog} />
     </div>
   );
 }
+

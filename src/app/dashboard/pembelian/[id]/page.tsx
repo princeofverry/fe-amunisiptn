@@ -6,26 +6,50 @@ import { ChevronLeft, X, CheckCircle2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetDetailPackage } from "@/http/pembelian/get-detail-package";
+import { useCreateOrder } from "@/http/pembelian/create-order";
+import { toast } from "sonner";
 
 export default function DetailPaketPage() {
   const { data: session } = useSession();
   const token = (session?.user as any)?.access_token || "";
 
   const params = useParams();
-  const idStr = params?.id as string;
-  const pkgId = idStr ? parseInt(idStr, 10) : 1;
+  const pkgId = params?.id as string;
   
   const { data, isLoading } = useGetDetailPackage({ id: pkgId, token });
   const pkg = data?.data;
 
   const [dialogState, setDialogState] = useState<"none" | "summary" | "midtrans" | "success">("none");
   const [referral, setReferral] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const createOrderMutation = useCreateOrder({
+    token,
+    options: {
+      onSuccess: (data) => {
+        // If snap_token is available, could integrate Midtrans here
+        // For now, show success
+        setDialogState("success");
+        setIsProcessing(false);
+      },
+      onError: (error: any) => {
+        const msg = error?.response?.data?.message || "Gagal memproses pembayaran";
+        toast.error(msg);
+        setIsProcessing(false);
+      },
+    },
+  });
 
   if (isLoading || !pkg) {
     return <div className="p-10 text-center text-slate-500">Memuat detail paket...</div>;
   }
 
   const discountAmount = pkg.originalPrice - pkg.price;
+
+  const handlePayment = async () => {
+    setIsProcessing(true);
+    createOrderMutation.mutate({ package_id: pkgId });
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 relative min-h-screen">
@@ -57,14 +81,25 @@ export default function DetailPaketPage() {
               <span className="font-bold text-2xl text-[#004AAB]">
                 Rp{pkg.price.toLocaleString("id-ID")}
               </span>
-              <span className="text-sm font-medium text-slate-500 line-through">
-                Rp{pkg.originalPrice.toLocaleString("id-ID")}
-              </span>
+              {discountAmount > 0 && (
+                <span className="text-sm font-medium text-slate-500 line-through">
+                  Rp{pkg.originalPrice.toLocaleString("id-ID")}
+                </span>
+              )}
             </div>
-            <div className="bg-[#EBF4FF] text-[#004AAB] px-4 py-1.5 rounded-sm text-sm font-bold">
-              Diskon {pkg.discount}
-            </div>
+            {pkg.discount !== "0%" && (
+              <div className="bg-[#EBF4FF] text-[#004AAB] px-4 py-1.5 rounded-sm text-sm font-bold">
+                Diskon {pkg.discount}
+              </div>
+            )}
           </div>
+
+          {pkg.ticketAmount && (
+            <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+              <span>🎫</span>
+              <span>Berisi <strong>{pkg.ticketAmount} tiket</strong> tryout premium</span>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <h4 className="font-bold text-slate-800 text-sm">Deskripsi:</h4>
@@ -82,8 +117,6 @@ export default function DetailPaketPage() {
         </button>
 
       </div>
-
-      {/* Modals/Dialogs Area */}
 
       {/* 1. Pembayaran Summary Dialog */}
       {dialogState === "summary" && (
@@ -103,10 +136,12 @@ export default function DetailPaketPage() {
                   <span className="text-gray-600">{pkg.title}</span>
                   <span className="font-medium">Rp{pkg.originalPrice.toLocaleString("id-ID")}</span>
                 </div>
-                <div className="flex justify-between items-center text-red-500">
-                  <span>Potongan Harga</span>
-                  <span>-Rp{discountAmount.toLocaleString("id-ID")}</span>
-                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-red-500">
+                    <span>Potongan Harga</span>
+                    <span>-Rp{discountAmount.toLocaleString("id-ID")}</span>
+                  </div>
+                )}
                 <div className="w-full h-px bg-gray-200 my-2"></div>
                 <div className="flex justify-between items-center font-bold text-black">
                   <span>Total Pembayaran</span>
@@ -136,11 +171,11 @@ export default function DetailPaketPage() {
         </div>
       )}
 
-      {/* 2. Mock Midtrans Dialog */}
+      {/* 2. Payment Methods Dialog */}
       {dialogState === "midtrans" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200 p-4">
           <div className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col font-sans">
-            {/* Midtrans Header */}
+            {/* Header */}
             <div className="bg-[#002f6c] text-white p-4 flex flex-col gap-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
@@ -153,7 +188,7 @@ export default function DetailPaketPage() {
               <div className="flex items-end justify-between">
                 <div className="flex flex-col">
                   <span className="font-bold text-xl">Rp{pkg.price.toLocaleString("id-ID")}</span>
-                  <span className="text-xs text-white/70">Order ID: #Amunisi-{pkg.id}-{Math.floor(Math.random() * 10000)}</span>
+                  <span className="text-xs text-white/70">Order ID: #Amunisi-{pkg.id}</span>
                 </div>
                 <span className="text-xs text-[#00aaff] cursor-pointer">Details ▼</span>
               </div>
@@ -167,49 +202,32 @@ export default function DetailPaketPage() {
             <div className="flex flex-col overflow-y-auto max-h-[400px] p-2 bg-white">
               <div className="p-3 text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">All payment methods</div>
               
-              {/* Payment Option Row */}
-              <button 
-                onClick={() => setDialogState("success")}
-                className="flex items-center justify-between p-4 hover:bg-slate-50 border-b border-gray-100 text-left transition-colors"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold text-slate-800 text-sm">Virtual account</span>
-                  <div className="flex gap-2">
-                    <span className="w-6 h-4 bg-blue-600 rounded-sm inline-block"></span>
-                    <span className="w-6 h-4 bg-orange-500 rounded-sm inline-block"></span>
-                    <span className="w-6 h-4 bg-green-500 rounded-sm inline-block"></span>
+              {[
+                { label: "Virtual account", colors: ["bg-blue-600", "bg-orange-500", "bg-green-500"] },
+                { label: "QRIS", colors: [] },
+                { label: "Credit/debit card", colors: ["bg-blue-800", "bg-red-500"] },
+              ].map((method) => (
+                <button 
+                  key={method.label}
+                  onClick={handlePayment}
+                  disabled={isProcessing}
+                  className="flex items-center justify-between p-4 hover:bg-slate-50 border-b border-gray-100 text-left transition-colors disabled:opacity-50"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="font-bold text-slate-800 text-sm">{method.label}</span>
+                    <div className="flex gap-2">
+                      {method.label === "QRIS" ? (
+                        <span className="text-[10px] font-bold text-red-600 border border-red-200 px-1 rounded">QRIS</span>
+                      ) : (
+                        method.colors.map((c, i) => (
+                          <span key={i} className={`w-6 h-4 ${c} rounded-sm inline-block`}></span>
+                        ))
+                      )}
+                    </div>
                   </div>
-                </div>
-                <span className="text-slate-400">›</span>
-              </button>
-
-              <button 
-                onClick={() => setDialogState("success")}
-                className="flex items-center justify-between p-4 hover:bg-slate-50 border-b border-gray-100 text-left transition-colors"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold text-slate-800 text-sm">QRIS</span>
-                  <div className="flex gap-2">
-                    <span className="text-[10px] font-bold text-red-600 border border-red-200 px-1 rounded">QRIS</span>
-                  </div>
-                </div>
-                <span className="text-slate-400">›</span>
-              </button>
-
-              <button 
-                onClick={() => setDialogState("success")}
-                className="flex items-center justify-between p-4 hover:bg-slate-50 text-left transition-colors"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold text-slate-800 text-sm">Credit/debit card</span>
-                  <div className="flex gap-2">
-                    <span className="w-6 h-4 bg-blue-800 rounded-sm inline-block"></span>
-                    <span className="w-6 h-4 bg-red-500 rounded-sm inline-block"></span>
-                  </div>
-                </div>
-                <span className="text-slate-400">›</span>
-              </button>
-
+                  <span className="text-slate-400">{isProcessing ? "..." : "›"}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -232,7 +250,6 @@ export default function DetailPaketPage() {
             <button 
               onClick={() => {
                 setDialogState("none");
-                // In real app, might redirect to riwayat or tryout here
               }}
               className="w-full mt-4 py-3 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold rounded-lg transition-colors"
             >

@@ -27,7 +27,7 @@ export default function PembelianPage() {
   const filteredPackages = packages.filter((pkg) => {
     const matchesSearch = pkg.title.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Simple filter logic mapping category to keyword since dummy data doesn't have explicit category
+    // Simple filter logic mapping category to keyword
     let matchesCategory = true;
     if (activeCategory === "Paket Try Out") matchesCategory = pkg.title.toLowerCase().includes("try out");
     if (activeCategory === "Paket Live Class") matchesCategory = pkg.title.toLowerCase().includes("live class");
