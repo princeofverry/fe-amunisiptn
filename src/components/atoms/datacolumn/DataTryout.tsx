@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Eye, SquarePen } from "lucide-react";
 
 import ActionButton from "@/components/molecules/datatable/ActionButton";
 import {
@@ -94,6 +94,16 @@ export const tryoutColumns: ColumnDef<Tryout>[] = [
             >
               <Eye className="h-4 w-4 text-gray-700" />
               <span className="ml-2">Detail</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/dashboard/admin/try-out/${data.id}/edit`}
+              className="flex items-center text-yellow-700 hover:underline hover:text-yellow-900"
+            >
+              <SquarePen className="h-4 w-4 text-yellow-700 hover:text-yellow-900" />
+              <span className="ml-2">Edit</span>
             </Link>
           </DropdownMenuItem>
         </ActionButton>
