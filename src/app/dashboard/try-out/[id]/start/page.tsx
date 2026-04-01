@@ -19,7 +19,7 @@ export default function TryoutStartPage({
   const { id: tryoutId } = use(params);
   const router = useRouter();
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   const [isChecked, setIsChecked] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);

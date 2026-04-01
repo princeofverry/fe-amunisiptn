@@ -14,7 +14,7 @@ interface DialogRedeemCodeProps {
 
 export default function DialogRedeemCode({ open, onOpenChange }: DialogRedeemCodeProps) {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
   const [code, setCode] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 

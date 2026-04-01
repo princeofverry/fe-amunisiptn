@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export default function DetailPaketPage() {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   const params = useParams();
   const pkgId = params?.id as string;

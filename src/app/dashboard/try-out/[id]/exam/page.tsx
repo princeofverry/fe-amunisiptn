@@ -28,7 +28,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   // Read subtest index from query param
   const subtestParam = parseInt(searchParams.get("subtest") || "0", 10);

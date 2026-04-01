@@ -42,6 +42,7 @@ export const useGetUserTryouts = ({ token, options }: { token: string; options?:
   return useQuery({
     queryKey: ["get-user-tryouts"],
     queryFn: () => GetUserTryoutsHandler(token),
+    enabled: !!token,
     ...options,
   });
 };

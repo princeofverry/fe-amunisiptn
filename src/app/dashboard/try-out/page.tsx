@@ -17,7 +17,7 @@ const FILTER_OPTIONS = [
 
 export default function TryoutPage() {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
   const [searchQuery, setSearchQuery] = useState("");
