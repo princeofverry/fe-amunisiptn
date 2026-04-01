@@ -11,15 +11,19 @@ export const GetUserTryoutDetailHandler = async (
   id: string,
   token: string,
 ): Promise<GetUserTryoutDetailResponse> => {
-  const { data } = await api.get<GetUserTryoutDetailResponse>(
-    `/tryouts/${id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  const { data } = await api.get<{ data: Tryout[] }>("/tryouts", {
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
-  );
-  return data;
+  });
+  
+  const found = data.data.find((t) => t.id === id);
+  
+  if (!found) {
+    throw new Error("Tryout not found");
+  }
+
+  return { data: found };
 };
 
 export const useGetUserTryoutDetail = ({

@@ -11,6 +11,7 @@ export interface UserTryoutData {
   endDate: string;
   is_free?: boolean;
   description?: string;
+  image_url?: string | null;
   tryoutSubtests?: any[];
 }
 
@@ -23,6 +24,7 @@ function mapTryoutBEtoFE(tryout: Tryout): UserTryoutData {
     endDate: tryout.end_date ? String(tryout.end_date) : "",
     is_free: tryout.is_free,
     description: tryout.description,
+    image_url: tryout.image_url,
     tryoutSubtests: tryout.tryout_subtests,
   };
 }

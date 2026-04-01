@@ -34,9 +34,10 @@ export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps
     return () => clearInterval(timer);
   }, [seconds <= 0]); // eslint-disable-line
 
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  const isLow = seconds < 300; // Less than 5 minutes
+  const validSeconds = Math.max(0, Math.floor(seconds));
+  const mins = Math.floor(validSeconds / 60);
+  const secs = validSeconds % 60;
+  const isLow = validSeconds < 300; // Less than 5 minutes
 
   return (
     <div

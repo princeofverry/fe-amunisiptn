@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useTickets } from "@/hooks/useTickets";
 
@@ -21,7 +21,10 @@ interface DashboardTopBarProps {
 }
 
 export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
-  const name = userName || "Amunisian";
+  const { data: session } = useSession();
+  const user = session?.user as { fullname?: string; name?: string } | undefined;
+  const userNameFromSession = user?.fullname || user?.name;
+  const name = userName || userNameFromSession || "Amunisian";
   const { ticketCount } = useTickets();
 
   return (
