@@ -18,7 +18,7 @@ export default function TryoutDetailPage({
 }) {
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
   const { ticketCount } = useTickets();
 
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);

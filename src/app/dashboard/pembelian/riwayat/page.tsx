@@ -8,7 +8,7 @@ import { useGetHistoryPembelian } from "@/http/pembelian/get-history-pembelian";
 
 export default function RiwayatPembelianPage() {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   const { data, isLoading } = useGetHistoryPembelian({ token });
   const transactions = data?.data || [];

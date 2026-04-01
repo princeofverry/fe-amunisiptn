@@ -8,7 +8,7 @@ import { useGetHistoryTryout } from "@/http/tryout/get-history-tryout";
 
 export default function RiwayatTryoutPage() {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   const { data, isLoading } = useGetHistoryTryout({ token });
   const histories = data?.data || [];

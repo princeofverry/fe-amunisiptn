@@ -16,7 +16,7 @@ const categories = [
 
 export default function PembelianPage() {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.access_token || "";
+  const token = (session as any)?.access_token || "";
 
   const [activeCategory, setActiveCategory] = useState("Semua Paket");
   const [searchQuery, setSearchQuery] = useState("");
