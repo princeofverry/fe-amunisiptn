@@ -25,7 +25,7 @@ export const questionColumns: ColumnDef<Question>[] = [
     id: "name",
     header: "Pertanyaan",
     cell: ({ row }) => (
-      <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+      <p suppressHydrationWarning className="max-w-xs md:max-w-6xl truncate">
         {row.original.question_text}
       </p>
     ),
@@ -69,7 +69,7 @@ export const questionColumns: ColumnDef<Question>[] = [
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
           <DropdownMenuItem asChild>
             <Link
-              href={`/dashboard/admin/try-out/${data.id}`}
+              href={`/dashboard/admin/subtest/${data.subtest_id}/question/${data.id}`}
               className="flex items-center text-gray-700 hover:underline"
             >
               <Eye className="h-4 w-4 text-gray-700" />
@@ -78,7 +78,7 @@ export const questionColumns: ColumnDef<Question>[] = [
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
-              href={`/dashboard/admin/try-out/${data.id}/edit`}
+              href={`/dashboard/admin/subtest/${data.subtest_id}/question/${data.id}/edit`}
               className="flex cursor-pointer items-center text-yellow-700 hover:underline hover:text-yellow-900"
             >
               <SquarePen className="h-4 w-4 text-yellow-700 hover:text-yellow-900" />
