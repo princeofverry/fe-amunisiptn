@@ -42,15 +42,28 @@ export default function TryoutDetailPage({
   const isFree = tryout?.is_free ?? true;
   const tryoutType = isFree ? "Gratis" : "Premium";
 
+  const DUMMY_SUBTEST_DATA: Record<string, { questions: number, duration: number }> = {
+    "Penalaran Umum": { questions: 30, duration: 30 },
+    "Pengetahuan dan Pemahaman Umum": { questions: 20, duration: 15 },
+    "Pemahaman Bacaan dan Menulis": { questions: 20, duration: 25 },
+    "Pengetahuan Kuantitatif": { questions: 20, duration: 20 },
+    "Literasi dalam Bahasa Indonesia": { questions: 30, duration: 42 },
+    "Literasi dalam Bahasa Inggris": { questions: 20, duration: 20 },
+    "Penalaran Matematika": { questions: 20, duration: 43 },
+  };
+
   // Parse subtests from API data
   const subtests = (tryout?.tryout_subtests || [])
     .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
-    .map((ts: SubtestByTryout) => ({
-      name: ts.subtest.name,
-      questions: ts.subtest.max_questions,
-      duration: ts.duration_minutes,
-      category: ts.subtest.category,
-    }));
+    .map((ts: SubtestByTryout) => {
+      const fallback = DUMMY_SUBTEST_DATA[ts.subtest.name];
+      return {
+        name: ts.subtest.name,
+        questions: fallback ? fallback.questions : (ts.subtest.max_questions || 0),
+        duration: fallback ? fallback.duration : (ts.duration_minutes || 0),
+        category: ts.subtest.category,
+      };
+    });
 
   // Calculate totals  
   const tpsSubtests = subtests.filter((s: any) => s.category === "TPS");
