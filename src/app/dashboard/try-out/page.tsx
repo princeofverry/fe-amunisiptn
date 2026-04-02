@@ -6,6 +6,7 @@ import Link from "next/link";
 import TryoutCard from "@/components/molecules/card/TryoutCard";
 import { useSession } from "next-auth/react";
 import { useGetUserTryouts } from "@/http/tryout/get-user-tryouts";
+import { useGetHistoryTryout } from "@/http/tryout/get-history-tryout";
 import DialogRedeemCode from "@/components/molecules/dialog/DialogRedeemCode";
 
 const FILTER_OPTIONS = [
@@ -26,13 +27,16 @@ export default function TryoutPage() {
   const { data: tryoutsData, isLoading } = useGetUserTryouts({ token });
   const tryouts = tryoutsData?.data || [];
 
+  const { data: historyData } = useGetHistoryTryout({ token });
+  const enrolledTryoutIds = new Set(historyData?.data?.map((t) => t.id) || []);
+
   const filteredData = tryouts.filter(
     (item) =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       (activeFilter === "Semua Tryout" ||
         (activeFilter === "Tryout Premium" && item.type === "Premium") ||
         (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
-        activeFilter === "Terdaftar")
+        (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
   );
 
   return (
@@ -116,6 +120,7 @@ export default function TryoutPage() {
             type={item.type}
             startDate={item.startDate}
             endDate={item.endDate}
+            imageUrl={item.image_url}
           />
         ))}
       </div>

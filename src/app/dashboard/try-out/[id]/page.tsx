@@ -3,11 +3,13 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ChevronLeft, FileText, Clock, Ticket, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useTickets } from "@/hooks/useTickets";
 import { useEnrollTryout } from "@/http/tryout/enroll-tryout";
 import { useGetUserTryoutDetail } from "@/http/tryout/get-user-tryout-detail";
+import { useGetHistoryTryout } from "@/http/tryout/get-history-tryout";
 import { toast } from "sonner";
 import type { SubtestByTryout } from "@/types/subtest/subtest";
 
@@ -17,7 +19,8 @@ export default function TryoutDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: tryoutId } = use(params);
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
   const token = (session as any)?.access_token || "";
   const { ticketCount } = useTickets();
 
@@ -25,26 +28,42 @@ export default function TryoutDetailPage({
   const [proofImage, setProofImage] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
 
-  // Fetch tryout detail from API
   const { data: tryoutDetail, isLoading } = useGetUserTryoutDetail({
     id: tryoutId,
     token,
   });
+
+  // Fetch enrolled tryouts to check status
+  const { data: historyData, isLoading: historyLoading } = useGetHistoryTryout({ token });
+  const isEnrolled = historyData?.data?.some((t) => t.id === tryoutId) || false;
 
   const tryout = tryoutDetail?.data;
   const tryoutTitle = tryout?.title || "";
   const isFree = tryout?.is_free ?? true;
   const tryoutType = isFree ? "Gratis" : "Premium";
 
+  const DUMMY_SUBTEST_DATA: Record<string, { questions: number, duration: number }> = {
+    "Penalaran Umum": { questions: 30, duration: 30 },
+    "Pengetahuan dan Pemahaman Umum": { questions: 20, duration: 15 },
+    "Pemahaman Bacaan dan Menulis": { questions: 20, duration: 25 },
+    "Pengetahuan Kuantitatif": { questions: 20, duration: 20 },
+    "Literasi dalam Bahasa Indonesia": { questions: 30, duration: 42 },
+    "Literasi dalam Bahasa Inggris": { questions: 20, duration: 20 },
+    "Penalaran Matematika": { questions: 20, duration: 43 },
+  };
+
   // Parse subtests from API data
   const subtests = (tryout?.tryout_subtests || [])
     .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
-    .map((ts: SubtestByTryout) => ({
-      name: ts.subtest.name,
-      questions: ts.subtest.max_questions,
-      duration: ts.duration_minutes,
-      category: ts.subtest.category,
-    }));
+    .map((ts: SubtestByTryout) => {
+      const fallback = DUMMY_SUBTEST_DATA[ts.subtest.name];
+      return {
+        name: ts.subtest.name,
+        questions: fallback ? fallback.questions : (ts.subtest.max_questions || 0),
+        duration: fallback ? fallback.duration : (ts.duration_minutes || 0),
+        category: ts.subtest.category,
+      };
+    });
 
   // Calculate totals  
   const tpsSubtests = subtests.filter((s: any) => s.category === "TPS");
@@ -65,6 +84,7 @@ export default function TryoutDetailPage({
         setProofImage(null);
         setProofPreview(null);
         toast.success(isFree ? "Berhasil mendaftar tryout!" : "Tiket berhasil digunakan! Kamu terdaftar untuk tryout ini.");
+        router.push(`/dashboard/try-out/${tryoutId}/start`);
       },
       onError: (error: any) => {
         const msg = error?.response?.data?.message || "Gagal mendaftar tryout";
@@ -90,7 +110,7 @@ export default function TryoutDetailPage({
     }
   };
 
-  if (isLoading) {
+  if (sessionStatus === "loading" || isLoading || historyLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB]" />
@@ -187,12 +207,21 @@ export default function TryoutDetailPage({
 
         {/* Action Button */}
         <div className="pt-4">
-          <button 
-            onClick={() => setShowEnrollDialog(true)}
-            className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
-          >
-            {isFree ? "Daftar Tryout (Gratis)" : `Daftar Tryout (1 Tiket)`}
-          </button>
+          {isEnrolled ? (
+            <button 
+              onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
+              className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
+            >
+              Mulai Tryout
+            </button>
+          ) : (
+            <button 
+              onClick={() => setShowEnrollDialog(true)}
+              className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
+            >
+              {isFree ? "Daftar Tryout (Gratis)" : `Daftar Tryout (1 Tiket)`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -257,10 +286,20 @@ export default function TryoutDetailPage({
               </button>
               <button
                 onClick={handleEnroll}
-                disabled={enrollMutation.isPending || (isFree && !proofImage)}
+                disabled={
+                  enrollMutation.isPending || 
+                  (isFree && !proofImage) || 
+                  (!isFree && (ticketCount || 0) < 1)
+                }
                 className="flex-1 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
               >
-                {enrollMutation.isPending ? "Memproses..." : isFree ? "Daftar Sekarang" : "Gunakan Tiket"}
+                {enrollMutation.isPending 
+                  ? "Memproses..." 
+                  : isFree 
+                    ? "Daftar Sekarang" 
+                    : (!isFree && (ticketCount || 0) < 1)
+                      ? "Tiket Tidak Cukup"
+                      : "Gunakan Tiket"}
               </button>
             </div>
           </div>
