@@ -55,7 +55,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
       const sorted = [...tryoutDetail.data.tryout_subtests]
         .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
         .map((ts: SubtestByTryout) => ({
-          id: ts.subtest_id,
+          id: ts.id,
           name: ts.subtest.name,
           category: ts.subtest.category === "TPS" ? "Tes Potensi Skolastik" : "Tes Literasi",
           duration: ts.duration_minutes,

@@ -11,6 +11,7 @@ interface TryoutCardProps {
   type: "Gratis" | "Premium";
   startDate: string;
   endDate: string;
+  imageUrl?: string | null;
 }
 
 export default function TryoutCard({
@@ -19,6 +20,7 @@ export default function TryoutCard({
   type,
   startDate,
   endDate,
+  imageUrl,
 }: TryoutCardProps) {
 
   const [statusText, setStatusText] = useState("Menghitung...");
@@ -27,6 +29,9 @@ export default function TryoutCard({
   const [countdownText, setCountdownText] = useState("");
   const [countdownTheme, setCountdownTheme] = useState("bg-gray-300"); // for the right tag
   const [dateRangeText, setDateRangeText] = useState("");
+
+  const thumbnailSrc = imageUrl || "/images/background/bg_to.png";
+  const isExternal = imageUrl?.startsWith("http");
 
   useEffect(() => {
     const updateStatus = () => {
@@ -86,10 +91,11 @@ export default function TryoutCard({
       {/* Background Image Header */}
       <div className="relative w-full h-40">
         <Image
-          src="/images/background/bg_to.png"
-          alt="Tryout Background"
+          src={thumbnailSrc}
+          alt={title}
           fill
           className="object-cover"
+          unoptimized={!!isExternal}
         />
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2">

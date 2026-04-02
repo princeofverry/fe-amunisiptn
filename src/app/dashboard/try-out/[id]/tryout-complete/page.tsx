@@ -4,6 +4,7 @@ import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useFinishTryout } from "@/http/tryout/finish-tryout";
+import { useGetTryoutResult } from "@/http/tryout/get-tryout-result";
 import { Calendar, FileText, Clock } from "lucide-react";
 
 export default function TryoutCompletePage({
@@ -31,18 +32,55 @@ export default function TryoutCompletePage({
     }
   }, []); // eslint-disable-line
 
-  // Calculate result release date (15 days from now)
-  const releaseDate = new Date();
-  releaseDate.setDate(releaseDate.getDate() + 15);
-  const releaseDateStr = releaseDate.toLocaleDateString("id-ID", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  // Fetch result data after submission is complete
+  const { data: resultData } = useGetTryoutResult({
+    tryoutId,
+    token,
+    options: {
+      enabled: isSubmitted,
+    },
   });
 
-  const elapsedTime = "—";
-  const totalQuestions = "—";
+  // Derived stats from result API
+  const summary = resultData?.data?.summary;
+  const startedAt = resultData?.data?.started_at ? new Date(resultData.data.started_at) : null;
+  const finishedAt = resultData?.data?.finished_at ? new Date(resultData.data.finished_at) : null;
+
+  const totalQuestions = summary ? `${summary.answered} / ${summary.total_questions}` : "—";
+
+  let elapsedTime = "—";
+  if (startedAt && finishedAt) {
+    const diffMs = finishedAt.getTime() - startedAt.getTime();
+    if (diffMs > 0) {
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      elapsedTime = `${diffMins}m ${diffSecs}s`;
+    }
+  }
+
+  // Calculate release date
+  let releaseDateStr = "Menunggu Proses...";
+  const beReleaseDate = resultData?.data?.irt_result?.release_date;
+  
+  if (beReleaseDate) {
+    const rd = new Date(beReleaseDate);
+    releaseDateStr = `${rd.toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })}, pukul ${String(rd.getHours()).padStart(2, "0")}:${String(rd.getMinutes()).padStart(2, "0")} WIB`;
+  } else if (!resultData) {
+    // Optimistic fallback before data loads
+    const releaseDate = new Date();
+    releaseDate.setDate(releaseDate.getDate() + 15);
+    releaseDateStr = `${releaseDate.toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })}, pukul 10:00 WIB`;
+  }
 
   return (
     <div className="w-full max-w-3xl mx-auto animate-in fade-in duration-500 py-8 px-4">
@@ -69,7 +107,7 @@ export default function TryoutCompletePage({
               Nilai Try Out Anda sedang diproses. Hasil lengkap akan diumumkan pada:
             </p>
             <p className="text-[#004AAB] font-bold text-base mt-2">
-              {releaseDateStr}, pukul 10:00 WIB.
+              {releaseDateStr}
             </p>
           </div>
         </div>
