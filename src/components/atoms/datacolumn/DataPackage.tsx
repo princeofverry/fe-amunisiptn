@@ -12,7 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Package } from "@/types/packages/package";
 import { formatPrice } from "@/utils/format-price";
 
-export const packageColumns: ColumnDef<Package>[] = [
+interface DataPackageProps {
+  detailPackageHandler: (data: Package) => void;
+}
+
+export const packageColumns: (
+  props: DataPackageProps,
+) => ColumnDef<Package>[] = (props) => [
   {
     id: "index",
     header: "No",
@@ -83,13 +89,13 @@ export const packageColumns: ColumnDef<Package>[] = [
         <ActionButton>
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
           <DropdownMenuItem asChild>
-            <Link
-              href={`/dashboard/admin/packages/${data.id}`}
+            <div
+              onClick={() => props.detailPackageHandler(data)}
               className="flex items-center text-gray-700 hover:underline"
             >
               <Eye className="h-4 w-4 text-gray-700" />
               <span className="ml-2">Detail</span>
-            </Link>
+            </div>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
