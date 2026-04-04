@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Eye, SquarePen } from "lucide-react";
+import { Eye, SquarePen, Trash2 } from "lucide-react";
 import ActionButton from "@/components/molecules/datatable/ActionButton";
 import {
   DropdownMenuItem,
@@ -14,6 +14,7 @@ import { formatPrice } from "@/utils/format-price";
 
 interface DataPackageProps {
   detailPackageHandler: (data: Package) => void;
+  deletePackageHandler: (data: Package) => void;
 }
 
 export const packageColumns: (
@@ -105,6 +106,15 @@ export const packageColumns: (
               <SquarePen className="h-4 w-4 text-yellow-700 hover:text-yellow-900" />
               <span className="ml-2">Edit</span>
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <div
+              onClick={() => props.deletePackageHandler(data)}
+              className="flex cursor-pointer items-center text-red-700 hover:underline hover:text-red-900"
+            >
+              <Trash2 className="h-4 w-4 text-red-700 hover:text-red-900" />
+              <span className="ml-2">Hapus</span>
+            </div>
           </DropdownMenuItem>
         </ActionButton>
       );
