@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Eye, SquarePen } from "lucide-react";
+import { Eye, SquarePen, Trash2 } from "lucide-react";
 
 import ActionButton from "@/components/molecules/datatable/ActionButton";
 import {
@@ -14,7 +14,11 @@ import { id } from "date-fns/locale";
 import { Tryout } from "@/types/tryout/tryout";
 import { Badge } from "@/components/ui/badge";
 
-export const tryoutColumns: ColumnDef<Tryout>[] = [
+interface DataTryoutProps {
+  deleteTryoutHandler: (data: Tryout) => void;
+}
+
+export const tryoutColumns = (props: DataTryoutProps): ColumnDef<Tryout>[] => [
   {
     id: "index",
     header: "No",
@@ -105,6 +109,16 @@ export const tryoutColumns: ColumnDef<Tryout>[] = [
               <SquarePen className="h-4 w-4 text-yellow-700 hover:text-yellow-900" />
               <span className="ml-2">Edit</span>
             </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem>
+            <div
+              className="flex cursor-pointer items-center text-red-600 hover:text-red-800 hover:underline"
+              onClick={() => props.deleteTryoutHandler(data)}
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+              <span className="ml-2">Hapus</span>
+            </div>
           </DropdownMenuItem>
         </ActionButton>
       );
