@@ -38,7 +38,7 @@ export const tryoutColumns = (props: DataTryoutProps): ColumnDef<Tryout>[] => [
     header: "Deskripsi",
     cell: ({ row }) => {
       return (
-        <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+        <p suppressHydrationWarning className="max-w-xs truncate">
           {row.original.description}
         </p>
       );

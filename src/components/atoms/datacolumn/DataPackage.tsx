@@ -38,7 +38,7 @@ export const packageColumns: (
     id: "description",
     header: "Deskripsi",
     cell: ({ row }) => (
-      <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
+      <p suppressHydrationWarning className="max-w-xl truncate">
         {row.original.description}
       </p>
     ),
