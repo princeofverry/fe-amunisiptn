@@ -35,7 +35,9 @@ export default function TryoutDetailPage({
 
   // Fetch enrolled tryouts to check status
   const { data: historyData, isLoading: historyLoading } = useGetHistoryTryout({ token });
-  const isEnrolled = historyData?.data?.some((t) => t.id === tryoutId) || false;
+  const enrolledTryout = historyData?.data?.find((t) => t.id === tryoutId);
+  const isEnrolled = !!enrolledTryout;
+  const isFinished = enrolledTryout?.status === "selesai";
 
   const tryout = tryoutDetail?.data;
   const tryoutTitle = tryout?.title || "";
@@ -208,12 +210,21 @@ export default function TryoutDetailPage({
         {/* Action Button */}
         <div className="pt-4">
           {isEnrolled ? (
-            <button 
-              onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
-              className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
-            >
-              Mulai Tryout
-            </button>
+            isFinished ? (
+              <button 
+                onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+                className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
+              >
+                Lihat Hasil Skor & Pembahasan
+              </button>
+            ) : (
+              <button 
+                onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
+                className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
+              >
+                Mulai Tryout
+              </button>
+            )
           ) : (
             <button 
               onClick={() => setShowEnrollDialog(true)}
