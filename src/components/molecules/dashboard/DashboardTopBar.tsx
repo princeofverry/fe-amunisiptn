@@ -55,9 +55,27 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
         </button>
 
         {/* Notification Bell */}
-        <button className="relative p-2 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors flex-shrink-0 text-gray-600">
-          <Bell className="h-5 w-5" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild className="focus:outline-none">
+            <button className="relative p-2 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors flex-shrink-0 text-gray-600">
+              <Bell className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[300px] p-2" sideOffset={8}>
+            <DropdownMenuLabel className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-2">
+              Notifikasi
+            </DropdownMenuLabel>
+            <div className="flex flex-col items-center justify-center p-6 text-center">
+              <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                <Bell className="h-6 w-6 text-gray-300" />
+              </div>
+              <p className="text-sm font-semibold text-gray-600">Belum ada notifikasi</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Notifikasi terbaru akan muncul di sini.
+              </p>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Separator */}
         <div className="hidden md:block w-px h-8 bg-gray-200" />

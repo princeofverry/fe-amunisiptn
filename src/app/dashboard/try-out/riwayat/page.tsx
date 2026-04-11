@@ -49,7 +49,15 @@ export default function RiwayatTryoutPage() {
                     <span className="font-bold text-[#004AAB] text-xl">{hist.score}</span>
                   </div>
                   {hist.status === "selesai" ? (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">Selesai</span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">Selesai</span>
+                      <Link 
+                        href={`/dashboard/try-out/${hist.id}/result`}
+                        className="mt-1 text-sm font-semibold text-white bg-[#004AAB] px-4 py-1.5 rounded-lg hover:bg-[#003B8A] transition-colors"
+                      >
+                        Lihat Hasil
+                      </Link>
+                    </div>
                   ) : (
                     <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider">Mengerjakan</span>
                   )}
