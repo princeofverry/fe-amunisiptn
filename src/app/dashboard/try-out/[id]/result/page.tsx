@@ -87,11 +87,7 @@ export default function ResultPage({
             </div>
 
             {/* Score Details */}
-            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-              <div className="bg-white/10 rounded-xl p-4">
-                <p className="text-white/60 text-xs mb-1">Raw Score</p>
-                <p className="text-2xl font-bold">{irt_result.raw_score}</p>
-              </div>
+            <div className="flex-1 grid grid-cols-3 gap-4 w-full">
               <div className="bg-white/10 rounded-xl p-4">
                 <p className="text-white/60 text-xs mb-1">Akurasi</p>
                 <p className="text-2xl font-bold">{accuracy}%</p>

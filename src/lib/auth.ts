@@ -9,6 +9,7 @@ declare module "next-auth" {
   interface User {
     id: string;
     token?: string;
+    role?: string;
   }
 
   interface Session {
@@ -48,6 +49,7 @@ export const authOptions: NextAuthOptions = {
           return {
             id: res.user.id,
             token: res.token,
+            role: res.user.role,
           };
         } catch {
           return null;
@@ -68,6 +70,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.access_token = (user as any).token;
         token.sub = String((user as any).id);
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -94,7 +97,7 @@ export const authOptions: NextAuthOptions = {
             id: token.sub || "",
             name: overrides?.name || session?.user?.name || "Amunisian",
             email: overrides?.email || session?.user?.email || "",
-            role: overrides?.role || "user",
+            role: overrides?.role || token.role || "user",
             ...overrides,
           } as any,
           access_token,
