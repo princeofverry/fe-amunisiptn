@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useBulkImportQuestions } from "@/http/questions/bulk-import-questions";
 import { FileSpreadsheet, Upload, Download, X, CheckCircle2, AlertCircle } from "lucide-react";
-import { api } from "@/lib/axios";
 
 interface DialogBulkImportQuestionProps {
   open: boolean;
@@ -87,20 +86,34 @@ export default function DialogBulkImportQuestion({
 
   const handleDownloadTemplate = async () => {
     try {
-      const response = await api.get("/admin/questions/bulk-import/template", {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob",
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}/admin/questions/bulk-import/template`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      if (!response.ok) {
+        const text = await response.text();
+        let msg = `Error ${response.status}`;
+        try { msg = JSON.parse(text)?.message ?? msg; } catch {}
+        toast.error("Gagal mengunduh template.", { description: msg });
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "template-soal-amunisi.xlsx");
+      link.download = "template-soal-amunisi.xlsx";
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch {
-      toast.error("Gagal mengunduh template.");
+    } catch (e) {
+      console.error("Download template error:", e);
+      toast.error("Gagal mengunduh template.", { description: "Periksa koneksi atau hubungi admin." });
     }
   };
 
