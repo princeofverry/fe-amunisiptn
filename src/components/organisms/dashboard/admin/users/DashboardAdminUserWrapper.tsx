@@ -14,12 +14,16 @@ import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export default function DashboardAdminUserWrapper() {
   const { data: session, status } = useSession();
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(15);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
@@ -29,6 +33,7 @@ export default function DashboardAdminUserWrapper() {
   const { data, isPending } = useGetAllUsers({
     token: session?.access_token as string,
     page,
+    perPage,
     search,
     options: { enabled: status === "authenticated" },
   });
@@ -89,29 +94,45 @@ export default function DashboardAdminUserWrapper() {
             />
 
             {/* Pagination */}
-            {data && data.last_page > 1 && (
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                  Halaman {data.current_page} dari {data.last_page} ({data.total} pengguna)
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.min(data.last_page, p + 1))}
-                    disabled={page === data.last_page}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+            {data && (
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <span>
+                    {data.total > 0
+                      ? `Menampilkan ${(page - 1) * perPage + 1}–${Math.min(page * perPage, data.total)} dari ${data.total} pengguna`
+                      : "Tidak ada pengguna"}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">Tampilkan</span>
+                    <Select
+                      value={String(perPage)}
+                      onValueChange={(v) => { setPerPage(Number(v)); setPage(1); }}
+                    >
+                      <SelectTrigger className="h-7 w-16 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZE_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-xs">per halaman</span>
+                  </div>
                 </div>
+                {data.last_page > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-gray-600 min-w-20 text-center">
+                      {data.current_page} / {data.last_page}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(data.last_page, p + 1))} disabled={page === data.last_page}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

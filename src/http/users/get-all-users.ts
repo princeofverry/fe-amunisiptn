@@ -14,11 +14,12 @@ export interface GetAllUsersResponse {
 export const GetAllUsersHandler = async (
   token: string,
   page = 1,
-  search = ""
+  search = "",
+  perPage = 15
 ): Promise<GetAllUsersResponse> => {
   const { data } = await api.get<GetAllUsersResponse>("/admin/users", {
     headers: { Authorization: `Bearer ${token}` },
-    params: { page, search: search || undefined },
+    params: { page, search: search || undefined, per_page: perPage },
   });
   return data;
 };
@@ -27,16 +28,18 @@ export const useGetAllUsers = ({
   token,
   page = 1,
   search = "",
+  perPage = 15,
   options,
 }: {
   token: string;
   page?: number;
   search?: string;
+  perPage?: number;
   options?: Partial<UseQueryOptions<GetAllUsersResponse, AxiosError>>;
 }) => {
   return useQuery({
-    queryKey: ["get-all-users", page, search],
-    queryFn: () => GetAllUsersHandler(token, page, search),
+    queryKey: ["get-all-users", page, search, perPage],
+    queryFn: () => GetAllUsersHandler(token, page, search, perPage),
     enabled: !!token,
     ...options,
   });

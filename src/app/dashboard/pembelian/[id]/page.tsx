@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { useGetDetailPackage } from "@/http/pembelian/get-detail-package";
 import { useCreateOrder } from "@/http/pembelian/create-order";
 import { useCancelOrder } from "@/http/pembelian/cancel-order";
+import { useVerifyPayment } from "@/http/pembelian/verify-payment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -30,6 +31,7 @@ export default function DetailPaketPage() {
   const paymentCompleted = useRef(false);
 
   const { mutate: cancelOrder } = useCancelOrder();
+  const { mutate: verifyPayment } = useVerifyPayment();
 
   const createOrderMutation = useCreateOrder({
     token,
@@ -55,8 +57,14 @@ export default function DetailPaketPage() {
         window.snap.pay(snapToken, {
           onSuccess: () => {
             paymentCompleted.current = true;
+            // Sinkronisasi status ke BE via Midtrans API (fallback jika webhook belum sampai)
+            if (currentOrderId.current) {
+              verifyPayment(
+                { orderId: currentOrderId.current, token },
+                { onSettled: () => queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] }) }
+              );
+            }
             setPaymentState("success");
-            queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
           },
           onPending: () => {
             paymentCompleted.current = true;
