@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2, Clock, AlertCircle, Ticket } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetDetailPackage } from "@/http/pembelian/get-detail-package";
 import { useCreateOrder } from "@/http/pembelian/create-order";
+import { useCancelOrder } from "@/http/pembelian/cancel-order";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -25,6 +26,10 @@ export default function DetailPaketPage() {
   const pkg = data?.data;
 
   const [paymentState, setPaymentState] = useState<PaymentState>("idle");
+  const currentOrderId = useRef<string | null>(null);
+  const paymentCompleted = useRef(false);
+
+  const { mutate: cancelOrder } = useCancelOrder();
 
   const createOrderMutation = useCreateOrder({
     token,
@@ -44,23 +49,31 @@ export default function DetailPaketPage() {
           return;
         }
 
+        currentOrderId.current = res.data.id;
+        paymentCompleted.current = false;
+
         window.snap.pay(snapToken, {
           onSuccess: () => {
+            paymentCompleted.current = true;
             setPaymentState("success");
             queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
           },
           onPending: () => {
+            paymentCompleted.current = true;
             setPaymentState("pending");
             queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
           },
           onError: () => {
+            paymentCompleted.current = true;
             setPaymentState("error");
             toast.error("Pembayaran gagal. Silakan coba lagi.");
           },
           onClose: () => {
-            // User menutup popup tanpa bayar
+            if (!paymentCompleted.current && currentOrderId.current) {
+              cancelOrder({ orderId: currentOrderId.current, token });
+            }
             setPaymentState("idle");
-            toast.info("Pembayaran dibatalkan. Kamu bisa mencoba lagi kapan saja.");
+            toast.info("Pembayaran dibatalkan.");
           },
         });
       },
