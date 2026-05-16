@@ -7,20 +7,24 @@ export interface PackageData {
   id: string;
   title: string;
   price: number;
-  originalPrice: number;
-  discount: string;
+  originalPrice: number | null;
+  discountPercent: number | null;
   description: string;
   ticketAmount?: number;
 }
 
-// Map BE response to FE interface
 function mapBEtoFE(pkg: PackageBE): PackageData {
+  const discountPercent =
+    pkg.discount_price != null && pkg.discount_price < pkg.price
+      ? Math.round(((pkg.price - pkg.discount_price) / pkg.price) * 100)
+      : null;
+
   return {
     id: pkg.id,
     title: pkg.name,
-    price: pkg.price,
-    originalPrice: pkg.price, // BE doesn't have discount info
-    discount: "0%",
+    price: pkg.discount_price ?? pkg.price,
+    originalPrice: pkg.discount_price != null ? pkg.price : null,
+    discountPercent,
     description: pkg.description || "",
     ticketAmount: pkg.ticket_amount,
   };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Rubik } from "next/font/google";
 import "./globals.css";
 import GlobalProvider from "@/components/providers/GlobalProvider";
+import Script from "next/script";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -77,9 +78,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const midtransUrl =
+    process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true"
+      ? "https://app.midtrans.com/snap/snap.js"
+      : "https://app.sandbox.midtrans.com/snap/snap.js";
+
   return (
     <html lang="en">
       <body className={`${rubik.variable} antialiased font-rubik`}>
+        <Script
+          src={midtransUrl}
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+          strategy="beforeInteractive"
+        />
         <GlobalProvider>{children}</GlobalProvider>
       </body>
     </html>

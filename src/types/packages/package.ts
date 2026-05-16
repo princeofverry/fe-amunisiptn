@@ -4,6 +4,7 @@ export interface Package {
   slug: string;
   description: string;
   price: number;
+  discount_price: number | null;
   ticket_amount: number;
   currency: string;
   is_active: boolean;

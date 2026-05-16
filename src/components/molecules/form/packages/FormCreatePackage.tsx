@@ -40,6 +40,7 @@ export default function FormCreatePackage() {
       slug: "",
       description: "",
       price: 0,
+      discount_price: null,
       currency: "IDR",
       ticket_amount: 1,
       is_active: true,
@@ -150,6 +151,31 @@ export default function FormCreatePackage() {
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     placeholder="Masukkan harga"
+                  />
+                  {fieldState.error && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="discount_price"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Harga Diskon</FieldLabel>
+                  <Input
+                    type="number"
+                    min={0}
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? null : e.target.valueAsNumber
+                      )
+                    }
+                    placeholder="Kosongkan jika tidak ada diskon"
                   />
                   {fieldState.error && (
                     <FieldError errors={[fieldState.error]} />

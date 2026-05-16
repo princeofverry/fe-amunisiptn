@@ -5,6 +5,7 @@ export interface PackageBE {
   slug: string;
   description: string | null;
   price: number;
+  discount_price: number | null;
   ticket_amount: number;
   currency: string;
   is_active: boolean;
