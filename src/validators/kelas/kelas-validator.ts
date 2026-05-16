@@ -1,0 +1,28 @@
+import z from "zod";
+
+export const kelasSchema = z.object({
+  name: z.string().min(1, "Nama kelas wajib diisi").max(150),
+  description: z.string().optional().nullable(),
+  price: z
+    .number({ invalid_type_error: "Harga wajib berupa angka" })
+    .min(0),
+  discount_price: z.number().optional().nullable(),
+  ticket_amount: z.number().min(0).default(0),
+  wa_group_link: z
+    .string()
+    .url("Link WA group harus URL valid")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  wa_consultation_number: z.string().optional().nullable(),
+  meet_link: z
+    .string()
+    .url("Link Meet harus URL valid")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  image: z.instanceof(File).optional().nullable(),
+  is_active: z.boolean().default(true),
+});
+
+export type KelasFormType = z.infer<typeof kelasSchema>;

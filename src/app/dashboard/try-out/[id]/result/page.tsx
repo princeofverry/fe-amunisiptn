@@ -41,7 +41,7 @@ export default function ResultPage({
     );
   }
 
-  const { summary, irt_result } = result;
+  const { summary, irt_result, use_irt } = result;
   const accuracy = summary.total_questions > 0 ? Math.round((summary.correct / summary.total_questions) * 100) : 0;
 
   return (
@@ -54,9 +54,38 @@ export default function ResultPage({
         <h1 className="text-xl font-bold text-gray-900">Hasil Tryout</h1>
       </div>
 
-      {/* IRT Score Card */}
-      {irt_result.is_ready ? (
-        <div className="bg-gradient-to-br from-[#004AAB] to-[#002B66] rounded-2xl p-8 text-white mb-6 shadow-lg">
+      {/* Score Card — IRT atau Non-IRT */}
+      {!use_irt ? (
+        /* Non-IRT: tampilkan ringkasan benar/salah */
+        <div className="bg-linear-to-br from-[#004AAB] to-[#002B66] rounded-2xl p-8 text-white mb-6 shadow-lg">
+          <div className="flex items-center gap-3 mb-6">
+            <Trophy className="w-8 h-8 text-yellow-300" />
+            <div>
+              <h2 className="text-xl font-bold">{result.tryout_title}</h2>
+              <p className="text-white/70 text-sm">Ringkasan Jawaban</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white/10 rounded-xl p-4 text-center">
+              <p className="text-white/60 text-xs mb-1">Akurasi</p>
+              <p className="text-3xl font-bold">{accuracy}%</p>
+            </div>
+            <div className="bg-green-500/20 rounded-xl p-4 text-center">
+              <p className="text-white/60 text-xs mb-1">Benar</p>
+              <p className="text-3xl font-bold text-green-300">{summary.correct}</p>
+            </div>
+            <div className="bg-red-500/20 rounded-xl p-4 text-center">
+              <p className="text-white/60 text-xs mb-1">Salah</p>
+              <p className="text-3xl font-bold text-red-300">{summary.wrong}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 text-center">
+              <p className="text-white/60 text-xs mb-1">Kosong</p>
+              <p className="text-3xl font-bold text-white/50">{summary.unanswered}</p>
+            </div>
+          </div>
+        </div>
+      ) : irt_result?.is_ready ? (
+        <div className="bg-linear-to-br from-[#004AAB] to-[#002B66] rounded-2xl p-8 text-white mb-6 shadow-lg">
           <div className="flex items-center gap-3 mb-4">
             <Trophy className="w-8 h-8 text-yellow-300" />
             <div>
@@ -67,7 +96,7 @@ export default function ResultPage({
 
           <div className="flex flex-col sm:flex-row items-center gap-8 mt-6">
             {/* Score Circle */}
-            <div className="relative w-36 h-36 flex-shrink-0">
+            <div className="relative w-36 h-36 shrink-0">
               <svg className="w-full h-full" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
                 <circle
@@ -109,7 +138,7 @@ export default function ResultPage({
           <h2 className="text-xl font-bold text-amber-800">Hasil IRT Sedang Diproses</h2>
           <p className="text-amber-600 text-sm mt-2">
             Skor IRT akan tersedia setelah tryout berakhir dan cukup peserta menyelesaikan ujian.
-            {irt_result.release_date && (
+            {irt_result?.release_date && (
               <span className="block mt-1">Perkiraan rilis: {new Date(irt_result.release_date).toLocaleDateString("id-ID")}</span>
             )}
           </p>

@@ -136,6 +136,7 @@ export default function TryoutPage() {
             startDate={item.startDate}
             endDate={item.endDate}
             imageUrl={item.image_url}
+            participantsCount={item.participantsCount}
           />
         ))}
       </div>

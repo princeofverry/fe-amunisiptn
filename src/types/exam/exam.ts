@@ -40,6 +40,7 @@ export interface ExamData {
 export interface TryoutResultData {
   tryout_id: string;
   tryout_title: string;
+  use_irt: boolean;
   status: string;
   started_at: string | null;
   finished_at: string | null;
@@ -56,7 +57,7 @@ export interface TryoutResultData {
     total_participants_calculated: number;
     raw_score: number;
     final_score: number;
-  };
+  } | null;
 }
 
 // Review types

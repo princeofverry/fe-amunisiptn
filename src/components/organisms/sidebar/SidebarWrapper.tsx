@@ -50,6 +50,7 @@ import {
   Home,
   Crown,
   Shield,
+  GraduationCap,
 } from "lucide-react";
 import { SidebarUser } from "./SidebarUser";
 import { DASHBOARD_MENU } from "@/constants/dashboard-menu";
@@ -199,6 +200,17 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
+                      className={buttonClass("/dashboard/admin/kelas")}
+                    >
+                      <Link href="/dashboard/admin/kelas">
+                        <GraduationCap />
+                        <span>Kelas</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
                       className={buttonClass("/dashboard/admin/transactions")}
                     >
                       <Link href="/dashboard/admin/transactions">
@@ -258,6 +270,22 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       <Link href="/dashboard/try-out" className="flex items-center w-full gap-3">
                         <BookOpen className="w-5 h-5 shrink-0" />
                         <span>Try Out</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem className="w-full relative">
+                    <SidebarMenuButton
+                      asChild
+                      className={`h-11 justify-start px-4 rounded-xl transition-all w-full flex items-center ${
+                        pathname.startsWith("/dashboard/kelas")
+                          ? "bg-[#EBF4FF] text-[#004AAB] font-semibold"
+                          : "text-[#9695A5] hover:bg-[#EBF4FF] hover:text-[#004AAB]"
+                      }`}
+                    >
+                      <Link href="/dashboard/kelas" className="flex items-center w-full gap-3">
+                        <GraduationCap className="w-5 h-5 shrink-0" />
+                        <span>Kelas</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
