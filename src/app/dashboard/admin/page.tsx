@@ -126,7 +126,7 @@ export default function DashboardAdminPage() {
                     tick={{ fontSize: 12 }}
                   />
                   <Tooltip
-                    formatter={(value: number) => [formatPrice(value), "Pendapatan"]}
+                    formatter={(value) => [formatPrice(Number(value)), "Pendapatan"]}
                   />
                   <Bar dataKey="total" fill="#004AAB" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -160,7 +160,7 @@ export default function DashboardAdminPage() {
                     cy="50%"
                     outerRadius={80}
                     label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                      `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                     }
                     labelLine={false}
                   >
