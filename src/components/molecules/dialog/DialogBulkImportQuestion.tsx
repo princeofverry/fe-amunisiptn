@@ -90,7 +90,7 @@ export default function DialogBulkImportQuestion({
       const response = await fetch(`${baseUrl}/admin/questions/bulk-import/template`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          Accept: "text/csv",
         },
       });
 
@@ -106,7 +106,7 @@ export default function DialogBulkImportQuestion({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "template-soal-amunisi.xlsx";
+      link.download = "template-soal-amunisi.csv";
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -168,7 +168,7 @@ export default function DialogBulkImportQuestion({
             onClick={handleDownloadTemplate}
           >
             <Download className="w-4 h-4 mr-2" />
-            Download Template Excel
+            Download Template CSV
           </Button>
 
           {/* Drop Zone */}
