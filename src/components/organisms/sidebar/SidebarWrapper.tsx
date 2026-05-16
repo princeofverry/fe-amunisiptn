@@ -49,6 +49,7 @@ import {
   FileClock,
   Home,
   Crown,
+  Shield,
 } from "lucide-react";
 import { SidebarUser } from "./SidebarUser";
 import { DASHBOARD_MENU } from "@/constants/dashboard-menu";
@@ -206,6 +207,17 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={buttonClass("/dashboard/admin/audit-log")}
+                    >
+                      <Link href="/dashboard/admin/audit-log">
+                        <Shield />
+                        <span>Log Audit</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -228,7 +240,7 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       }`}
                     >
                       <Link href="/dashboard" className="flex items-center w-full gap-3">
-                        <Home className="w-5 h-5 flex-shrink-0" />
+                        <Home className="w-5 h-5 shrink-0" />
                         <span>Beranda</span>
                       </Link>
                     </SidebarMenuButton>
@@ -244,7 +256,7 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       }`}
                     >
                       <Link href="/dashboard/try-out" className="flex items-center w-full gap-3">
-                        <BookOpen className="w-5 h-5 flex-shrink-0" />
+                        <BookOpen className="w-5 h-5 shrink-0" />
                         <span>Try Out</span>
                       </Link>
                     </SidebarMenuButton>
@@ -260,7 +272,7 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       }`}
                     >
                       <Link href="/dashboard/pembelian" className="flex items-center w-full gap-3">
-                        <ShoppingCart className="w-5 h-5 flex-shrink-0" />
+                        <ShoppingCart className="w-5 h-5 shrink-0" />
                         <span>Pembelian</span>
                       </Link>
                     </SidebarMenuButton>

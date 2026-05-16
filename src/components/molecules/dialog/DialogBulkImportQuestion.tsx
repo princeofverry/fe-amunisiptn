@@ -70,14 +70,12 @@ export default function DialogBulkImportQuestion({
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file && isValidFile(file)) handleFileChange(file);
-    else toast.error("Format file tidak valid. Gunakan .xlsx, .xls, atau .csv");
+    else toast.error("Format file tidak valid. Gunakan file .csv");
   };
 
   const isValidFile = (file: File) =>
-    ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-     "application/vnd.ms-excel",
-     "text/csv"].includes(file.type) ||
-    file.name.match(/\.(xlsx|xls|csv)$/i) !== null;
+    ["text/csv", "text/plain", "application/csv"].includes(file.type) ||
+    file.name.match(/\.csv$/i) !== null;
 
   const handleSubmit = () => {
     if (!selectedFile) return;
@@ -188,12 +186,12 @@ export default function DialogBulkImportQuestion({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".xlsx,.xls,.csv"
+              accept=".csv"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0] || null;
                 if (file && isValidFile(file)) handleFileChange(file);
-                else if (file) toast.error("Format tidak valid. Gunakan .xlsx, .xls, atau .csv");
+                else if (file) toast.error("Format tidak valid. Gunakan file .csv");
               }}
             />
 
@@ -202,7 +200,7 @@ export default function DialogBulkImportQuestion({
                 <div className="flex items-center gap-2 text-green-700">
                   <FileSpreadsheet className="w-8 h-8 shrink-0" />
                   <div className="text-left">
-                    <p className="font-semibold text-sm truncate max-w-[240px]">{selectedFile.name}</p>
+                    <p className="font-semibold text-sm truncate max-w-60">{selectedFile.name}</p>
                     <p className="text-xs text-gray-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
                   </div>
                 </div>
@@ -217,7 +215,7 @@ export default function DialogBulkImportQuestion({
               <div className="flex flex-col items-center gap-2 text-gray-500">
                 <Upload className="w-8 h-8 text-gray-400" />
                 <p className="text-sm font-medium">Drag & drop file di sini atau klik untuk pilih</p>
-                <p className="text-xs text-gray-400">Format: .xlsx, .xls, .csv — Maks 5 MB</p>
+                <p className="text-xs text-gray-400">Format: .csv — Maks 5 MB</p>
               </div>
             )}
           </div>
