@@ -18,6 +18,7 @@ export interface User {
   target_major_2?: string;
   province?: string;
   city?: string;
+  ticket_balance?: number;
   created_at: Date;
   updated_at: Date;
 }

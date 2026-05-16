@@ -15,7 +15,7 @@ import { toast } from "sonner";
 type PaymentState = "idle" | "loading" | "success" | "pending" | "error";
 
 export default function DetailPaketPage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const token = (session as any)?.access_token || "";
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -57,11 +57,15 @@ export default function DetailPaketPage() {
         window.snap.pay(snapToken, {
           onSuccess: () => {
             paymentCompleted.current = true;
-            // Sinkronisasi status ke BE via Midtrans API (fallback jika webhook belum sampai)
             if (currentOrderId.current) {
               verifyPayment(
                 { orderId: currentOrderId.current, token },
-                { onSettled: () => queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] }) }
+                {
+                  onSettled: () => {
+                    queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
+                    updateSession(); // refresh session agar ticket_balance ter-update
+                  },
+                }
               );
             }
             setPaymentState("success");
