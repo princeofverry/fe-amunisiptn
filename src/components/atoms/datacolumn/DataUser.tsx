@@ -73,6 +73,7 @@ export const userColumns: (props: DataUserProps) => ColumnDef<User>[] = (props) 
     header: "Aksi",
     cell: ({ row }) => {
       const data = row.original;
+      if (data.role === "admin") return null;
       return (
         <ActionButton>
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
