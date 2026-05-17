@@ -43,6 +43,9 @@ export default function AdminKelasPage() {
   const { mutate: deleteKelas, isPending: isDeleting } = useDeleteKelasAdmin({
     onSuccess: () => {
       toast.success("Kelas berhasil dihapus!");
+      if (kelasList.length === 1 && page > 1) {
+        setPage((p) => p - 1);
+      }
       queryClient.invalidateQueries({ queryKey: ["get-all-kelas-admin"] });
       setDeleteDialogOpen(false);
       setDeleteId(null);

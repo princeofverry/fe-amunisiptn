@@ -21,17 +21,16 @@ export const UpdateKelasAdminHandler = async (
   const formData = new FormData();
   formData.append("_method", "PUT");
   formData.append("name", body.name);
-  if (body.description) formData.append("description", body.description);
+  formData.append("description", body.description ?? "");
   formData.append("price", String(body.price));
   formData.append(
     "discount_price",
     body.discount_price != null ? String(body.discount_price) : ""
   );
   formData.append("ticket_amount", String(body.ticket_amount ?? 0));
-  if (body.wa_group_link) formData.append("wa_group_link", body.wa_group_link);
-  if (body.wa_consultation_number)
-    formData.append("wa_consultation_number", body.wa_consultation_number);
-  if (body.meet_link) formData.append("meet_link", body.meet_link);
+  formData.append("wa_group_link", body.wa_group_link ?? "");
+  formData.append("wa_consultation_number", body.wa_consultation_number ?? "");
+  formData.append("meet_link", body.meet_link ?? "");
   if (body.image instanceof File) formData.append("image", body.image);
   formData.append("is_active", body.is_active ? "1" : "0");
 

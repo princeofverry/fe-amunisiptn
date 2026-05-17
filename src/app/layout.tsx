@@ -89,7 +89,7 @@ export default function RootLayout({
         <Script
           src={midtransUrl}
           data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
         <GlobalProvider>{children}</GlobalProvider>
       </body>

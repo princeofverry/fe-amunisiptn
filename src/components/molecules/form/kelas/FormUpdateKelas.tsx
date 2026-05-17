@@ -30,7 +30,7 @@ export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
   const { data: session } = useSession();
   const token = (session as any)?.access_token || "";
 
-  const { data: detailData, isPending: isLoadingDetail } = useGetDetailKelasAdmin({
+  const { data: detailData, isPending: isLoadingDetail, isError: isDetailError } = useGetDetailKelasAdmin({
     id: kelasId,
     token,
   });
@@ -123,6 +123,16 @@ export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
           <div className="flex justify-end">
             <Skeleton className="h-11 w-36 rounded-md" />
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isDetailError) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-red-500">
+          Gagal memuat data kelas. Pastikan koneksi server aktif dan coba lagi.
         </CardContent>
       </Card>
     );

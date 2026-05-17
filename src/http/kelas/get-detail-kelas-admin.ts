@@ -32,6 +32,7 @@ export const useGetDetailKelasAdmin = ({
     queryKey: ["get-detail-kelas-admin", id],
     queryFn: () => GetDetailKelasAdminHandler(id, token),
     enabled: !!token && !!id,
+    retry: 1,
     ...options,
   });
 };
