@@ -23,8 +23,10 @@ export const UpdateKelasAdminHandler = async (
   formData.append("name", body.name);
   if (body.description) formData.append("description", body.description);
   formData.append("price", String(body.price));
-  if (body.discount_price != null)
-    formData.append("discount_price", String(body.discount_price));
+  formData.append(
+    "discount_price",
+    body.discount_price != null ? String(body.discount_price) : ""
+  );
   formData.append("ticket_amount", String(body.ticket_amount ?? 0));
   if (body.wa_group_link) formData.append("wa_group_link", body.wa_group_link);
   if (body.wa_consultation_number)
