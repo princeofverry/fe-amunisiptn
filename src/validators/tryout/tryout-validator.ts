@@ -13,7 +13,7 @@ export const tryoutSchema = z.object({
 
   is_published: z.boolean(),
   is_free: z.boolean(),
-  use_irt: z.boolean().optional().default(true),
+  use_irt: z.boolean(),
 
   start_date: z
     .string()
