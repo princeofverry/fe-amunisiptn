@@ -19,7 +19,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { kelasSchema, KelasFormType } from "@/validators/kelas/kelas-validator";
-import { useGetDetailKelas } from "@/http/kelas/get-detail-kelas";
+import { useGetDetailKelasAdmin } from "@/http/kelas/get-detail-kelas-admin";
 import { useUpdateKelasAdmin } from "@/http/kelas/update-kelas-admin";
 
 interface FormUpdateKelasProps {
@@ -30,7 +30,7 @@ export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
   const { data: session } = useSession();
   const token = (session as any)?.access_token || "";
 
-  const { data: detailData, isPending: isLoadingDetail } = useGetDetailKelas({
+  const { data: detailData, isPending: isLoadingDetail } = useGetDetailKelasAdmin({
     id: kelasId,
     token,
   });
@@ -71,7 +71,7 @@ export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
       name: defaultData.name ?? "",
       description: defaultData.description ?? "",
       price: defaultData.price ?? 0,
-      discount_price: defaultData.discount_price ?? null,
+      discount_price: defaultData.discount_price && defaultData.discount_price > 0 ? defaultData.discount_price : null,
       ticket_amount: defaultData.ticket_amount ?? 0,
       wa_group_link: defaultData.wa_group_link ?? "",
       wa_consultation_number: defaultData.wa_consultation_number ?? "",
@@ -99,7 +99,7 @@ export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
         toast.success("Berhasil memperbarui kelas!");
         queryClient.invalidateQueries({ queryKey: ["get-all-kelas-admin"] });
         queryClient.invalidateQueries({
-          queryKey: ["get-detail-kelas", kelasId],
+          queryKey: ["get-detail-kelas-admin", kelasId],
         });
         router.push("/dashboard/admin/kelas");
       },
