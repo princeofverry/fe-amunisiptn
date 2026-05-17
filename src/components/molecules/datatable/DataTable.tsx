@@ -37,6 +37,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   isLoading: boolean;
   defaultPageSize?: number;
+  disablePagination?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -44,10 +45,13 @@ export function DataTable<TData, TValue>({
   data,
   isLoading,
   defaultPageSize = 10,
+  disablePagination = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [pageSize, setPageSize] = React.useState(defaultPageSize);
   const [pageIndex, setPageIndex] = React.useState(0);
+
+  const effectivePageSize = disablePagination ? 9999 : pageSize;
 
   const table = useReactTable({
     data,
@@ -58,9 +62,10 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     state: {
       sorting,
-      pagination: { pageIndex, pageSize },
+      pagination: { pageIndex: disablePagination ? 0 : pageIndex, pageSize: effectivePageSize },
     },
     onPaginationChange: (updater) => {
+      if (disablePagination) return;
       const next = typeof updater === "function"
         ? updater({ pageIndex, pageSize })
         : updater;
@@ -140,7 +145,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Footer: page size + pagination */}
-      {!isLoading && data.length > 0 && (
+      {!isLoading && data.length > 0 && !disablePagination && (
         <div className="flex items-center justify-between gap-4 flex-wrap">
           {/* Info + page size */}
           <div className="flex items-center gap-3 text-sm text-gray-500">

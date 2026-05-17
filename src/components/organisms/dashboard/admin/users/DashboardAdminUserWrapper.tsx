@@ -91,6 +91,7 @@ export default function DashboardAdminUserWrapper() {
               })}
               data={data?.data ?? []}
               isLoading={isPending}
+              disablePagination={true}
             />
 
             {/* Pagination */}
