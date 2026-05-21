@@ -13,6 +13,7 @@ import {
   PieChart, Pie, Cell, Legend,
   LineChart, Line, CartesianGrid,
 } from "recharts";
+import DashboardTitle from "@/components/atoms/typography/DashboardTitle";
 
 const STATUS_COLORS: Record<string, string> = {
   pending:   "#F59E0B",
@@ -81,7 +82,7 @@ export default function DashboardAdminPage() {
 
   return (
     <main className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
+      <DashboardTitle title="Dashboard Admin" />
 
       {/* Row 1 — 4 stat cards utama */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
