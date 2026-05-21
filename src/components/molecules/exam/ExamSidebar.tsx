@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 interface ExamSidebarProps {
   subtestName: string;
@@ -20,7 +20,7 @@ export default function ExamSidebar({
   onFinishSubtest,
 }: ExamSidebarProps) {
   return (
-    <div className="w-full lg:w-[260px] flex-shrink-0 flex flex-col gap-4">
+    <div className="w-full lg:w-65 shrink-0 flex flex-col gap-4">
       {/* Subtest Name */}
       <div className="bg-[#002B66] text-white rounded-xl p-4 text-center">
         <p className="text-sm font-medium opacity-80">Subtest:</p>

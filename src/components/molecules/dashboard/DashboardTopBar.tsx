@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bell, Search, LogOut, Settings, Home, User, Ticket } from "lucide-react";
@@ -49,7 +49,7 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
         </div>
 
         {/* Ticket Badge */}
-        <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer">
+        <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors shrink-0 cursor-pointer">
           <Ticket className="h-5 w-5 text-gray-700" />
           <span className="font-bold text-gray-800 text-sm">{ticketCount}</span>
         </button>
@@ -57,7 +57,7 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
         {/* Notification Bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="focus:outline-none">
-            <button className="relative p-2 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors flex-shrink-0 text-gray-600">
+            <button className="relative p-2 rounded-full bg-[#EDF5FF] hover:bg-blue-100 transition-colors shrink-0 text-gray-600">
               <Bell className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>

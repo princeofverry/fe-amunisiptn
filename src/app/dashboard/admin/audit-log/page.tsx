@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetAuditLogs } from "@/http/audit/get-audit-logs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,13 +41,26 @@ const ACTIONS = ["login", "logout", "register", "create", "update", "delete", "a
 export default function AuditLogPage() {
   const { data: session } = useSession();
   const token = session?.access_token || "";
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [page, setPage]       = useState(1);
+  const [page, setPage]       = useState(() => Number(searchParams.get("page") || 1));
   const [search, setSearch]   = useState("");
   const [module, setModule]   = useState("");
   const [action, setAction]   = useState("");
   const [date, setDate]       = useState("");
   const [searchInput, setSearchInput] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(page));
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [page, pathname, router, searchParams]);
 
   const { data, isLoading } = useGetAuditLogs({
     token, page, search, module, action, date,
@@ -82,7 +96,7 @@ export default function AuditLogPage() {
         <CardContent>
           <div className="flex flex-wrap gap-3">
             {/* Search */}
-            <div className="flex gap-2 flex-1 min-w-[200px]">
+            <div className="flex gap-2 flex-1 min-w-50">
               <Input
                 placeholder="Cari deskripsi atau pengguna..."
                 value={searchInput}
@@ -160,7 +174,7 @@ export default function AuditLogPage() {
                         {format(new Date(log.created_at), "dd MMM yyyy HH:mm:ss", { locale: idLocale })}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-medium text-gray-700 text-xs truncate max-w-[120px] block" title={log.user_name ?? "-"}>
+                        <span className="font-medium text-gray-700 text-xs truncate max-w-30 block" title={log.user_name ?? "-"}>
                           {log.user_name ?? <span className="text-gray-400 italic">System</span>}
                         </span>
                       </td>
@@ -184,27 +198,32 @@ export default function AuditLogPage() {
           )}
 
           {/* Pagination */}
-          {data && data.last_page > 1 && (
+          {data && data.total > 0 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <p className="text-sm text-gray-500">
-                Halaman {data.current_page} dari {data.last_page} — {data.total} log
+                Menampilkan {(data.current_page - 1) * data.per_page + 1}–{Math.min(data.current_page * data.per_page, data.total)} dari {data.total} data
               </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline" size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline" size="sm"
-                  onClick={() => setPage(p => Math.min(data.last_page, p + 1))}
-                  disabled={page === data.last_page}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+              {data.last_page > 1 && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="flex items-center px-3 text-sm text-gray-600">
+                    {data.current_page} / {data.last_page}
+                  </span>
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={() => setPage(p => Math.min(data.last_page, p + 1))}
+                    disabled={page === data.last_page}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

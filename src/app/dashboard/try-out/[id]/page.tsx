@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, FileText, Clock, Ticket, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useTickets } from "@/hooks/useTickets";
 import { useEnrollTryout } from "@/http/tryout/enroll-tryout";
@@ -28,6 +29,7 @@ export default function TryoutDetailPage({
 }) {
   const { id: tryoutId } = use(params);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: session, status: sessionStatus, update: updateSession } = useSession();
   const token = session?.access_token || "";
   const { ticketCount } = useTickets();
@@ -94,7 +96,10 @@ export default function TryoutDetailPage({
         setProofImage(null);
         setProofPreview(null);
         toast.success(isFree ? "Berhasil mendaftar tryout!" : "Tiket berhasil digunakan! Kamu terdaftar untuk tryout ini.");
-        if (!isFree) updateSession();
+        updateSession();
+        queryClient.invalidateQueries({ queryKey: ["get-user-tryouts"] });
+        queryClient.invalidateQueries({ queryKey: ["get-user-tryout-detail", tryoutId] });
+        queryClient.invalidateQueries({ queryKey: ["get-history-tryout"] });
         router.push(`/dashboard/try-out/${tryoutId}/start`);
       },
       onError: (error: unknown) => {
@@ -220,12 +225,20 @@ export default function TryoutDetailPage({
         <div className="pt-4">
           {isEnrolled ? (
             isFinished ? (
-              <button 
-                onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
-                className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
-              >
-                Lihat Hasil Skor & Pembahasan
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
+                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
+                >
+                  Mulai Lagi
+                </button>
+                <button
+                  onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#004AAB] hover:bg-[#003B8A] text-white shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1 transition-all"
+                >
+                  Lihat Hasil Skor & Pembahasan
+                </button>
+              </div>
             ) : (
               <button 
                 onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
@@ -289,7 +302,7 @@ export default function TryoutDetailPage({
               </>
             ) : (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-                <Ticket className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                <Ticket className="w-6 h-6 text-amber-600 shrink-0" />
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">1 Tiket akan digunakan</p>
                   <p className="text-xs text-gray-500">Sisa tiket kamu: <strong>{ticketCount}</strong></p>

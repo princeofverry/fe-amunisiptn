@@ -28,6 +28,7 @@ import {
   Home,
   Shield,
   GraduationCap,
+  TrendingUp,
 } from "lucide-react";
 import { SidebarUser } from "./SidebarUser";
 import { DASHBOARD_MENU } from "@/constants/dashboard-menu";
@@ -186,6 +187,17 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       <Link href="/dashboard/admin/transactions">
                         <FileClock />
                         <span>Riwayat Transaksi</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={buttonClass("/dashboard/admin/sales-report")}
+                    >
+                      <Link href="/dashboard/admin/sales-report">
+                        <TrendingUp />
+                        <span>Laporan Penjualan</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

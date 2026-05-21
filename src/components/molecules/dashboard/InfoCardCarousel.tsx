@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -75,7 +75,7 @@ export default function InfoCardCarousel() {
         {INFO_CARDS.map((card, index) => (
           <div
             key={index}
-            className="flex-shrink-0 w-[260px] md:w-[280px] snap-start rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            className="shrink-0 w-[260px] md:w-[280px] snap-start rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
           >
             <div className="relative w-full aspect-[4/3]">
               <Image

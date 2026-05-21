@@ -12,12 +12,18 @@ export interface TryoutHistoryData {
 }
 
 function mapMyTryoutToHistory(tryout: Tryout): TryoutHistoryData {
+  const isFinished = tryout.user_session_status === "finished";
+
   return {
     id: tryout.id,
     tryoutName: tryout.title,
-    dateTaken: tryout.start_date ? String(tryout.start_date) : "",
+    dateTaken: tryout.user_started_at
+      ? String(tryout.user_started_at)
+      : tryout.start_date
+        ? String(tryout.start_date)
+        : "",
     score: 0, // Score needs separate API call to /result
-    status: "selesai",
+    status: isFinished ? "selesai" : "sedang dikerjakan",
   };
 }
 

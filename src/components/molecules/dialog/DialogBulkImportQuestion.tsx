@@ -21,6 +21,25 @@ interface DialogBulkImportQuestionProps {
   subtestId: string;
 }
 
+const EXCEL_COLUMNS = [
+  ["Kolom A", "Gambar (embed gambar ke cell)"],
+  ["Kolom B", "Soal"],
+  ["Kolom C", "Opsi A"],
+  ["Kolom D", "Opsi B"],
+  ["Kolom E", "Opsi C"],
+  ["Kolom F", "Opsi D"],
+  ["Kolom G", "Opsi E"],
+  ["Kolom H", "Kunci Jawaban (A/B/C/D/E)"],
+  ["Kolom I", "Pembahasan"],
+];
+
+const CSV_COLUMNS = [
+  ["Kolom 1", "Soal"],
+  ["Kolom 2–6", "Jawaban A–E"],
+  ["Kolom 7", "Penjelasan"],
+  ["Kolom 8", "Kunci Jawaban"],
+];
+
 export default function DialogBulkImportQuestion({
   open,
   onOpenChange,
@@ -33,6 +52,7 @@ export default function DialogBulkImportQuestion({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeTab, setActiveTab] = useState<"xlsx" | "csv">("xlsx");
   const [result, setResult] = useState<{
     imported: number;
     skipped: number;
@@ -41,11 +61,7 @@ export default function DialogBulkImportQuestion({
 
   const { mutate: bulkImport, isPending } = useBulkImportQuestions({
     onSuccess: (data) => {
-      setResult({
-        imported: data.imported,
-        skipped: data.skipped,
-        errors: data.errors,
-      });
+      setResult({ imported: data.imported, skipped: data.skipped, errors: data.errors });
       if (data.imported > 0) {
         queryClient.invalidateQueries({ queryKey: ["get-all-question-by-subtest", subtestId] });
         toast.success(data.message);
@@ -60,9 +76,17 @@ export default function DialogBulkImportQuestion({
     },
   });
 
+  const isValidFile = (file: File) => {
+    const name = file.name.toLowerCase();
+    return name.endsWith(".csv") || name.endsWith(".xlsx");
+  };
+
   const handleFileChange = (file: File | null) => {
     setResult(null);
     setSelectedFile(file);
+    if (file) {
+      setActiveTab(file.name.toLowerCase().endsWith(".xlsx") ? "xlsx" : "csv");
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -70,47 +94,39 @@ export default function DialogBulkImportQuestion({
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file && isValidFile(file)) handleFileChange(file);
-    else toast.error("Format file tidak valid. Gunakan file .csv");
+    else toast.error("Format tidak valid. Gunakan file .xlsx atau .csv");
   };
-
-  const isValidFile = (file: File) =>
-    ["text/csv", "text/plain", "application/csv"].includes(file.type) ||
-    file.name.match(/\.csv$/i) !== null;
 
   const handleSubmit = () => {
     if (!selectedFile) return;
     bulkImport({ subtestId, file: selectedFile, token });
   };
 
-  const handleDownloadTemplate = async () => {
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${baseUrl}/admin/questions/bulk-import/template`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "text/csv",
-        },
-      });
+  const handleDownloadTemplate = async (type: "csv" | "xlsx") => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const endpoint = type === "xlsx"
+      ? "/admin/questions/bulk-import/excel-template"
+      : "/admin/questions/bulk-import/template";
+    const filename = type === "xlsx" ? "template-soal-amunisi.xlsx" : "template-soal-amunisi.csv";
 
+    try {
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!response.ok) {
-        const text = await response.text();
-        let msg = `Error ${response.status}`;
-        try { msg = JSON.parse(text)?.message ?? msg; } catch {}
-        toast.error("Gagal mengunduh template.", { description: msg });
+        toast.error("Gagal mengunduh template.");
         return;
       }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "template-soal-amunisi.csv";
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error("Download template error:", e);
+    } catch {
       toast.error("Gagal mengunduh template.", { description: "Periksa koneksi atau hubungi admin." });
     }
   };
@@ -123,51 +139,78 @@ export default function DialogBulkImportQuestion({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-green-600" />
-            Import Soal dari Excel
+            Import Soal
           </DialogTitle>
           <DialogDescription>
-            Upload file Excel dengan 8 kolom: Soal, Jwb A, B, C, D, E, Penjelasan, Kunci.
+            Upload file Excel (.xlsx) dengan dukungan gambar, atau CSV untuk format lama.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
+
+          {/* Tab pilih format */}
+          <div className="flex rounded-lg border overflow-hidden text-sm">
+            {(["xlsx", "csv"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-2 font-medium transition-colors ${
+                  activeTab === tab
+                    ? "bg-[#004AAB] text-white"
+                    : "bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                {tab === "xlsx" ? "Excel (.xlsx) — dengan Gambar" : "CSV — format lama"}
+              </button>
+            ))}
+          </div>
+
           {/* Format Info */}
           <div className="bg-blue-50 rounded-xl p-4 text-xs text-blue-800 space-y-1">
-            <p className="font-semibold mb-2">Format Kolom Excel:</p>
+            <p className="font-semibold mb-2">
+              {activeTab === "xlsx" ? "Format Kolom Excel:" : "Format Kolom CSV:"}
+            </p>
             <div className="grid grid-cols-2 gap-1">
-              {[
-                ["Kolom 1", "Soal"],
-                ["Kolom 2", "Jawaban A"],
-                ["Kolom 3", "Jawaban B"],
-                ["Kolom 4", "Jawaban C"],
-                ["Kolom 5", "Jawaban D"],
-                ["Kolom 6", "Jawaban E"],
-                ["Kolom 7", "Penjelasan/Pembahasan"],
-                ["Kolom 8", "Kunci Jawaban (A/B/C/D/E)"],
-              ].map(([col, label]) => (
+              {(activeTab === "xlsx" ? EXCEL_COLUMNS : CSV_COLUMNS).map(([col, label]) => (
                 <div key={col} className="flex gap-1">
-                  <span className="font-medium w-16">{col}:</span>
+                  <span className="font-medium w-20 shrink-0">{col}:</span>
                   <span>{label}</span>
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-blue-600 italic">Baris pertama bisa berupa header atau langsung data.</p>
+            {activeTab === "xlsx" && (
+              <p className="mt-2 text-blue-600 italic">
+                Embed gambar: Insert → Pictures → Place in Cell di kolom A.
+                Format didukung: jpg, png, webp.
+              </p>
+            )}
           </div>
 
           {/* Download Template */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full border-green-200 text-green-700 hover:bg-green-50"
-            onClick={handleDownloadTemplate}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download Template CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 border-green-200 text-green-700 hover:bg-green-50"
+              onClick={() => handleDownloadTemplate("xlsx")}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Template Excel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50"
+              onClick={() => handleDownloadTemplate("csv")}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Template CSV
+            </Button>
+          </div>
 
           {/* Drop Zone */}
           <div
@@ -186,12 +229,12 @@ export default function DialogBulkImportQuestion({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0] || null;
                 if (file && isValidFile(file)) handleFileChange(file);
-                else if (file) toast.error("Format tidak valid. Gunakan file .csv");
+                else if (file) toast.error("Format tidak valid. Gunakan file .xlsx atau .csv");
               }}
             />
 
@@ -215,7 +258,7 @@ export default function DialogBulkImportQuestion({
               <div className="flex flex-col items-center gap-2 text-gray-500">
                 <Upload className="w-8 h-8 text-gray-400" />
                 <p className="text-sm font-medium">Drag & drop file di sini atau klik untuk pilih</p>
-                <p className="text-xs text-gray-400">Format: .csv — Maks 5 MB</p>
+                <p className="text-xs text-gray-400">Format: .xlsx / .csv — Maks 10 MB</p>
               </div>
             )}
           </div>

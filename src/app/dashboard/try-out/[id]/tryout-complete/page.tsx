@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useFinishTryout } from "@/http/tryout/finish-tryout";
 import { useGetTryoutResult } from "@/http/tryout/get-tryout-result";
-import { Calendar, FileText, Clock } from "lucide-react";
+import { Calendar, FileText, Clock, Trophy } from "lucide-react";
 
 export default function TryoutCompletePage({
   params,
@@ -42,9 +42,12 @@ export default function TryoutCompletePage({
   });
 
   // Derived stats from result API
+  const result = resultData?.data;
   const summary = resultData?.data?.summary;
+  const scoreResult = resultData?.data?.score_result;
   const startedAt = resultData?.data?.started_at ? new Date(resultData.data.started_at) : null;
   const finishedAt = resultData?.data?.finished_at ? new Date(resultData.data.finished_at) : null;
+  const isSimpleScoreReady = result?.use_irt === false && scoreResult?.is_ready;
 
   const totalQuestions = summary ? `${summary.answered} / ${summary.total_questions}` : "—";
 
@@ -96,19 +99,36 @@ export default function TryoutCompletePage({
 
       {/* Result Info Card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 space-y-6">
-        {/* Result Processing Info */}
+        {/* Result Info */}
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 flex-shrink-0 bg-blue-50 rounded-xl flex items-center justify-center">
-            <Calendar className="w-8 h-8 text-[#004AAB]" />
+          <div className="w-16 h-16 shrink-0 bg-blue-50 rounded-xl flex items-center justify-center">
+            {isSimpleScoreReady ? (
+              <Trophy className="w-8 h-8 text-[#004AAB]" />
+            ) : (
+              <Calendar className="w-8 h-8 text-[#004AAB]" />
+            )}
           </div>
           <div>
             <h3 className="font-bold text-gray-900 text-base">Informasi Nilai</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Nilai Try Out Anda sedang diproses. Hasil lengkap akan diumumkan pada:
-            </p>
-            <p className="text-[#004AAB] font-bold text-base mt-2">
-              {releaseDateStr}
-            </p>
+            {isSimpleScoreReady ? (
+              <>
+                <p className="text-sm text-gray-600 mt-1">
+                  Try Out ini tidak menggunakan IRT. Skor Anda sudah tersedia.
+                </p>
+                <p className="text-[#004AAB] font-bold text-2xl mt-2">
+                  {scoreResult.final_score}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-600 mt-1">
+                  Nilai Try Out Anda sedang diproses. Hasil lengkap akan diumumkan pada:
+                </p>
+                <p className="text-[#004AAB] font-bold text-base mt-2">
+                  {releaseDateStr}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -142,12 +162,22 @@ export default function TryoutCompletePage({
         <hr className="border-gray-100" />
 
         {/* Action Button */}
-        <Link
-          href="/dashboard"
-          className="block w-full py-4 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold text-base rounded-xl text-center transition-colors shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1"
-        >
-          Kembali ke Dashboard
-        </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {isSimpleScoreReady && (
+            <Link
+              href={`/dashboard/try-out/${tryoutId}/result`}
+              className="block w-full py-4 bg-[#3B9245] hover:bg-[#317A3A] text-white font-bold text-base rounded-xl text-center transition-colors shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1"
+            >
+              Lihat Hasil Lengkap
+            </Link>
+          )}
+          <Link
+            href="/dashboard"
+            className="block w-full py-4 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold text-base rounded-xl text-center transition-colors shadow-[0_4px_0_0_#002B66] active:shadow-none active:translate-y-1"
+          >
+            Kembali ke Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   );

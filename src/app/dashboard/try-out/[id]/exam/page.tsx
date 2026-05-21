@@ -278,6 +278,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
           onSelectAnswer={handleSelectAnswer}
           onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
           onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+          onFinish={handleFinishSubtest}
           hasPrev={currentQuestionIndex > 0}
           hasNext={currentQuestionIndex < questions.length - 1}
         />

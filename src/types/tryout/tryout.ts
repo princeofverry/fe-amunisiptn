@@ -17,4 +17,7 @@ export interface Tryout {
   image_url: string | null;
   tryout_subtests: SubtestByTryout[];
   user_accesses_count?: number;
+  user_session_status?: "not_started" | "in_progress" | "finished" | "expired";
+  user_started_at?: Date | string | null;
+  user_finished_at?: Date | string | null;
 }

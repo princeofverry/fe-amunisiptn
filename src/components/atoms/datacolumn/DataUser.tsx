@@ -51,6 +51,15 @@ export const userColumns: (props: DataUserProps) => ColumnDef<User>[] = (props) 
     },
   },
   {
+    id: "phone_number",
+    header: "No. HP",
+    cell: ({ row }) => (
+      <p suppressHydrationWarning className="text-sm text-gray-600 font-mono">
+        {row.original.phone_number || "-"}
+      </p>
+    ),
+  },
+  {
     id: "school_origin",
     header: "Asal Sekolah",
     cell: ({ row }) => (

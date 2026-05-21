@@ -41,6 +41,7 @@ export interface TryoutResultData {
   tryout_id: string;
   tryout_title: string;
   use_irt: boolean;
+  attempt_number: number;
   status: string;
   started_at: string | null;
   finished_at: string | null;
@@ -51,6 +52,13 @@ export interface TryoutResultData {
     wrong: number;
     unanswered: number;
   };
+  score_result: {
+    method: "simple" | "irt";
+    is_ready: boolean;
+    raw_score: number;
+    final_score: number;
+    accuracy: number;
+  };
   irt_result: {
     is_ready: boolean;
     release_date: string | null;
@@ -58,6 +66,35 @@ export interface TryoutResultData {
     raw_score: number;
     final_score: number;
   } | null;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: string;
+  user_name: string;
+  attempt_number: number;
+  started_at: string | null;
+  finished_at: string | null;
+  summary: {
+    total_questions: number;
+    answered: number;
+    correct: number;
+    wrong: number;
+    unanswered: number;
+    accuracy: number;
+  };
+  score: {
+    raw_score: number;
+    final_score: number;
+  };
+}
+
+export interface TryoutLeaderboardData {
+  tryout_id: string;
+  tryout_title: string;
+  use_irt: boolean;
+  leaderboard_basis: "attempt_number_1";
+  leaderboard: LeaderboardEntry[];
 }
 
 // Review types
@@ -93,6 +130,7 @@ export interface TryoutSession {
   id: string;
   user_id: string;
   tryout_id: string;
+  attempt_number: number;
   started_at: string;
   finished_at: string | null;
   status: "not_started" | "in_progress" | "finished";
