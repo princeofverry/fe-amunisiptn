@@ -62,7 +62,7 @@ function StatCard({
 
 export default function DashboardAdminPage() {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const { data, isLoading } = useGetAdminStats({ token });
   const stats = data?.data;

@@ -10,6 +10,7 @@ import { useGetDetailKelas } from "@/http/kelas/get-detail-kelas";
 import { useCreateKelasOrder } from "@/http/kelas/create-kelas-order";
 import { useCancelKelasOrder } from "@/http/kelas/cancel-kelas-order";
 import { useVerifyKelasPayment } from "@/http/kelas/verify-kelas-payment";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 type PaymentState = "idle" | "loading" | "success" | "pending" | "error";
 
@@ -20,7 +21,7 @@ interface DetailKelasPageProps {
 export default function DetailKelasPage({ params }: DetailKelasPageProps) {
   const { id: kelasId } = use(params);
   const { data: session, update: updateSession } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useGetDetailKelas({ id: kelasId, token });
@@ -45,7 +46,7 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
           return;
         }
 
-        if (typeof window === "undefined" || !(window as any).snap) {
+        if (typeof window === "undefined" || !window.snap) {
           toast.error("Midtrans Snap belum siap, coba refresh halaman.");
           setPaymentState("idle");
           return;
@@ -54,7 +55,7 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
         currentOrderId.current = res.data.id;
         paymentCompleted.current = false;
 
-        (window as any).snap.pay(snapToken, {
+        window.snap.pay(snapToken, {
           onSuccess: () => {
             paymentCompleted.current = true;
             if (currentOrderId.current) {
@@ -91,8 +92,8 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
           },
         });
       },
-      onError: (error: any) => {
-        const msg = error?.response?.data?.message || "Gagal membuat pesanan.";
+      onError: (error: unknown) => {
+        const msg = getErrorMessage(error, "Gagal membuat pesanan.");
         toast.error(msg);
         setPaymentState("idle");
       },

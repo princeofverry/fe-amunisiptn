@@ -11,12 +11,13 @@ import { useCancelOrder } from "@/http/pembelian/cancel-order";
 import { useVerifyPayment } from "@/http/pembelian/verify-payment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 type PaymentState = "idle" | "loading" | "success" | "pending" | "error";
 
 export default function DetailPaketPage() {
   const { data: session, update: updateSession } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -89,8 +90,8 @@ export default function DetailPaketPage() {
           },
         });
       },
-      onError: (error: any) => {
-        const msg = error?.response?.data?.message || "Gagal membuat pesanan.";
+      onError: (error: unknown) => {
+        const msg = getErrorMessage(error, "Gagal membuat pesanan.");
         toast.error(msg);
         setPaymentState("idle");
       },

@@ -14,7 +14,7 @@ export default function TryoutCompletePage({
 }) {
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const finishTryoutMutation = useFinishTryout({

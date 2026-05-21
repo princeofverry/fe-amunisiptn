@@ -2,18 +2,14 @@
 
 import AlertDialogDeleteQuestion from "@/components/atoms/alert-dialog/question/AlertDialogDeleteQuestion";
 import { questionColumns } from "@/components/atoms/datacolumn/DataQuestion";
-import { questionSubtestTryoutColumns } from "@/components/atoms/datacolumn/DataQuestionSubtestTryout";
 import { DataTable } from "@/components/molecules/datatable/DataTable";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDeleteQuestion } from "@/http/questions/delete-question";
 import { useGetAllQuestionBySubtest } from "@/http/questions/get-all-question-by-subtest";
 import { Question } from "@/types/questions/question";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -23,7 +19,6 @@ interface DashboardAdminQuestionSubtestTryoutProps {
 }
 
 export default function DashboardAdminQuestionSubtestTryoutWrapper({
-  tryoutId,
   subtestId,
 }: DashboardAdminQuestionSubtestTryoutProps) {
   const { data: session, status } = useSession();

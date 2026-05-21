@@ -2,6 +2,7 @@ import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { api } from "@/lib/axios";
 import type { Tryout } from "@/types/tryout/tryout";
+import type { SubtestByTryout } from "@/types/subtest/subtest";
 
 export interface UserTryoutData {
   id: string;
@@ -12,7 +13,7 @@ export interface UserTryoutData {
   is_free?: boolean;
   description?: string;
   image_url?: string | null;
-  tryoutSubtests?: any[];
+  tryoutSubtests?: SubtestByTryout[];
   participantsCount: number;
 }
 

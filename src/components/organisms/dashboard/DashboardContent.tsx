@@ -5,18 +5,15 @@ import InfoCardCarousel from "@/components/molecules/dashboard/InfoCardCarousel"
 import LiveClassSection from "@/components/molecules/dashboard/LiveClassSection";
 import DialogCompleteProfile from "@/components/molecules/dialog/DialogCompleteProfile";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function DashboardContent() {
   const { data: session } = useSession();
-  const [showProfileComplete, setShowProfileComplete] = useState(false);
-
-  useEffect(() => {
-    // Show popup if user lacks a phone number or school origin, which they usually do right after registering
-    if (session?.user && (!session.user.phone_number || !session.user.school_origin)) {
-      setShowProfileComplete(true);
-    }
-  }, [session]);
+  const [profileDialogDismissed, setProfileDialogDismissed] = useState(false);
+  const showProfileComplete =
+    !!session?.user &&
+    (!session.user.phone_number || !session.user.school_origin) &&
+    !profileDialogDismissed;
 
   return (
     <>
@@ -29,7 +26,9 @@ export default function DashboardContent() {
       {/* Conditionally rendered popup for new users without full profiles */}
       <DialogCompleteProfile 
         open={showProfileComplete} 
-        onOpenChange={setShowProfileComplete} 
+        onOpenChange={(open) => {
+          if (!open) setProfileDialogDismissed(true);
+        }} 
       />
     </>
   );

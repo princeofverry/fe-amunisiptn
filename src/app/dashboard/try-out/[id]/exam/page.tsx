@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useCallback, Suspense } from "react";
+import { useState, useEffect, use, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { X } from "lucide-react";
@@ -28,7 +28,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   // Read subtest index from query param
   const subtestParam = parseInt(searchParams.get("subtest") || "0", 10);
@@ -41,7 +41,6 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [subtests, setSubtests] = useState<SubtestInfo[]>([]);
 
   // Fetch tryout detail to get subtests list
   const { data: tryoutDetail } = useGetUserTryoutDetail({
@@ -49,10 +48,10 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
     token,
   });
 
-  // Parse subtests from API when tryout detail loads
-  useEffect(() => {
-    if (tryoutDetail?.data?.tryout_subtests) {
-      const sorted = [...tryoutDetail.data.tryout_subtests]
+  const subtests = useMemo<SubtestInfo[]>(() => {
+    if (!tryoutDetail?.data?.tryout_subtests) return [];
+
+    return [...tryoutDetail.data.tryout_subtests]
         .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
         .map((ts: SubtestByTryout) => ({
           id: ts.id,
@@ -61,22 +60,20 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
           duration: ts.duration_minutes,
           questionCount: ts.subtest.max_questions,
         }));
-      setSubtests(sorted);
-    }
   }, [tryoutDetail]);
 
   const currentSubtest = subtests[currentSubtestIndex];
   const totalSubtests = subtests.length;
 
   // --- Backend: Start subtest & fetch questions ---
-  const startSubtestMutation = useStartSubtest({
+  const { mutate: startSubtest } = useStartSubtest({
     token,
     options: {
       onSuccess: (data) => {
         // Timer from BE
         setTimerSeconds(data.data.remaining_seconds);
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         console.error("Failed to start subtest:", error);
         // Fallback to configured duration
         setTimerSeconds((currentSubtest?.duration || 30) * 60);
@@ -85,7 +82,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   });
 
   // Backend: fetch exam questions
-  const { data: examData, refetch: refetchExam } = useGetExamQuestions({
+  const { refetch: refetchExam } = useGetExamQuestions({
     tryoutId,
     subtestId: currentSubtest?.id || "",
     token,
@@ -98,12 +95,14 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   useEffect(() => {
     if (!currentSubtest) return;
 
-    setIsLoading(true);
-    setCurrentQuestionIndex(0);
-    setAnswers({});
+    queueMicrotask(() => {
+      setIsLoading(true);
+      setCurrentQuestionIndex(0);
+      setAnswers({});
+    });
 
     // Start the subtest session (to get timer), then fetch questions
-    startSubtestMutation.mutate(
+    startSubtest(
       { tryoutId, subtestId: currentSubtest.id },
       {
         onSuccess: () => {
@@ -155,12 +154,12 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
         },
       }
     );
-  }, [currentSubtest?.id, tryoutId]);
+  }, [currentSubtest, refetchExam, startSubtest, tryoutId]);
 
   // --- Mutations ---
   const submitAnswerMutation = useSubmitAnswer({
     token,
-    options: { onError: (error: any) => console.error("Failed to submit answer:", error) },
+    options: { onError: (error: unknown) => console.error("Failed to submit answer:", error) },
   });
 
   const finishSubtestMutation = useFinishSubtest({
@@ -171,12 +170,12 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   // --- Derived state ---
   const currentQuestion = questions[currentQuestionIndex];
   const answeredQuestions = new Set(
-    Object.entries(answers).filter(([_, v]) => v !== null).map(([k]) => k)
+    Object.entries(answers).filter(([, v]) => v !== null).map(([k]) => k)
   );
   const unansweredCount = questions.length - answeredQuestions.size;
 
   // --- Handlers ---
-  const handleSelectAnswer = useCallback((answer: string | null) => {
+  const handleSelectAnswer = (answer: string | null) => {
     if (!currentQuestion) return;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
 
@@ -189,7 +188,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
         answer,
       });
     }
-  }, [currentQuestion, currentSubtest, tryoutId]);
+  };
 
   const navigateAfterSubtest = () => {
     const nextIndex = currentSubtestIndex + 1;
@@ -200,13 +199,13 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
     }
   };
 
-  const handleTimeUp = useCallback(() => {
+  const handleTimeUp = () => {
     if (currentSubtest) {
       finishSubtestMutation.mutate({ tryoutId, subtestId: currentSubtest.id });
     } else {
       navigateAfterSubtest();
     }
-  }, [currentSubtest, tryoutId, currentSubtestIndex, totalSubtests]);
+  };
 
   const handleFinishSubtest = () => {
     setShowFinishDialog(true);

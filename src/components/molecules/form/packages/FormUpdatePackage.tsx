@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 import { useEffect, useMemo } from "react";
 import { useGetDetailPackage } from "@/http/packages/get-detail-package";
 import {
@@ -99,8 +100,8 @@ export default function FormUpdatePackage({
   const router = useRouter();
 
   const { mutate: updatePackageHandler, isPending } = useUpdatePackage({
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? "Terjadi kesalahan.";
+    onError: (error: unknown) => {
+      const message = getErrorMessage(error, "Terjadi kesalahan.");
       toast.error("Gagal memperbarui package!", { description: message });
     },
     onSuccess: () => {

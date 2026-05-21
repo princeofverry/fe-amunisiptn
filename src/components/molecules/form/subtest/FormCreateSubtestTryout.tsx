@@ -36,6 +36,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 import {
   subtestTryoutSchema,
@@ -90,8 +91,8 @@ export default function FormCreateSubtestTryout({
   const queryClient = useQueryClient();
 
   const { mutate: createHandler, isPending } = useCreateSubtestTryout({
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? "Terjadi kesalahan.";
+    onError: (error: unknown) => {
+      const message = getErrorMessage(error, "Terjadi kesalahan.");
 
       toast.error("Gagal menambahkan subtest!", {
         description: message,

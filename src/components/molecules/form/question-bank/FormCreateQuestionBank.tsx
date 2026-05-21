@@ -45,6 +45,7 @@ import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 import {
   questionBankSchema,
@@ -108,8 +109,8 @@ export default function FormCreateQuestionBank() {
   const router = useRouter();
 
   const { mutate: createQuestionHandler, isPending } = useCreateQuestionBank({
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? "Terjadi kesalahan.";
+    onError: (error: unknown) => {
+      const message = getErrorMessage(error, "Terjadi kesalahan.");
 
       toast.error("Gagal membuat soal!", {
         description: message,

@@ -11,6 +11,7 @@ import { useDeleteKelasAdmin } from "@/http/kelas/delete-kelas-admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getErrorMessage } from "@/utils/get-error-message";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,7 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 50];
 
 export default function AdminKelasPage() {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
@@ -50,9 +51,8 @@ export default function AdminKelasPage() {
       setDeleteDialogOpen(false);
       setDeleteId(null);
     },
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.message ?? "Gagal menghapus kelas.";
+    onError: (error: unknown) => {
+      const message = getErrorMessage(error, "Gagal menghapus kelas.");
       toast.error(message);
     },
   });

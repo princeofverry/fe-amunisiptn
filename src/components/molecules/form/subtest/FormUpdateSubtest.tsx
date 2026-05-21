@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 import { useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import {
@@ -72,8 +73,8 @@ export default function FormUpdateSubtest({
   const router = useRouter();
 
   const { mutate: updateSubtestHandler, isPending } = useUpdateSubtest({
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? "Terjadi kesalahan.";
+    onError: (error: unknown) => {
+      const message = getErrorMessage(error, "Terjadi kesalahan.");
       toast.error("Gagal memperbarui subtes!", { description: message });
     },
     onSuccess: () => {

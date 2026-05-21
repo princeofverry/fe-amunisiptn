@@ -5,12 +5,12 @@
  * This hook provides minimal utility functions for compatibility.
  */
 export function useRegisteredTryouts() {
-  const registerTryout = (_tryoutId: string) => {
+  const registerTryout = () => {
     // Registration is handled via API (useEnrollTryout mutation)
     return;
   };
 
-  const checkIsRegistered = (_tryoutId: string): boolean => {
+  const checkIsRegistered = (): boolean => {
     // In backend mode, check via my-tryouts API
     return false; // Will be overridden by actual API data
   };

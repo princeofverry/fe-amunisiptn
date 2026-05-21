@@ -12,43 +12,20 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
-  Settings2,
   Users,
   Book,
-  FileText,
-  File,
-  MessageCircleMore,
-  Info,
-  Map,
-  Box,
-  Package,
-  ClipboardClock,
-  SquareArrowDown,
-  SquareArrowUp,
-  ClipboardList,
-  ChartNoAxesCombined,
-  ClipboardPen,
-  Landmark,
-  FingerprintPattern,
-  FileBox,
-  ListChecks,
   ShoppingCart,
-  Receipt,
-  PlusCircle,
-  Banknote,
   BookCopy,
   BookOpen,
   BookKey,
   FileClock,
   Home,
-  Crown,
   Shield,
   GraduationCap,
 } from "lucide-react";
@@ -71,13 +48,6 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
   const buttonClass = (href: string) =>
     `hover:bg-primary/10 hover:text-primary dark:hover:bg-slate-900 ${
       pathname.startsWith(href)
-        ? "bg-primary/10 text-primary dark:bg-slate-800"
-        : ""
-    }`;
-
-  const buttonClassIncoming = (href: string) =>
-    `hover:bg-primary/10 hover:text-primary dark:hover:bg-slate-900 ${
-      pathname.startsWith(href) && !pathname.startsWith(`${href}/status`)
         ? "bg-primary/10 text-primary dark:bg-slate-800"
         : ""
     }`;
