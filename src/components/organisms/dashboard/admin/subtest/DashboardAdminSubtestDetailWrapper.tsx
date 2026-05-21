@@ -12,7 +12,8 @@ import { useGetAllQuestionBySubtest } from "@/http/questions/get-all-question-by
 import { useGetDetailSubtest } from "@/http/subtest/get-detail-subtest";
 import { Question } from "@/types/questions/question";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import DialogBulkImportQuestion from "@/components/molecules/dialog/DialogBulkImportQuestion";
+import { FileSpreadsheet, Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -31,6 +32,7 @@ export default function DashboardadminSubtestDetailWrapper({
   const [isOpenDialogDelete, setIsOpenDialogDelete] = useState(false);
   const [isSelectedDeleteQuestion, setIsSelectedDeleteQuestion] =
     useState<Question | null>(null);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   const deleteQuestionHandler = (data: Question) => {
     setIsSelectedDeleteQuestion(data);
@@ -86,18 +88,29 @@ export default function DashboardadminSubtestDetailWrapper({
       <DashboardTitle title={data?.data.name} />
       <Card>
         <CardContent>
-          <div className="grid md:grid-cols-3 grid-cols-1 gap-4">
+          <div className="grid md:grid-cols-4 grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <span>Judul Subtes</span>
+              <span className="text-sm text-gray-500">Judul Subtes</span>
               <h3 className="font-semibold">{data?.data.name}</h3>
             </div>
             <div className="flex flex-col gap-2">
-              <span>Kategori</span>
+              <span className="text-sm text-gray-500">Kategori</span>
               <h3 className="font-semibold">{data?.data.category}</h3>
             </div>
             <div className="flex flex-col gap-2">
-              <span>Maksimal Pertanyaan</span>
-              <h3 className="font-semibold">{data?.data.max_questions}</h3>
+              <span className="text-sm text-gray-500">Maks. Soal</span>
+              <h3 className="font-semibold">
+                {data?.data.max_questions === 0 ? "Tidak terbatas" : data?.data.max_questions}
+              </h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-gray-500">Jumlah Soal</span>
+              <h3 className="font-semibold">
+                <span className="text-blue-600">{data?.data.questions_count ?? 0}</span>
+                {data?.data.max_questions && data.data.max_questions > 0 && (
+                  <span className="text-gray-400 font-normal"> / {data.data.max_questions}</span>
+                )}
+              </h3>
             </div>
           </div>
         </CardContent>
@@ -110,11 +123,22 @@ export default function DashboardadminSubtestDetailWrapper({
                 placeholder="Cari berdasarkan pertanyaan..."
                 className="max-w-xs w-full"
               />
-              <Button asChild size={"lg"}>
-                <Link href={`/dashboard/admin/subtest/${id}/create`}>
-                  <Plus /> Tambah Pertanyaan
-                </Link>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setIsBulkImportOpen(true)}
+                  className="border-green-200 text-green-700 hover:bg-green-50"
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Import Excel
+                </Button>
+                <Button asChild size={"lg"}>
+                  <Link href={`/dashboard/admin/subtest/${id}/create`}>
+                    <Plus /> Tambah Pertanyaan
+                  </Link>
+                </Button>
+              </div>
             </div>
             <DataTable
               columns={questionColumns({
@@ -135,6 +159,12 @@ export default function DashboardadminSubtestDetailWrapper({
           isPending={isPending}
         />
       )}
+
+      <DialogBulkImportQuestion
+        open={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        subtestId={id}
+      />
     </section>
   );
 }

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Field,
   FieldError,
@@ -75,12 +76,23 @@ export default function FormAuthLogin() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Password</FieldLabel>
-              <Input
-                {...field}
-                type={showPassword ? "text" : "password"}
-                id="password"
-                placeholder="Masukkan password"
-              />
+              <div className="relative">
+                <Input
+                  {...field}
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  placeholder="Masukkan password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {fieldState.error && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

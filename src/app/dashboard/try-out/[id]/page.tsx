@@ -20,7 +20,7 @@ export default function TryoutDetailPage({
 }) {
   const { id: tryoutId } = use(params);
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus, update: updateSession } = useSession();
   const token = (session as any)?.access_token || "";
   const { ticketCount } = useTickets();
 
@@ -86,6 +86,7 @@ export default function TryoutDetailPage({
         setProofImage(null);
         setProofPreview(null);
         toast.success(isFree ? "Berhasil mendaftar tryout!" : "Tiket berhasil digunakan! Kamu terdaftar untuk tryout ini.");
+        if (!isFree) updateSession();
         router.push(`/dashboard/try-out/${tryoutId}/start`);
       },
       onError: (error: any) => {

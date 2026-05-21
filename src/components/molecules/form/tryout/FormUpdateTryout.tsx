@@ -62,6 +62,7 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
       end_date: "",
       is_published: false,
       is_free: false,
+      use_irt: true,
       image: null,
     },
     mode: "onChange",
@@ -84,6 +85,7 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
       end_date: formatDate(defaultData.end_date),
       is_published: defaultData.is_published ?? false,
       is_free: defaultData.is_free ?? false,
+      use_irt: defaultData.use_irt ?? true,
       image: null,
     });
 
@@ -342,6 +344,27 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
                     />
                     <span className="text-sm text-muted-foreground">
                       {field.value ? "Gratis" : "Berbayar"}
+                    </span>
+                  </div>
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="use_irt"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Gunakan Skoring IRT?</FieldLabel>
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {field.value
+                        ? "IRT — skor dihitung berdasarkan tingkat kesulitan soal"
+                        : "Tanpa IRT — hanya tampilkan jumlah benar/salah"}
                     </span>
                   </div>
                 </Field>

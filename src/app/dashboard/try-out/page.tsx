@@ -30,14 +30,29 @@ export default function TryoutPage() {
   const { data: historyData } = useGetHistoryTryout({ token });
   const enrolledTryoutIds = new Set(historyData?.data?.map((t) => t.id) || []);
 
-  const filteredData = tryouts.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (activeFilter === "Semua Tryout" ||
-        (activeFilter === "Tryout Premium" && item.type === "Premium") ||
-        (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
-        (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
-  );
+  const getStatusOrder = (item: { startDate: string; endDate: string }) => {
+    const now = Date.now();
+    const start = new Date(item.startDate).getTime();
+    const end = new Date(item.endDate).getTime();
+    if (now >= start && now <= end) return 0;
+    if (now < start) return 1;
+    return 2;
+  };
+
+  const filteredData = tryouts
+    .filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (activeFilter === "Semua Tryout" ||
+          (activeFilter === "Tryout Premium" && item.type === "Premium") ||
+          (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
+          (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
+    )
+    .sort((a, b) => {
+      const statusDiff = getStatusOrder(a) - getStatusOrder(b);
+      if (statusDiff !== 0) return statusDiff;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -121,6 +136,7 @@ export default function TryoutPage() {
             startDate={item.startDate}
             endDate={item.endDate}
             imageUrl={item.image_url}
+            participantsCount={item.participantsCount}
           />
         ))}
       </div>

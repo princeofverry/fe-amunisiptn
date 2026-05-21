@@ -55,11 +55,17 @@ export const packageColumns: (
   {
     id: "currency",
     header: "Harga",
-    cell: ({ row }) => (
-      <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-        {formatPrice(row.original.price)}
-      </p>
-    ),
+    cell: ({ row }) => {
+      const { price, discount_price } = row.original;
+      return discount_price ? (
+        <div suppressHydrationWarning className="flex flex-col">
+          <span className="line-through text-gray-400 text-xs">{formatPrice(price)}</span>
+          <span className="text-green-600 font-semibold">{formatPrice(discount_price)}</span>
+        </div>
+      ) : (
+        <p suppressHydrationWarning>{formatPrice(price)}</p>
+      );
+    },
   },
   {
     id: "status",

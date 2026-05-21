@@ -13,6 +13,7 @@ export interface UserTryoutData {
   description?: string;
   image_url?: string | null;
   tryoutSubtests?: any[];
+  participantsCount: number;
 }
 
 function mapTryoutBEtoFE(tryout: Tryout): UserTryoutData {
@@ -26,6 +27,7 @@ function mapTryoutBEtoFE(tryout: Tryout): UserTryoutData {
     description: tryout.description,
     image_url: tryout.image_url,
     tryoutSubtests: tryout.tryout_subtests,
+    participantsCount: tryout.user_accesses_count ?? 0,
   };
 }
 

@@ -129,13 +129,17 @@ export default function PembelianPage() {
                   <span className="font-bold text-xl text-[#004AAB]">
                     Rp{pkg.price.toLocaleString("id-ID")}
                   </span>
-                  <span className="text-sm font-medium text-slate-500 line-through">
-                    Rp{pkg.originalPrice.toLocaleString("id-ID")}
-                  </span>
+                  {pkg.originalPrice != null && (
+                    <span className="text-sm font-medium text-slate-500 line-through">
+                      Rp{pkg.originalPrice.toLocaleString("id-ID")}
+                    </span>
+                  )}
                 </div>
-                <div className="bg-[#EBF4FF] text-[#004AAB] px-2.5 py-1 rounded-sm text-xs font-bold">
-                  Diskon {pkg.discount}
-                </div>
+                {pkg.discountPercent != null && (
+                  <div className="bg-[#EBF4FF] text-[#004AAB] px-2.5 py-1 rounded-sm text-xs font-bold">
+                    Diskon {pkg.discountPercent}%
+                  </div>
+                )}
               </div>
 
               <Link 

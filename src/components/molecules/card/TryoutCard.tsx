@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Radio, Calendar, Clock } from "lucide-react";
+import { Radio, Calendar, Clock, Users } from "lucide-react";
 import Link from "next/link";
 
 interface TryoutCardProps {
@@ -12,6 +12,7 @@ interface TryoutCardProps {
   startDate: string;
   endDate: string;
   imageUrl?: string | null;
+  participantsCount?: number;
 }
 
 export default function TryoutCard({
@@ -21,6 +22,7 @@ export default function TryoutCard({
   startDate,
   endDate,
   imageUrl,
+  participantsCount = 0,
 }: TryoutCardProps) {
 
   const [statusText, setStatusText] = useState("Menghitung...");
@@ -130,9 +132,15 @@ export default function TryoutCard({
         {/* Details List */}
         <div className="space-y-2 mb-5">
           <div className="flex items-center gap-2">
-            <Calendar className="w-[15px] h-[15px] text-gray-400" />
+            <Calendar className="w-3.75 h-3.75 text-gray-400" />
             <span className="text-gray-600 text-xs font-medium">
               {dateRangeText}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="w-3.75 h-3.75 text-gray-400" />
+            <span className="text-gray-600 text-xs font-medium">
+              {participantsCount.toLocaleString("id-ID")} peserta
             </span>
           </div>
         </div>

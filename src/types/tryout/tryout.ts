@@ -7,6 +7,7 @@ export interface Tryout {
   description: string;
   is_published: boolean;
   is_free: boolean;
+  use_irt: boolean;
   created_at: Date;
   updated_at: Date;
   creator: User;
@@ -15,4 +16,5 @@ export interface Tryout {
   end_date: Date | null;
   image_url: string | null;
   tryout_subtests: SubtestByTryout[];
+  user_accesses_count?: number;
 }
