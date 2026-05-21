@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { KeyRound, Upload, X } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRedeemAccessCode } from "@/http/access-code/redeem-access-code";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 interface DialogRedeemCodeProps {
   open: boolean;
@@ -14,7 +15,7 @@ interface DialogRedeemCodeProps {
 
 export default function DialogRedeemCode({ open, onOpenChange }: DialogRedeemCodeProps) {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
   const [code, setCode] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -26,8 +27,8 @@ export default function DialogRedeemCode({ open, onOpenChange }: DialogRedeemCod
         setCode("");
         onOpenChange(false);
       },
-      onError: (error: any) => {
-        const message = error?.response?.data?.message || "Gagal menggunakan kode akses";
+      onError: (error: unknown) => {
+        const message = getErrorMessage(error, "Gagal menggunakan kode akses");
         toast.error(message);
       },
     },

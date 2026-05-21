@@ -18,6 +18,14 @@ declare module "next-auth" {
   }
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    access_token?: string;
+    role?: string;
+    userOverrides?: Partial<Auth>;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.AUTH_SECRET,
   providers: [
@@ -32,9 +40,12 @@ export const authOptions: NextAuthOptions = {
 
         try {
           if (credentials.token) {
+            const auth = await getAuthApiHandler(credentials.token);
+
             return {
-              id: "oauth-user",
+              id: auth.id,
               token: credentials.token,
+              role: auth.role,
             };
           }
 
@@ -62,15 +73,15 @@ export const authOptions: NextAuthOptions = {
       // Intercept purely front-end fields on session update and store them in the JWT token
       if (trigger === "update" && session?.user) {
         token.userOverrides = {
-          ...(token.userOverrides as any || {}),
+          ...(token.userOverrides || {}),
           ...session.user,
         };
       }
 
       if (user) {
-        token.access_token = (user as any).token;
-        token.sub = String((user as any).id);
-        token.role = (user as any).role;
+        token.access_token = user.token;
+        token.sub = String(user.id);
+        token.role = user.role;
       }
       return token;
     },
@@ -81,16 +92,17 @@ export const authOptions: NextAuthOptions = {
         const auth = await getAuthApiHandler(access_token);
 
         // Merge fresh backend data with any front-end only overrides (like province, city) we stored
-        const overrides = (token.userOverrides as any) || {};
+        const overrides = token.userOverrides || {};
         const mergedUser = { ...auth, ...overrides };
 
         return { ...session, user: mergedUser, access_token };
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If BE returns 401 or is unreachable, return a degraded session
         // This prevents the entire app from crashing
-        console.warn("[auth] Failed to fetch user from BE:", error?.message || error);
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn("[auth] Failed to fetch user from BE:", message);
 
-        const overrides = (token.userOverrides as any) || {};
+        const overrides = token.userOverrides || {};
         return {
           ...session,
           user: {
@@ -99,7 +111,7 @@ export const authOptions: NextAuthOptions = {
             email: overrides?.email || session?.user?.email || "",
             role: overrides?.role || token.role || "user",
             ...overrides,
-          } as any,
+          } as Auth,
           access_token,
         };
       }

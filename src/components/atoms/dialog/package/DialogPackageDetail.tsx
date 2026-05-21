@@ -22,7 +22,7 @@ export default function DialogPackageDetail({
 }: DialogPackageDetailProps) {
   const { data: session, status } = useSession();
 
-  const { data, isPending } = useGetDetailPackage({
+  const { data } = useGetDetailPackage({
     id: packageId,
     token: session?.access_token ?? "",
     options: {

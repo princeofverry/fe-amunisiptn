@@ -39,7 +39,7 @@ const ACTIONS = ["login", "logout", "register", "create", "update", "delete", "a
 
 export default function AuditLogPage() {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const [page, setPage]       = useState(1);
   const [search, setSearch]   = useState("");

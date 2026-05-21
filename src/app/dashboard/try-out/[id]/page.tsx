@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import { ChevronLeft, FileText, Clock, Ticket, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,14 @@ import { useGetUserTryoutDetail } from "@/http/tryout/get-user-tryout-detail";
 import { useGetHistoryTryout } from "@/http/tryout/get-history-tryout";
 import { toast } from "sonner";
 import type { SubtestByTryout } from "@/types/subtest/subtest";
+import { getErrorMessage } from "@/utils/get-error-message";
+
+interface TryoutSubtestSummary {
+  name: string;
+  questions: number;
+  duration: number;
+  category: string;
+}
 
 export default function TryoutDetailPage({
   params,
@@ -21,7 +29,7 @@ export default function TryoutDetailPage({
   const { id: tryoutId } = use(params);
   const router = useRouter();
   const { data: session, status: sessionStatus, update: updateSession } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
   const { ticketCount } = useTickets();
 
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
@@ -55,7 +63,7 @@ export default function TryoutDetailPage({
   };
 
   // Parse subtests from API data
-  const subtests = (tryout?.tryout_subtests || [])
+  const subtests: TryoutSubtestSummary[] = (tryout?.tryout_subtests || [])
     .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
     .map((ts: SubtestByTryout) => {
       const fallback = DUMMY_SUBTEST_DATA[ts.subtest.name];
@@ -68,14 +76,14 @@ export default function TryoutDetailPage({
     });
 
   // Calculate totals  
-  const tpsSubtests = subtests.filter((s: any) => s.category === "TPS");
-  const litSubtests = subtests.filter((s: any) => s.category === "Literasi");
-  const totalQuestions = subtests.reduce((sum: number, s: any) => sum + s.questions, 0);
-  const totalDuration = subtests.reduce((sum: number, s: any) => sum + s.duration, 0);
-  const tpsQuestions = tpsSubtests.reduce((sum: number, s: any) => sum + s.questions, 0);
-  const tpsDuration = tpsSubtests.reduce((sum: number, s: any) => sum + s.duration, 0);
-  const litQuestions = litSubtests.reduce((sum: number, s: any) => sum + s.questions, 0);
-  const litDuration = litSubtests.reduce((sum: number, s: any) => sum + s.duration, 0);
+  const tpsSubtests = subtests.filter((s) => s.category === "TPS");
+  const litSubtests = subtests.filter((s) => s.category === "Literasi");
+  const totalQuestions = subtests.reduce((sum, s) => sum + s.questions, 0);
+  const totalDuration = subtests.reduce((sum, s) => sum + s.duration, 0);
+  const tpsQuestions = tpsSubtests.reduce((sum, s) => sum + s.questions, 0);
+  const tpsDuration = tpsSubtests.reduce((sum, s) => sum + s.duration, 0);
+  const litQuestions = litSubtests.reduce((sum, s) => sum + s.questions, 0);
+  const litDuration = litSubtests.reduce((sum, s) => sum + s.duration, 0);
 
   // Enroll mutation
   const enrollMutation = useEnrollTryout({
@@ -89,8 +97,8 @@ export default function TryoutDetailPage({
         if (!isFree) updateSession();
         router.push(`/dashboard/try-out/${tryoutId}/start`);
       },
-      onError: (error: any) => {
-        const msg = error?.response?.data?.message || "Gagal mendaftar tryout";
+      onError: (error: unknown) => {
+        const msg = getErrorMessage(error, "Gagal mendaftar tryout");
         toast.error(msg);
       },
     },
@@ -178,7 +186,7 @@ export default function TryoutDetailPage({
               <div className="pt-2">
                 <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
                 <ul className="text-sm text-gray-600 space-y-1.5">
-                  {tpsSubtests.map((s: any) => (
+                  {tpsSubtests.map((s) => (
                     <li key={s.name}>• {s.name} : {s.questions} soal</li>
                   ))}
                 </ul>
@@ -199,7 +207,7 @@ export default function TryoutDetailPage({
               <div className="pt-2">
                 <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
                 <ul className="text-sm text-gray-600 space-y-1.5">
-                  {litSubtests.map((s: any) => (
+                  {litSubtests.map((s) => (
                     <li key={s.name}>• {s.name} : {s.questions} soal</li>
                   ))}
                 </ul>

@@ -14,7 +14,7 @@ export default function DashboardTitle({
   title,
   isPending = false,
 }: DashboardTitleProps) {
-  const [time, setTime] = useState(Date.now());
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
     if (isPending) return;
@@ -37,7 +37,7 @@ export default function DashboardTitle({
         <>
           <h1 className="text-4xl font-extrabold">{title}</h1>
           <p className="text-muted-foreground" suppressHydrationWarning>
-            {format(time, "EEEE, d MMMM yyyy, HH:mm:ss", { locale: id })}
+            {time > 0 ? format(time, "EEEE, d MMMM yyyy, HH:mm:ss", { locale: id }) : ""}
           </p>
         </>
       )}

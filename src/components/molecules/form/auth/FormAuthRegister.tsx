@@ -20,6 +20,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 export default function FormAuthRegister() {
   const [isLoading, setIsLoading] = useState(false);
@@ -50,13 +51,13 @@ export default function FormAuthRegister() {
       });
 
       router.push("/login");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsLoading(false);
 
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.errors?.email?.[0] ||
-        "Terjadi kesalahan, silakan coba lagi.";
+      const message = getErrorMessage(
+        error,
+        "Terjadi kesalahan, silakan coba lagi.",
+      );
 
       toast.error("Registrasi Gagal", {
         description: message,

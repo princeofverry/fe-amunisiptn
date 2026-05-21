@@ -16,26 +16,27 @@ const FILTER_OPTIONS = [
   "Terdaftar",
 ];
 
+const INITIAL_TIME = Date.now();
+
 export default function TryoutPage() {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
   const [searchQuery, setSearchQuery] = useState("");
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
 
-  const { data: tryoutsData, isLoading } = useGetUserTryouts({ token });
+  const { data: tryoutsData } = useGetUserTryouts({ token });
   const tryouts = tryoutsData?.data || [];
 
   const { data: historyData } = useGetHistoryTryout({ token });
   const enrolledTryoutIds = new Set(historyData?.data?.map((t) => t.id) || []);
 
   const getStatusOrder = (item: { startDate: string; endDate: string }) => {
-    const now = Date.now();
     const start = new Date(item.startDate).getTime();
     const end = new Date(item.endDate).getTime();
-    if (now >= start && now <= end) return 0;
-    if (now < start) return 1;
+    if (INITIAL_TIME >= start && INITIAL_TIME <= end) return 0;
+    if (INITIAL_TIME < start) return 1;
     return 2;
   };
 

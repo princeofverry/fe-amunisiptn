@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 import { useSession } from "next-auth/react";
 import { kelasSchema, KelasFormType } from "@/validators/kelas/kelas-validator";
 import { useGetDetailKelasAdmin } from "@/http/kelas/get-detail-kelas-admin";
@@ -28,7 +29,7 @@ interface FormUpdateKelasProps {
 
 export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const { data: detailData, isPending: isLoadingDetail, isError: isDetailError } = useGetDetailKelasAdmin({
     id: kelasId,
@@ -90,9 +91,8 @@ export default function FormUpdateKelas({ kelasId }: FormUpdateKelasProps) {
   const { mutate: updateKelasHandler, isPending } = useUpdateKelasAdmin({
     token,
     options: {
-      onError: (error: any) => {
-        const message =
-          error?.response?.data?.message ?? "Terjadi kesalahan.";
+      onError: (error: unknown) => {
+        const message = getErrorMessage(error, "Terjadi kesalahan.");
         toast.error("Gagal memperbarui kelas!", { description: message });
       },
       onSuccess: () => {

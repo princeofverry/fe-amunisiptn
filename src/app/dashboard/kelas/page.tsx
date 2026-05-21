@@ -8,7 +8,7 @@ import KelasCard from "@/components/molecules/card/KelasCard";
 
 export default function KelasPage() {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const { data, isLoading } = useGetUserKelas({ token });
   const kelasList = data?.data ?? [];

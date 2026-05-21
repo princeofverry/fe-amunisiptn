@@ -10,6 +10,14 @@ import { useStartTryout } from "@/http/tryout/start-tryout";
 import { useGetUserTryoutDetail } from "@/http/tryout/get-user-tryout-detail";
 import { toast } from "sonner";
 import type { SubtestByTryout } from "@/types/subtest/subtest";
+import { getErrorMessage } from "@/utils/get-error-message";
+
+interface TryoutSubtestSummary {
+  name: string;
+  questions: number;
+  duration: number;
+  category: string;
+}
 
 export default function TryoutStartPage({
   params,
@@ -19,7 +27,7 @@ export default function TryoutStartPage({
   const { id: tryoutId } = use(params);
   const router = useRouter();
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const [isChecked, setIsChecked] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -45,7 +53,7 @@ export default function TryoutStartPage({
   };
 
   // Parse subtests from API
-  const allSubtests = (tryout?.tryout_subtests || [])
+  const allSubtests: TryoutSubtestSummary[] = (tryout?.tryout_subtests || [])
     .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
     .map((ts: SubtestByTryout) => {
       const fallback = DUMMY_SUBTEST_DATA[ts.subtest.name];
@@ -57,13 +65,15 @@ export default function TryoutStartPage({
       };
     });
 
-  const subtestsTPS = allSubtests.filter((s: any) => s.category === "TPS");
-  const subtestsLIT = allSubtests.filter((s: any) => s.category === "Literasi");
+  const subtestsTPS = allSubtests.filter((s) => s.category === "TPS");
+  const subtestsLIT = allSubtests.filter((s) => s.category === "Literasi");
 
-  const totalQuestions = allSubtests.reduce((s: number, t: any) => s + t.questions, 0);
-  const totalDuration = allSubtests.reduce((s: number, t: any) => s + t.duration, 0);
-  const tpsDuration = subtestsTPS.reduce((s: number, t: any) => s + t.duration, 0);
-  const litDuration = subtestsLIT.reduce((s: number, t: any) => s + t.duration, 0);
+  const totalQuestions = allSubtests.reduce((s, t) => s + t.questions, 0);
+  const totalDuration = allSubtests.reduce((s, t) => s + t.duration, 0);
+  const tpsDuration = subtestsTPS.reduce((s, t) => s + t.duration, 0);
+  const litDuration = subtestsLIT.reduce((s, t) => s + t.duration, 0);
+  const tpsQuestions = subtestsTPS.reduce((s, t) => s + t.questions, 0);
+  const litQuestions = subtestsLIT.reduce((s, t) => s + t.questions, 0);
 
   const startTryoutMutation = useStartTryout({
     token,
@@ -71,8 +81,8 @@ export default function TryoutStartPage({
       onSuccess: () => {
         router.push(`/dashboard/try-out/${tryoutId}/exam`);
       },
-      onError: (error: any) => {
-        const msg = error?.response?.data?.message || "Gagal memulai tryout";
+      onError: (error: unknown) => {
+        const msg = getErrorMessage(error, "Gagal memulai tryout");
         toast.error(msg);
         setIsStarting(false);
       },
@@ -132,13 +142,13 @@ export default function TryoutStartPage({
             <div className="space-y-3">
               <h4 className="font-bold text-gray-900 text-lg">Tes Potensi Skolastik (TPS)</h4>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>Jumlah Soal : {subtestsTPS.reduce((s: number, t: any) => s + t.questions, 0)} Soal</p>
+                <p>Jumlah Soal : {tpsQuestions} Soal</p>
                 <p>Durasi : {tpsDuration} menit</p>
               </div>
               <div className="pt-2">
                 <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
                 <ul className="text-sm text-gray-600 space-y-1.5">
-                  {subtestsTPS.map((s: any) => (
+                  {subtestsTPS.map((s) => (
                     <li key={s.name}>• {s.name} : {s.questions} soal</li>
                   ))}
                 </ul>
@@ -150,13 +160,13 @@ export default function TryoutStartPage({
             <div className="space-y-3">
               <h4 className="font-bold text-gray-900 text-lg">Tes Literasi</h4>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>Jumlah Soal : {subtestsLIT.reduce((s: number, t: any) => s + t.questions, 0)} Soal</p>
+                <p>Jumlah Soal : {litQuestions} Soal</p>
                 <p>Durasi : {litDuration} menit</p>
               </div>
               <div className="pt-2">
                 <p className="text-sm text-gray-600 mb-2">Isi subtest :</p>
                 <ul className="text-sm text-gray-600 space-y-1.5">
-                  {subtestsLIT.map((s: any) => (
+                  {subtestsLIT.map((s) => (
                     <li key={s.name}>• {s.name} : {s.questions} soal</li>
                   ))}
                 </ul>

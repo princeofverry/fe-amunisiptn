@@ -13,7 +13,7 @@ export default function ResultPage({
 }) {
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const { data: beResult, isLoading } = useGetTryoutResult({
     tryoutId,

@@ -25,7 +25,7 @@ export default function DashboardAdminTryoutDetailWrapper({
   const { data: session, status } = useSession();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data, isPending } = useGetDetailTryout({
+  const { data } = useGetDetailTryout({
     id,
     token: session?.access_token as string,
     options: {

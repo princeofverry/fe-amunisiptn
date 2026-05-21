@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import type { ExamQuestion } from "@/types/exam/exam";
 
 interface QuestionViewProps {

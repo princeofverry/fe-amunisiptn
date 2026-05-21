@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 import { useState } from "react";
 import {
   questionSchema,
@@ -35,12 +36,6 @@ interface FormCreateQuestionProps {
 }
 
 const optionKeys = ["A", "B", "C", "D", "E"] as const;
-
-const difficultyOptions = [
-  { label: "Mudah", value: "easy" },
-  { label: "Sedang", value: "medium" },
-  { label: "Sulit", value: "hard" },
-];
 
 export default function FormCreateQuestion({ id }: FormCreateQuestionProps) {
   const [questionPreview, setQuestionPreview] = useState<string | null>(null);
@@ -73,8 +68,8 @@ export default function FormCreateQuestion({ id }: FormCreateQuestionProps) {
   const router = useRouter();
 
   const { mutate: createQuestionHandler, isPending } = useCreateQuestion({
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? "Terjadi kesalahan.";
+    onError: (error: unknown) => {
+      const message = getErrorMessage(error, "Terjadi kesalahan.");
 
       toast.error("Gagal membuat soal baru!", {
         description: message,

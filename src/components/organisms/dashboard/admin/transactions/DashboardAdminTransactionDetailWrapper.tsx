@@ -12,7 +12,7 @@ export default function DashboardAdminTransactionDetailWrapper({
 }: DashboardAdminTransactionDetailWrapperProps) {
   const { data: session, status } = useSession();
 
-  const { data, isPending } = useGetDetailTransaction({
+  useGetDetailTransaction({
     id,
     token: session?.access_token as string,
     options: {
@@ -22,7 +22,7 @@ export default function DashboardAdminTransactionDetailWrapper({
 
   return (
     <section>
-      <div></div>
+      <div data-transaction-id={id}></div>
     </section>
   );
 }

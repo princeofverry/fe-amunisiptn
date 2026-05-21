@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { User, Phone, Mail, GraduationCap, School, MapPin, Edit2, X } from "lucide-react";
+import { User, Mail, GraduationCap, Edit2, X } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import FormCompleteProfile from "@/components/molecules/form/profile/FormCompleteProfile";

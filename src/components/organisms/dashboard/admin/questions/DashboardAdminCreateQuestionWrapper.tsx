@@ -14,7 +14,7 @@ export default function DashboardAdminCreateQuestionWrapper({
 }: DashboardAdminCreateQuestionWrapperProps) {
   const { data: session } = useSession();
 
-  const { data, isPending } = useGetDetailSubtest({
+  const { data } = useGetDetailSubtest({
     id,
     token: session?.access_token as string,
     options: {

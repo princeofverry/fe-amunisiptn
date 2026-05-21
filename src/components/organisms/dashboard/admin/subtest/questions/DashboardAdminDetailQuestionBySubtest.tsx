@@ -13,7 +13,7 @@ export default function DashboardAdminDetailQuestionBySubtestWrapper({
   subtestId,
   questionId,
 }: DashboardAdminDetailQuestionBySubtestWrapperProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   const { data, isPending } = useGetDetailQuestion({
     id: subtestId,

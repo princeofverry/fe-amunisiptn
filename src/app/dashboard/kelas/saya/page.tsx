@@ -7,7 +7,7 @@ import { useGetMyKelas } from "@/http/kelas/get-my-kelas";
 
 export default function KelasayaPage() {
   const { data: session } = useSession();
-  const token = (session as any)?.access_token || "";
+  const token = session?.access_token || "";
 
   const { data, isLoading } = useGetMyKelas({ token });
   const myKelas = data?.data ?? [];

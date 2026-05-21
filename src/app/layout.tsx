@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Rubik } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import GlobalProvider from "@/components/providers/GlobalProvider";
 import Script from "next/script";

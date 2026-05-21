@@ -21,7 +21,7 @@ export default function DialogCompleteProfile({
 }: DialogCompleteProfileProps) {
 
   // Prevent closing by clicking outside — user should fill the form
-  const handleOpenChange = (_newOpen: boolean) => {
+  const handleOpenChange = () => {
     // intentionally no-op — only the X button or form success can close it
   };
 

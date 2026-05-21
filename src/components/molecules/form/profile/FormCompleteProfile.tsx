@@ -70,7 +70,7 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
         description: "Selamat datang di Amunisi PTN",
       });
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If it fails on the backend, we still want to let them through to the dashboard
       console.error("Failed to update profile to backend:", error);
       
