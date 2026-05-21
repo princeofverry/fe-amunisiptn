@@ -41,8 +41,8 @@ export default function ResultPage({
     );
   }
 
-  const { summary, irt_result, use_irt } = result;
-  const accuracy = summary.total_questions > 0 ? Math.round((summary.correct / summary.total_questions) * 100) : 0;
+  const { summary, irt_result, use_irt, score_result } = result;
+  const accuracy = Math.round(score_result?.accuracy ?? 0);
 
   return (
     <div className="w-full max-w-4xl mx-auto animate-in fade-in duration-500 pb-12">
@@ -67,6 +67,10 @@ export default function ResultPage({
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-white/10 rounded-xl p-4 text-center">
+              <p className="text-white/60 text-xs mb-1">Skor</p>
+              <p className="text-3xl font-bold">{score_result.final_score}</p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-4 text-center">
               <p className="text-white/60 text-xs mb-1">Akurasi</p>
               <p className="text-3xl font-bold">{accuracy}%</p>
             </div>
@@ -77,10 +81,6 @@ export default function ResultPage({
             <div className="bg-red-500/20 rounded-xl p-4 text-center">
               <p className="text-white/60 text-xs mb-1">Salah</p>
               <p className="text-3xl font-bold text-red-300">{summary.wrong}</p>
-            </div>
-            <div className="bg-white/5 rounded-xl p-4 text-center">
-              <p className="text-white/60 text-xs mb-1">Kosong</p>
-              <p className="text-3xl font-bold text-white/50">{summary.unanswered}</p>
             </div>
           </div>
         </div>
@@ -161,6 +161,12 @@ export default function ResultPage({
           className="flex-1 py-3.5 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold rounded-xl text-center transition-colors"
         >
           Lihat Pembahasan
+        </Link>
+        <Link
+          href={`/dashboard/try-out/${tryoutId}/leaderboard`}
+          className="flex-1 py-3.5 bg-[#3B9245] hover:bg-[#317A3A] text-white font-bold rounded-xl text-center transition-colors"
+        >
+          Leaderboard
         </Link>
         <Link
           href="/dashboard/try-out"

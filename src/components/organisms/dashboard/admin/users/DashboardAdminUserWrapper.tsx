@@ -13,8 +13,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { api } from "@/lib/axios";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -29,6 +30,7 @@ export default function DashboardAdminUserWrapper() {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeleteUser, setSelectedDeleteUser] = useState<User | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data, isPending } = useGetAllUsers({
     token: session?.access_token as string,
@@ -52,6 +54,27 @@ export default function DashboardAdminUserWrapper() {
     },
   });
 
+  const handleDownloadExcel = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await api.get('/admin/users/export', {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+        params: { search: search || undefined },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `data-pengguna-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Gagal mengunduh data pengguna');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
@@ -72,15 +95,26 @@ export default function DashboardAdminUserWrapper() {
       <Card>
         <CardContent>
           <div className="space-y-6">
-            <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-              <Input
-                placeholder="Cari nama atau email pengguna..."
-                className="max-w-xs w-full"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-              <Button type="submit" variant="outline">Cari</Button>
-            </form>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+                <Input
+                  placeholder="Cari nama atau email pengguna..."
+                  className="max-w-xs w-full"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <Button type="submit" variant="outline">Cari</Button>
+              </form>
+              <Button
+                variant="outline"
+                onClick={handleDownloadExcel}
+                disabled={isDownloading}
+                className="flex items-center gap-2 text-green-700 border-green-300 hover:bg-green-50"
+              >
+                <Download className="w-4 h-4" />
+                {isDownloading ? 'Mengunduh...' : 'Download Excel'}
+              </Button>
+            </div>
 
             <DataTable
               columns={userColumns({

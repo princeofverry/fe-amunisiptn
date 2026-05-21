@@ -8,6 +8,7 @@ interface QuestionViewProps {
   onSelectAnswer: (answer: string | null) => void;
   onPrev: () => void;
   onNext: () => void;
+  onFinish: () => void;
   hasPrev: boolean;
   hasNext: boolean;
 }
@@ -18,6 +19,7 @@ export default function QuestionView({
   onSelectAnswer,
   onPrev,
   onNext,
+  onFinish,
   hasPrev,
   hasNext,
 }: QuestionViewProps) {
@@ -37,11 +39,11 @@ export default function QuestionView({
         {/* Question Image */}
         {question.question_image_url && (
           <div className="mb-6 flex justify-center">
-            <div className="relative max-w-full max-h-[300px] w-auto">
+            <div className="relative max-w-full max-h-75 w-auto">
               <img
                 src={question.question_image_url}
                 alt="Soal"
-                className="max-h-[300px] w-auto object-contain rounded-lg"
+                className="max-h-75 w-auto object-contain rounded-lg"
               />
             </div>
           </div>
@@ -69,7 +71,7 @@ export default function QuestionView({
                 }`}
               >
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
                     isSelected
                       ? "bg-[#004AAB] text-white"
                       : "bg-gray-100 text-gray-600"
@@ -99,18 +101,22 @@ export default function QuestionView({
           <span>Sebelumnya</span>
         </button>
 
-        <button
-          onClick={onNext}
-          disabled={!hasNext}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${
-            hasNext
-              ? "bg-[#004AAB] hover:bg-[#003B8A] text-white"
-              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-          }`}
-        >
-          <span>Selanjutnya</span>
-          <span>›</span>
-        </button>
+        {hasNext ? (
+          <button
+            onClick={onNext}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-colors bg-[#004AAB] hover:bg-[#003B8A] text-white"
+          >
+            <span>Selanjutnya</span>
+            <span>›</span>
+          </button>
+        ) : (
+          <button
+            onClick={onFinish}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-colors bg-[#004AAB] hover:bg-[#003B8A] text-white"
+          >
+            <span>Selesai</span>
+          </button>
+        )}
       </div>
     </div>
   );

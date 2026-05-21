@@ -116,7 +116,7 @@ export default function PembelianPage() {
             className="flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all group"
           >
             {/* Top Blue section */}
-            <div className="bg-[#004AAB] min-h-[140px] flex items-center justify-center p-6 text-center">
+            <div className="bg-[#004AAB] min-h-35 flex items-center justify-center p-6 text-center">
               <h3 className="text-white font-bold text-lg leading-snug">
                 {pkg.title}
               </h3>

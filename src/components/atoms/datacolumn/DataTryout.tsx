@@ -64,6 +64,15 @@ export const tryoutColumns = (props: DataTryoutProps): ColumnDef<Tryout>[] => [
     },
   },
   {
+    id: "participants",
+    header: "Peserta",
+    cell: ({ row }) => (
+      <p suppressHydrationWarning>
+        {(row.original.user_accesses_count ?? 0).toLocaleString("id-ID")}
+      </p>
+    ),
+  },
+  {
     accessorKey: "created_at",
     header: "Tanggal Dibuat",
     cell: ({ row }) => (

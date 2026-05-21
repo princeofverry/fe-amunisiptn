@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+﻿import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Question } from "@/types/questions/question";
@@ -44,7 +44,7 @@ function CardQuestionDetailSkeleton() {
                 key={i}
                 className="flex items-center gap-3 rounded-lg px-3.5 py-3 border border-border"
               >
-                <Skeleton className="flex-shrink-0 w-7 h-7 rounded-full" />
+                <Skeleton className="shrink-0 w-7 h-7 rounded-full" />
                 <Skeleton className="h-4 flex-1" />
               </div>
             ))}
@@ -145,7 +145,7 @@ export default function CardQuestionDetail({
                   >
                     <span
                       className={cn(
-                        "flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-semibold",
+                        "shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-semibold",
                         isCorrect
                           ? "bg-emerald-500 text-white"
                           : "bg-muted text-muted-foreground",

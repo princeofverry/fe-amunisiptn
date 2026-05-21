@@ -5,6 +5,7 @@ import { api } from "@/lib/axios";
 interface EnrollResponse {
   message: string;
   ticket_balance_remaining?: number;
+  participants_count?: number;
 }
 
 export const EnrollTryoutHandler = async (

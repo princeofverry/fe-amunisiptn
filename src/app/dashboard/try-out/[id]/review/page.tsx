@@ -138,7 +138,7 @@ function ReviewCard({ item, index }: { item: ReviewQuestion; index: number }) {
                 key={option.id}
                 className={`flex items-center gap-3 p-3 rounded-xl border-2 ${optionClass}`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                   isCorrectAnswer ? "bg-green-500 text-white" : isMyAnswer && !isCorrect ? "bg-red-500 text-white" : "bg-gray-100 text-gray-600"
                 }`}>
                   {option.option_key}
@@ -146,8 +146,8 @@ function ReviewCard({ item, index }: { item: ReviewQuestion; index: number }) {
                 <span className={`text-sm ${isCorrectAnswer ? "text-green-700 font-semibold" : isMyAnswer && !isCorrect ? "text-red-700" : "text-gray-700"}`}>
                   {option.option_text}
                 </span>
-                {isCorrectAnswer && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto flex-shrink-0" />}
-                {isMyAnswer && !isCorrect && <XCircle className="w-4 h-4 text-red-500 ml-auto flex-shrink-0" />}
+                {isCorrectAnswer && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />}
+                {isMyAnswer && !isCorrect && <XCircle className="w-4 h-4 text-red-500 ml-auto shrink-0" />}
               </div>
             );
           })}
