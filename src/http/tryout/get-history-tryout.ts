@@ -46,8 +46,9 @@ export const GetHistoryTryoutHandler = async (token: string): Promise<GetHistory
 
 export const useGetHistoryTryout = ({ token, options }: { token: string; options?: Partial<UseQueryOptions<GetHistoryTryoutResponse, AxiosError>> }) => {
   return useQuery({
-    queryKey: ["get-history-tryout"],
+    queryKey: ["get-history-tryout", token],
     queryFn: () => GetHistoryTryoutHandler(token),
+    enabled: !!token,
     ...options,
   });
 };
