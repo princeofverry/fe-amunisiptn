@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import DashboardTitle from "@/components/atoms/typography/DashboardTitle";
 import FormUpdateKelas from "@/components/molecules/form/kelas/FormUpdateKelas";
 
 interface AdminEditKelasPageProps {
@@ -12,20 +11,13 @@ export default async function AdminEditKelasPage({
   const { id } = await params;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Link
-          href="/dashboard/admin/kelas"
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-800"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </Link>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-          Edit Kelas
-        </h1>
-      </div>
-
+    <main>
+      <DashboardTitle
+        title="Edit Kelas"
+        showBackButton
+        backFallbackHref="/dashboard/admin/kelas"
+      />
       <FormUpdateKelas kelasId={id} />
-    </div>
+    </main>
   );
 }

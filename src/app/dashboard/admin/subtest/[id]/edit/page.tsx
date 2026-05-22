@@ -12,7 +12,11 @@ export default async function DashboardAdminSubtestEditPage({
 
   return (
     <main>
-      <DashboardTitle title="Ubah Subtes" />
+      <DashboardTitle
+        title="Ubah Subtes"
+        showBackButton
+        backFallbackHref="/dashboard/admin/subtest"
+      />
       <DashboardAdminUpdateSubtestWrapper subtestId={id} />
     </main>
   );

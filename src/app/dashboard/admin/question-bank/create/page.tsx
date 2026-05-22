@@ -4,7 +4,11 @@ import DashboardAdminCreateQuestionBankWrapper from "@/components/organisms/dash
 export default function DashboardAdminQuestionBankCreatePage() {
   return (
     <main>
-      <DashboardTitle title="Tambah Bank Soal" />
+      <DashboardTitle
+        title="Tambah Bank Soal"
+        showBackButton
+        backFallbackHref="/dashboard/admin/question-bank"
+      />
       <DashboardAdminCreateQuestionBankWrapper />
     </main>
   );

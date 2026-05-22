@@ -1,11 +1,14 @@
 "use client";
 
-import { use, useState } from "react";
-import Link from "next/link";
-import { ChevronLeft, CheckCircle2, XCircle, MinusCircle, MessageSquareText } from "lucide-react";
+import { use, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { X } from "lucide-react";
+import ExamSidebar from "@/components/molecules/exam/ExamSidebar";
+import QuestionView from "@/components/molecules/exam/QuestionView";
 import { useGetTryoutReview } from "@/http/tryout/get-tryout-review";
-import type { ReviewQuestion } from "@/types/exam/exam";
+import type { ExamQuestion, ReviewQuestion } from "@/types/exam/exam";
+import { getReviewQuestionStatus } from "@/utils/tryout-review";
 
 export default function ReviewPage({
   params,
@@ -13,168 +16,176 @@ export default function ReviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: tryoutId } = use(params);
+  const router = useRouter();
   const { data: session } = useSession();
   const token = session?.access_token || "";
-  const [selectedSubtest, setSelectedSubtest] = useState<string>("all");
+  const [selectedSubtestId, setSelectedSubtestId] = useState<string>("all");
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const { data: beReview, isLoading } = useGetTryoutReview({
+  const { data: beReview, isError, isLoading } = useGetTryoutReview({
     tryoutId,
     token,
   });
 
-  const reviewItems = beReview?.data?.review || [];
+  const reviewItems = useMemo(() => beReview?.data?.review ?? [], [beReview]);
+  const subtests = useMemo(() => {
+    const map = new Map<string, string>();
+    reviewItems.forEach((item) => map.set(item.subtest.id, item.subtest.name));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [reviewItems]);
 
-  // Group subtests
-  const subtestNames = Array.from(new Set(reviewItems.map((r) => r.subtest.name)));
-  const filteredItems = selectedSubtest === "all" ? reviewItems : reviewItems.filter((r) => r.subtest.name === selectedSubtest);
+  const filteredItems = useMemo(() => {
+    if (selectedSubtestId === "all") return reviewItems;
+    return reviewItems.filter((item) => item.subtest.id === selectedSubtestId);
+  }, [reviewItems, selectedSubtestId]);
+
+  const questions = useMemo(() => filteredItems.map(mapReviewQuestionToExamQuestion), [filteredItems]);
+  const reviewStatuses = useMemo(() => {
+    return filteredItems.reduce<Record<string, ReturnType<typeof getReviewQuestionStatus>>>(
+      (acc, item) => {
+        acc[item.question_id] = getReviewQuestionStatus(item);
+        return acc;
+      },
+      {},
+    );
+  }, [filteredItems]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const currentReviewItem = filteredItems[currentQuestionIndex];
+  const selectedSubtestName =
+    selectedSubtestId === "all"
+      ? "Semua Subtest"
+      : subtests.find((subtest) => subtest.id === selectedSubtestId)?.name ?? "Subtest";
+
+  const handleSelectSubtest = (subtestId: string) => {
+    setSelectedSubtestId(subtestId);
+    setCurrentQuestionIndex(0);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB]" />
+      <div className="fixed inset-0 z-40 bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#004AAB] mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Memuat pembahasan try out...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || reviewItems.length === 0 || !currentQuestion) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Pembahasan belum tersedia</h1>
+          <p className="text-sm text-gray-500 mb-5">
+            Kamu belum mengerjakan Try Out ini, sehingga pembahasan belum tersedia.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push(`/dashboard/try-out/${tryoutId}`)}
+            className="rounded-full bg-[#004AAB] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#003B8A]"
+          >
+            Kembali ke Detail Try Out
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto animate-in fade-in duration-500 pb-12">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <Link href={`/dashboard/try-out/${tryoutId}/result`} className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer text-gray-800">
-          <ChevronLeft className="w-6 h-6" />
-        </Link>
-        <h1 className="text-xl font-bold text-gray-900">Pembahasan Soal</h1>
-      </div>
-
-      {/* Subtest Filter */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
+    <div className="fixed inset-0 z-40 bg-white flex flex-col">
+      <header className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-200 bg-white">
         <button
-          onClick={() => setSelectedSubtest("all")}
-          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-            selectedSubtest === "all"
-              ? "bg-[#004AAB] text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
+          type="button"
+          onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
         >
-          Semua ({reviewItems.length})
+          <X className="w-5 h-5" />
+          <span className="font-bold text-sm hidden sm:inline">
+            {beReview?.data?.tryout_title ?? "Lihat Pembahasan"}
+          </span>
         </button>
-        {subtestNames.map((name) => (
-          <button
-            key={name}
-            onClick={() => setSelectedSubtest(name)}
-            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-              selectedSubtest === name
-                ? "bg-[#004AAB] text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {name} ({reviewItems.filter((r) => r.subtest.name === name).length})
-          </button>
-        ))}
-      </div>
-
-      {/* Questions */}
-      <div className="space-y-6">
-        {filteredItems.map((item, idx) => (
-          <ReviewCard key={item.question_id} item={item} index={idx + 1} />
-        ))}
-      </div>
-
-      {filteredItems.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          <p>Tidak ada soal untuk ditampilkan.</p>
+        <div className="text-center">
+          <p className="text-xs text-gray-500">Nomor Soal</p>
+          <p className="font-bold text-lg text-gray-900">{currentQuestionIndex + 1}</p>
         </div>
-      )}
+        <div className="rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-bold text-[#004AAB]">
+          Mode Review
+        </div>
+      </header>
+
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <aside className="lg:border-r lg:border-gray-100 p-4 lg:overflow-y-auto bg-gray-50/50">
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1 lg:w-65 lg:flex-col lg:overflow-visible lg:pb-0">
+            <button
+              type="button"
+              onClick={() => handleSelectSubtest("all")}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors ${
+                selectedSubtestId === "all"
+                  ? "bg-[#004AAB] text-white"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              Semua ({reviewItems.length})
+            </button>
+            {subtests.map((subtest) => (
+              <button
+                key={subtest.id}
+                type="button"
+                onClick={() => handleSelectSubtest(subtest.id)}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors lg:text-left ${
+                  selectedSubtestId === subtest.id
+                    ? "bg-[#004AAB] text-white"
+                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+                }`}
+              >
+                {subtest.name} ({reviewItems.filter((item) => item.subtest.id === subtest.id).length})
+              </button>
+            ))}
+          </div>
+
+          <ExamSidebar
+            subtestName={selectedSubtestName}
+            totalQuestions={questions.length}
+            currentIndex={currentQuestionIndex}
+            answeredQuestions={
+              new Set(filteredItems.filter((item) => item.my_answer).map((item) => item.question_id))
+            }
+            questionIds={questions.map((question) => question.id)}
+            onQuestionClick={(index) => setCurrentQuestionIndex(index)}
+            mode="review"
+            reviewStatuses={reviewStatuses}
+          />
+        </aside>
+
+        <QuestionView
+          question={currentQuestion}
+          selectedAnswer={currentReviewItem?.my_answer ?? null}
+          onSelectAnswer={() => undefined}
+          onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+          onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+          onFinish={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+          hasPrev={currentQuestionIndex > 0}
+          hasNext={currentQuestionIndex < questions.length - 1}
+          mode="review"
+        />
+      </div>
     </div>
   );
 }
 
-function ReviewCard({ item, index }: { item: ReviewQuestion; index: number }) {
-  const [showDiscussion, setShowDiscussion] = useState(false);
-  const correctAnswer = item.question.correct_answer;
-  const myAnswer = item.my_answer;
-  const isCorrect = item.is_correct;
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Question Header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-bold text-gray-500">Soal {index}</span>
-          <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">{item.subtest.name}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {isCorrect === true && <CheckCircle2 className="w-5 h-5 text-green-500" />}
-          {isCorrect === false && <XCircle className="w-5 h-5 text-red-500" />}
-          {isCorrect === null && <MinusCircle className="w-5 h-5 text-gray-400" />}
-          <span className={`text-sm font-semibold ${isCorrect === true ? "text-green-600" : isCorrect === false ? "text-red-600" : "text-gray-400"}`}>
-            {isCorrect === true ? "Benar" : isCorrect === false ? "Salah" : "Tidak Dijawab"}
-          </span>
-        </div>
-      </div>
-
-      {/* Question Content */}
-      <div className="p-6">
-        {item.question.question_image_url && (
-          <div className="mb-4">
-            <img src={item.question.question_image_url} alt="Soal" className="max-h-[200px] w-auto object-contain rounded-lg" />
-          </div>
-        )}
-
-        <div className="text-gray-800 text-sm leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: item.question.question_text }} />
-
-        {/* Options */}
-        <div className="flex flex-col gap-2 mb-4">
-          {item.question.options.map((option) => {
-            const isMyAnswer = myAnswer === option.option_key;
-            const isCorrectAnswer = correctAnswer === option.option_key;
-
-            let optionClass = "border-gray-200 bg-white";
-            if (isCorrectAnswer) optionClass = "border-green-400 bg-green-50";
-            if (isMyAnswer && !isCorrect) optionClass = "border-red-400 bg-red-50";
-
-            return (
-              <div
-                key={option.id}
-                className={`flex items-center gap-3 p-3 rounded-xl border-2 ${optionClass}`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  isCorrectAnswer ? "bg-green-500 text-white" : isMyAnswer && !isCorrect ? "bg-red-500 text-white" : "bg-gray-100 text-gray-600"
-                }`}>
-                  {option.option_key}
-                </div>
-                <span className={`text-sm ${isCorrectAnswer ? "text-green-700 font-semibold" : isMyAnswer && !isCorrect ? "text-red-700" : "text-gray-700"}`}>
-                  {option.option_text}
-                </span>
-                {isCorrectAnswer && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />}
-                {isMyAnswer && !isCorrect && <XCircle className="w-4 h-4 text-red-500 ml-auto shrink-0" />}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Discussion Toggle */}
-        {item.question.discussion && (
-          <div>
-            <button
-              onClick={() => setShowDiscussion(!showDiscussion)}
-              className="flex items-center gap-2 text-sm font-semibold text-[#004AAB] hover:text-[#003B8A] transition-colors"
-            >
-              <MessageSquareText className="w-4 h-4" />
-              <span>{showDiscussion ? "Sembunyikan Pembahasan" : "Lihat Pembahasan"}</span>
-            </button>
-
-            {showDiscussion && (
-              <div className="mt-3 p-4 bg-blue-50 border border-blue-100 rounded-xl animate-in slide-in-from-top-2 duration-200">
-                <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: item.question.discussion }} />
-                {item.question.discussion_image_url && (
-                  <img src={item.question.discussion_image_url} alt="Pembahasan" className="max-h-[200px] mt-3 rounded-lg" />
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function mapReviewQuestionToExamQuestion(item: ReviewQuestion): ExamQuestion {
+  return {
+    id: item.question.id,
+    question_text: item.question.question_text,
+    question_image: item.question.question_image,
+    question_image_url: item.question.question_image_url,
+    order_no: 0,
+    options: item.question.options,
+    my_answer: item.my_answer,
+    correct_answer: item.question.correct_answer,
+    discussion: item.question.discussion,
+    discussion_image_url: item.question.discussion_image_url,
+  };
 }

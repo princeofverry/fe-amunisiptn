@@ -14,7 +14,11 @@ export default async function DashboardAdminTryOutSubtestDetailPage({
   const { id, subtestId } = await params;
   return (
     <main>
-      <DashboardTitle title="Detail Subtes Tryout" />
+      <DashboardTitle
+        title="Detail Subtes Tryout"
+        showBackButton
+        backFallbackHref={`/dashboard/admin/try-out/${id}`}
+      />
       <DashboardAdminQuestionSubtestTryoutWrapper
         tryoutId={id}
         subtestId={subtestId}

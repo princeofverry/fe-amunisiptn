@@ -12,7 +12,11 @@ export default async function DashboardAdminTransactionDetailPage({
 
   return (
     <main>
-      <DashboardTitle title="Detail Transaksi" />
+      <DashboardTitle
+        title="Detail Transaksi"
+        showBackButton
+        backFallbackHref="/dashboard/admin/transactions"
+      />
       <DashboardAdminTransactionDetailWrapper id={id} />
     </main>
   );

@@ -4,7 +4,11 @@ import DashboardAdminCreateTryoutWrapper from "@/components/organisms/dashboard/
 export default function DashboardAdminCreateTryoutPage() {
   return (
     <main>
-      <DashboardTitle title="Tambah Try Out" />
+      <DashboardTitle
+        title="Tambah Try Out"
+        showBackButton
+        backFallbackHref="/dashboard/admin/try-out"
+      />
       <DashboardAdminCreateTryoutWrapper />
     </main>
   );

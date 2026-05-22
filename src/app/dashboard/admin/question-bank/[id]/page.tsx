@@ -12,7 +12,11 @@ export default async function DashboardAdminQuestionBankDetailPage({
 
   return (
     <main>
-      <DashboardTitle title="Detail Bank Soal" />
+      <DashboardTitle
+        title="Detail Bank Soal"
+        showBackButton
+        backFallbackHref="/dashboard/admin/question-bank"
+      />
       <DashboardAdminQuestionBankDetailWrapper id={id} />
     </main>
   );

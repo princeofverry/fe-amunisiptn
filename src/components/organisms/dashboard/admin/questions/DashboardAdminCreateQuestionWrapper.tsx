@@ -24,7 +24,11 @@ export default function DashboardAdminCreateQuestionWrapper({
 
   return (
     <section>
-      <DashboardTitle title={`Tambah Soal Subtes ${data?.data.name}`} />
+      <DashboardTitle
+        title={`Tambah Soal Subtes ${data?.data.name}`}
+        showBackButton
+        backFallbackHref={`/dashboard/admin/subtest/${id}`}
+      />
       <FormCreateQuestion id={id} />
     </section>
   );

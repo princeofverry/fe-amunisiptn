@@ -4,7 +4,11 @@ import DashboardAdminCreatePackageWrapper from "@/components/organisms/dashboard
 export default function DashboardAdminCreatePackagePage() {
   return (
     <main>
-      <DashboardTitle title="Tambah Paket" />
+      <DashboardTitle
+        title="Tambah Paket"
+        showBackButton
+        backFallbackHref="/dashboard/admin/packages"
+      />
       <DashboardAdminCreatePackageWrapper />
     </main>
   );

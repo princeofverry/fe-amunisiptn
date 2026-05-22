@@ -12,7 +12,11 @@ export default async function DashboardAdminTryOutEditPage({
 
   return (
     <main>
-      <DashboardTitle title="Ubah Tryout" />
+      <DashboardTitle
+        title="Ubah Tryout"
+        showBackButton
+        backFallbackHref={`/dashboard/admin/try-out/${id}`}
+      />
       <DashboardAdminUpdateTryoutWrapper id={id} />
     </main>
   );

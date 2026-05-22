@@ -12,7 +12,11 @@ export default async function DashboardAdminTryoutDetailPage({
 
   return (
     <main>
-      <DashboardTitle title="Detail Tryout" />
+      <DashboardTitle
+        title="Detail Tryout"
+        showBackButton
+        backFallbackHref="/dashboard/admin/try-out"
+      />
       <DashboardAdminTryoutDetailWrapper id={id} />
     </main>
   );

@@ -85,7 +85,11 @@ export default function DashboardadminSubtestDetailWrapper({
 
   return (
     <section className="space-y-6">
-      <DashboardTitle title={data?.data.name} />
+      <DashboardTitle
+        title={data?.data.name}
+        showBackButton
+        backFallbackHref="/dashboard/admin/subtest"
+      />
       <Card>
         <CardContent>
           <div className="grid md:grid-cols-4 grid-cols-2 gap-4">

@@ -12,7 +12,11 @@ export default async function DashboardAdminEditQuestionSubtestPage({
 
   return (
     <main>
-      <DashboardTitle title="Edit Pertanyaan" />
+      <DashboardTitle
+        title="Edit Pertanyaan"
+        showBackButton
+        backFallbackHref={`/dashboard/admin/subtest/${id}/question/${questionId}`}
+      />
       <DashboardAdminUpdateQuestionWrapper id={id} questionId={questionId} />
     </main>
   );

@@ -3,16 +3,25 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import AdminBackButton from "@/components/atoms/navigation/AdminBackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardTitleProps {
   title?: string;
   isPending?: boolean;
+  showBackButton?: boolean;
+  backFallbackHref?: string;
+  backLabel?: string;
+  onBeforeBack?: () => boolean | Promise<boolean>;
 }
 
 export default function DashboardTitle({
   title,
   isPending = false,
+  showBackButton = false,
+  backFallbackHref,
+  backLabel,
+  onBeforeBack,
 }: DashboardTitleProps) {
   const [time, setTime] = useState(0);
 
@@ -35,6 +44,14 @@ export default function DashboardTitle({
         </>
       ) : (
         <>
+          {showBackButton && (
+            <AdminBackButton
+              label={backLabel}
+              fallbackHref={backFallbackHref}
+              onBeforeBack={onBeforeBack}
+              className="mb-3"
+            />
+          )}
           <h1 className="text-4xl font-extrabold">{title}</h1>
           <p className="text-muted-foreground" suppressHydrationWarning>
             {time > 0 ? format(time, "EEEE, d MMMM yyyy, HH:mm:ss", { locale: id }) : ""}

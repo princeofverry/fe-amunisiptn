@@ -12,7 +12,11 @@ export default async function DashboardAdminPackageEditPage({
 
   return (
     <main>
-      <DashboardTitle title="Ubah Paket" />
+      <DashboardTitle
+        title="Ubah Paket"
+        showBackButton
+        backFallbackHref="/dashboard/admin/packages"
+      />
       <DashboardAdminUpdatePackageWrapper packageId={id} />
     </main>
   );

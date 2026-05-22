@@ -4,7 +4,11 @@ import DashboardAdminCreateSubtestWrapper from "@/components/organisms/dashboard
 export default function DashboardAdminCreateSubtestPage() {
   return (
     <main>
-      <DashboardTitle title="Tambah Subtes" />
+      <DashboardTitle
+        title="Tambah Subtes"
+        showBackButton
+        backFallbackHref="/dashboard/admin/subtest"
+      />
       <DashboardAdminCreateSubtestWrapper />
     </main>
   );

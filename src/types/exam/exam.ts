@@ -13,6 +13,9 @@ export interface ExamQuestion {
   order_no: number;
   options: ExamOption[];
   my_answer: string | null; // A, B, C, D, E or null
+  correct_answer?: string | null;
+  discussion?: string | null;
+  discussion_image_url?: string | null;
 }
 
 export interface ExamTimerData {
@@ -112,7 +115,7 @@ export interface ReviewQuestion {
     discussion: string | null;
     discussion_image: string | null;
     discussion_image_url: string | null;
-    correct_answer: string;
+    correct_answer: string | null;
     options: ExamOption[];
   };
   my_answer: string | null;
