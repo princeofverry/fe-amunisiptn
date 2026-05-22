@@ -15,9 +15,14 @@ export interface UserTryoutData {
   image_url?: string | null;
   tryoutSubtests?: SubtestByTryout[];
   participantsCount: number;
+  isEnrolled: boolean;
+  hasAttempted: boolean;
+  attemptCount: number;
 }
 
 function mapTryoutBEtoFE(tryout: Tryout): UserTryoutData {
+  const attemptCount = Number(tryout.user_attempt_count ?? 0);
+
   return {
     id: tryout.id,
     title: tryout.title,
@@ -29,6 +34,9 @@ function mapTryoutBEtoFE(tryout: Tryout): UserTryoutData {
     image_url: tryout.image_url,
     tryoutSubtests: tryout.tryout_subtests,
     participantsCount: tryout.user_accesses_count ?? 0,
+    isEnrolled: Boolean(tryout.user_is_enrolled),
+    hasAttempted: attemptCount > 0 || (!!tryout.user_session_status && tryout.user_session_status !== "not_started"),
+    attemptCount,
   };
 }
 

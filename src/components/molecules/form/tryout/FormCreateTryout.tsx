@@ -13,7 +13,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { tryoutSchema, TryoutType } from "@/validators/tryout/tryout-validator";
 import { useCreateTryout } from "@/http/tryout/create-tryout";

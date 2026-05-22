@@ -11,12 +11,14 @@ export interface TryoutHistoryData {
   status: "selesai" | "sedang dikerjakan";
   hasAttempted: boolean;
   isFree: boolean;
+  attemptCount: number;
 }
 
 function mapMyTryoutToHistory(tryout: Tryout): TryoutHistoryData {
   const isFinished = tryout.user_session_status === "finished";
+  const attemptCount = Number(tryout.user_attempt_count ?? 0);
   // "not_started" means enrolled but never opened; any other status means at least one attempt exists
-  const hasAttempted = !!tryout.user_session_status && tryout.user_session_status !== "not_started";
+  const hasAttempted = attemptCount > 0 || (!!tryout.user_session_status && tryout.user_session_status !== "not_started");
 
   return {
     id: tryout.id,
@@ -30,6 +32,7 @@ function mapMyTryoutToHistory(tryout: Tryout): TryoutHistoryData {
     status: isFinished ? "selesai" : "sedang dikerjakan",
     hasAttempted,
     isFree: tryout.is_free ?? false,
+    attemptCount,
   };
 }
 

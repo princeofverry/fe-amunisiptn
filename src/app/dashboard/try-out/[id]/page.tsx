@@ -14,6 +14,7 @@ import { useGetHistoryTryout } from "@/http/tryout/get-history-tryout";
 import { toast } from "sonner";
 import type { SubtestByTryout } from "@/types/subtest/subtest";
 import { getErrorMessage } from "@/utils/get-error-message";
+import { getTryoutButtonState, TRYOUT_BUTTON_CLASS } from "@/utils/tryout-button-state";
 
 interface TryoutSubtestSummary {
   name: string;
@@ -43,13 +44,21 @@ export default function TryoutDetailPage({
     token,
   });
 
-  // Fetch enrolled tryouts to check status
+  // Fetch enrolled tryouts as a fallback for user-specific status.
   const { data: historyData, isLoading: historyLoading } = useGetHistoryTryout({ token });
-  const enrolledTryout = historyData?.data?.find((t) => t.id === tryoutId);
-  const isEnrolled = !!enrolledTryout;
-  const isFinished = enrolledTryout?.status === "selesai";
-
   const tryout = tryoutDetail?.data;
+  const enrolledTryout = historyData?.data?.find((t) => t.id === tryoutId);
+  const isEnrolled = Boolean(tryout?.user_is_enrolled) || !!enrolledTryout;
+  const attemptCount = Number(tryout?.user_attempt_count ?? enrolledTryout?.attemptCount ?? 0);
+  const hasAttempted =
+    attemptCount > 0 ||
+    Boolean(enrolledTryout?.hasAttempted) ||
+    (!!tryout?.user_session_status && tryout.user_session_status !== "not_started");
+  const isFinished = tryout?.user_session_status === "finished" || enrolledTryout?.status === "selesai";
+  const buttonState = getTryoutButtonState({ isEnrolled, hasAttempted });
+  const buttonShadowClass = buttonState.variant === "yellow"
+    ? "shadow-[0_4px_0_0_#a16207]"
+    : "shadow-[0_4px_0_0_#2b6a32]";
   const tryoutTitle = tryout?.title || "";
   const isFree = tryout?.is_free ?? true;
   const tryoutType = isFree ? "Gratis" : "Premium";
@@ -239,13 +248,13 @@ export default function TryoutDetailPage({
         {/* Action Button */}
         <div className="pt-4">
           {isEnrolled ? (
-            isFinished ? (
+            buttonState.action === "retry_tryout" && isFinished ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
-                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-yellow-500 hover:bg-yellow-600 text-white shadow-[0_4px_0_0_#a16207] active:shadow-none active:translate-y-1 transition-all"
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm ${buttonShadowClass} active:shadow-none active:translate-y-1 transition-all ${TRYOUT_BUTTON_CLASS[buttonState.variant]}`}
                 >
-                  Kerjakan Ulang
+                  {buttonState.label}
                 </button>
                 <button
                   onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
@@ -257,9 +266,9 @@ export default function TryoutDetailPage({
             ) : (
               <button
                 onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
-                className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
+                className={`w-full py-3.5 rounded-xl font-bold text-sm ${buttonShadowClass} active:shadow-none active:translate-y-1 transition-all ${TRYOUT_BUTTON_CLASS[buttonState.variant]}`}
               >
-                Mulai Kerjakan
+                {buttonState.label}
               </button>
             )
           ) : (

@@ -139,8 +139,8 @@ export default function TryoutPage() {
             endDate={item.endDate}
             imageUrl={item.image_url}
             participantsCount={item.participantsCount}
-            isEnrolled={enrolledTryoutIds.has(item.id)}
-            hasAttempted={historyMap.get(item.id)?.hasAttempted ?? false}
+            isEnrolled={item.isEnrolled || enrolledTryoutIds.has(item.id)}
+            hasAttempted={item.hasAttempted || historyMap.get(item.id)?.hasAttempted || false}
           />
         ))}
       </div>
