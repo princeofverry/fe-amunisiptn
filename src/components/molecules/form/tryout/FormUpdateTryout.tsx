@@ -8,6 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,7 +65,7 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
     defaultValues: {
       title: "",
       description: "",
-      category: "",
+      category: "UTBK",
       start_date: "",
       end_date: "",
       is_published: false,
@@ -81,7 +88,10 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
     form.reset({
       title: defaultData.title ?? "",
       description: defaultData.description ?? "",
-      category: defaultData.category ?? "",
+      category:
+        defaultData.category === "UM" || defaultData.category === "UTBK"
+          ? defaultData.category
+          : null,
       start_date: formatDate(defaultData.start_date),
       end_date: formatDate(defaultData.end_date),
       is_published: defaultData.is_published ?? false,
@@ -183,11 +193,15 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Kategori</FieldLabel>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    placeholder="Contoh: UTBK / CPNS"
-                  />
+                  <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih kategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UTBK">UTBK</SelectItem>
+                      <SelectItem value="UM">UM</SelectItem>
+                    </SelectContent>
+                  </Select>
                   {fieldState.error && (
                     <FieldError errors={[fieldState.error]} />
                   )}

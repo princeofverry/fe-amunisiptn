@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Question } from "@/types/questions/question";
+import { stripHtmlToPreviewText } from "@/utils/rich-text";
 
 interface DataQuestionProps {
   deleteQuestionHandler: (data: Question) => void;
@@ -26,11 +27,19 @@ export const questionColumns = (
   {
     id: "name",
     header: "Pertanyaan",
-    cell: ({ row }) => (
-      <p suppressHydrationWarning className="max-w-xs md:max-w-6xl truncate">
-        {row.original.question_text}
-      </p>
-    ),
+    cell: ({ row }) => {
+      const preview = stripHtmlToPreviewText(row.original.question_text);
+
+      return (
+        <p
+          suppressHydrationWarning
+          title={preview}
+          className="max-w-[360px] truncate whitespace-nowrap overflow-hidden text-sm"
+        >
+          {preview || "-"}
+        </p>
+      );
+    },
   },
   {
     id: "order_no",

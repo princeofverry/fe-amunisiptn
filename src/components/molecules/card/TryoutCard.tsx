@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Radio, Calendar, Clock, Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { getTryoutButtonState, TRYOUT_BUTTON_CLASS } from "@/utils/tryout-button-state";
 
 interface TryoutCardProps {
   id: number | string;
   title: string;
   type: "Gratis" | "Premium";
+  category?: string | null;
   startDate: string;
   endDate: string;
   imageUrl?: string | null;
@@ -23,6 +23,7 @@ export default function TryoutCard({
   id,
   title,
   type,
+  category,
   startDate,
   endDate,
   imageUrl,
@@ -110,7 +111,7 @@ export default function TryoutCard({
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2">
           <span className="bg-white/30 backdrop-blur-sm border border-white/40 text-white text-xs px-3 py-1 rounded-full font-medium">
-            UTBK
+            {category || "-"}
           </span>
           <span className="bg-white/30 backdrop-blur-sm border border-white/40 text-white text-xs px-3 py-1 rounded-full font-medium">
             {type}

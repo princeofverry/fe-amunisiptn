@@ -1,6 +1,7 @@
 "use client";
 
 import type { ExamQuestion } from "@/types/exam/exam";
+import RichTextRenderer from "@/components/atoms/rich-text/RichTextRenderer";
 import { getReviewOptionState, type TryoutLayoutMode } from "@/utils/tryout-review";
 
 interface QuestionViewProps {
@@ -53,9 +54,9 @@ export default function QuestionView({
           </div>
         )}
 
-        <div
-          className="text-gray-800 text-[15px] leading-relaxed mb-6 font-medium"
-          dangerouslySetInnerHTML={{ __html: question.question_text }}
+        <RichTextRenderer
+          html={question.question_text}
+          className="mb-6 text-gray-800 text-[15px] font-medium"
         />
 
         <div className="flex flex-col gap-3">
@@ -113,7 +114,10 @@ export default function QuestionView({
                   {option.option_key}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className={`block text-sm pt-2 ${textClass}`}>{option.option_text}</span>
+                  <RichTextRenderer
+                    html={option.option_text}
+                    className={`pt-1 ${textClass}`}
+                  />
                   {isReviewMode && (isCorrectAnswer || isUserWrongAnswer) && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {isCorrectAnswer && (
@@ -144,10 +148,7 @@ export default function QuestionView({
           <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-5">
             <h3 className="mb-3 text-sm font-bold text-[#004AAB]">Pembahasan</h3>
             {question.discussion ? (
-              <div
-                className="text-sm leading-relaxed text-gray-700"
-                dangerouslySetInnerHTML={{ __html: question.discussion }}
-              />
+              <RichTextRenderer html={question.discussion} className="text-gray-700" />
             ) : (
               <p className="text-sm leading-relaxed text-gray-600">
                 Pembahasan belum tersedia untuk soal ini.

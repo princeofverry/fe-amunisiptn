@@ -62,6 +62,7 @@ export default function TryoutDetailPage({
   const tryoutTitle = tryout?.title || "";
   const isFree = tryout?.is_free ?? true;
   const tryoutType = isFree ? "Gratis" : "Premium";
+  const tryoutCategory = tryout?.category || "-";
 
   const DUMMY_SUBTEST_DATA: Record<string, { questions: number, duration: number }> = {
     "Penalaran Umum": { questions: 30, duration: 30 },
@@ -182,7 +183,10 @@ export default function TryoutDetailPage({
       <div className="px-6 md:px-10 space-y-6 max-w-4xl mx-auto">
         {/* Title */}
         <div className="text-center space-y-3">
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-2">
+            <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-blue-100 text-[#004AAB]">
+              {tryoutCategory}
+            </span>
             <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${isFree ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
               {tryoutType}
             </span>

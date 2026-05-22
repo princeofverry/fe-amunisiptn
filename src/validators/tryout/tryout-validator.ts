@@ -34,8 +34,9 @@ export const tryoutSchema = z.object({
   image: z.instanceof(File).optional().nullable(),
 
   category: z
-    .string()
-    .max(100, "Kategori maksimal 100 karakter")
+    .enum(["UTBK", "UM"], {
+      message: "Kategori harus UTBK atau UM",
+    })
     .optional()
     .nullable(),
 });

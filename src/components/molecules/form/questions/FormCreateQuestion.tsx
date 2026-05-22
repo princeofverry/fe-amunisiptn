@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/atoms/rich-text/RichTextEditor";
 import {
   Select,
   SelectContent,
@@ -25,6 +25,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/get-error-message";
 import { useState } from "react";
+import { stripHtmlToPreviewText } from "@/utils/rich-text";
 import {
   questionSchema,
   QuestionType,
@@ -130,7 +131,11 @@ export default function FormCreateQuestion({ id }: FormCreateQuestionProps) {
                       Soal <span className="text-red-500">*</span>
                     </FieldLabel>
 
-                    <Textarea {...field} rows={5} />
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Tulis soal..."
+                    />
 
                     {fieldState.error && (
                       <FieldError errors={[fieldState.error]} />
@@ -248,7 +253,7 @@ export default function FormCreateQuestion({ id }: FormCreateQuestionProps) {
                     <SelectContent>
                       {fields.map((option, index) => {
                         const text =
-                          form.watch(`options.${index}.option_text`) ||
+                          stripHtmlToPreviewText(form.watch(`options.${index}.option_text`)) ||
                           "(belum diisi)";
 
                         return (
@@ -271,7 +276,11 @@ export default function FormCreateQuestion({ id }: FormCreateQuestionProps) {
                   <Field>
                     <FieldLabel>Pembahasan</FieldLabel>
 
-                    <Textarea {...field} rows={4} />
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Tulis pembahasan..."
+                    />
                   </Field>
                 )}
               />

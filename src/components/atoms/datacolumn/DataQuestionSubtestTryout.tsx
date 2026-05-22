@@ -14,6 +14,7 @@ import {
   difficultyColor,
   difficultyOptions,
 } from "@/constants/difficult-option";
+import { stripHtmlToPreviewText } from "@/utils/rich-text";
 
 export const questionSubtestTryoutColumns: ColumnDef<QuestionBankBySubtestTryout>[] =
   [
@@ -25,11 +26,19 @@ export const questionSubtestTryoutColumns: ColumnDef<QuestionBankBySubtestTryout
     {
       id: "name",
       header: "Pertanyaan",
-      cell: ({ row }) => (
-        <p suppressHydrationWarning className="line-clamp-1 md:line-clamp-2">
-          {row.original.question_bank.question_text}
-        </p>
-      ),
+      cell: ({ row }) => {
+        const preview = stripHtmlToPreviewText(row.original.question_bank.question_text);
+
+        return (
+          <p
+            suppressHydrationWarning
+            title={preview}
+            className="max-w-[360px] truncate whitespace-nowrap overflow-hidden text-sm"
+          >
+            {preview || "-"}
+          </p>
+        );
+      },
     },
     {
       id: "category",

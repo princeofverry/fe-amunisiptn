@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -40,7 +47,7 @@ export default function FormCreateTryout() {
     defaultValues: {
       title: "",
       description: "",
-      category: "",
+      category: "UTBK",
       start_date: "",
       end_date: "",
       is_published: false,
@@ -135,11 +142,15 @@ export default function FormCreateTryout() {
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Kategori</FieldLabel>
 
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    placeholder="Contoh: UTBK / CPNS"
-                  />
+                  <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih kategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UTBK">UTBK</SelectItem>
+                      <SelectItem value="UM">UM</SelectItem>
+                    </SelectContent>
+                  </Select>
 
                   {fieldState.error && (
                     <FieldError errors={[fieldState.error]} />

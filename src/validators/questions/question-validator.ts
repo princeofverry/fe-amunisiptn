@@ -15,10 +15,12 @@ export const questionSchema = z
     question_text: z.string().min(1, "Soal wajib diisi"),
 
     question_image: z.instanceof(File).optional().nullable(),
+    delete_question_image: z.boolean().optional(),
 
     discussion: z.string().optional(),
 
     discussion_image: z.instanceof(File).optional().nullable(),
+    delete_discussion_image: z.boolean().optional(),
 
     correct_answer: z.enum(optionKeys, {
       message: "Jawaban benar harus A-E",

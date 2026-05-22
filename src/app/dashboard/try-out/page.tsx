@@ -135,6 +135,7 @@ export default function TryoutPage() {
             id={item.id}
             title={item.title}
             type={item.type}
+            category={item.category}
             startDate={item.startDate}
             endDate={item.endDate}
             imageUrl={item.image_url}

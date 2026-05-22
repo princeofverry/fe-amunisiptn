@@ -8,6 +8,7 @@ export interface UserTryoutData {
   id: string;
   title: string;
   type: "Premium" | "Gratis";
+  category?: string | null;
   startDate: string;
   endDate: string;
   is_free?: boolean;
@@ -27,6 +28,7 @@ function mapTryoutBEtoFE(tryout: Tryout): UserTryoutData {
     id: tryout.id,
     title: tryout.title,
     type: tryout.is_free ? "Gratis" : "Premium",
+    category: tryout.category,
     startDate: tryout.start_date ? String(tryout.start_date) : "",
     endDate: tryout.end_date ? String(tryout.end_date) : "",
     is_free: tryout.is_free,

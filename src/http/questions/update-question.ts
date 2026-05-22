@@ -22,6 +22,9 @@ export const updateQuestionHandler = async (
   if (body.question_image) {
     formData.append("question_image", body.question_image);
   }
+  if (body.delete_question_image) {
+    formData.append("delete_question_image", "1");
+  }
 
   if (body.discussion) {
     formData.append("discussion", body.discussion);
@@ -29,6 +32,9 @@ export const updateQuestionHandler = async (
 
   if (body.discussion_image) {
     formData.append("discussion_image", body.discussion_image);
+  }
+  if (body.delete_discussion_image) {
+    formData.append("delete_discussion_image", "1");
   }
 
   if (body.order_no) {

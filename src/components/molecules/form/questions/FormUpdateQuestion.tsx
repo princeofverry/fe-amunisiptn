@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import RichTextEditor from "@/components/atoms/rich-text/RichTextEditor";
 import {
   Select,
   SelectContent,
@@ -33,6 +33,7 @@ import {
 import { useUpdateQuestion } from "@/http/questions/update-question";
 import { useGetDetailQuestion } from "@/http/questions/get-detail-question";
 import { useSession } from "next-auth/react";
+import { stripHtmlToPreviewText } from "@/utils/rich-text";
 
 interface FormEditQuestionProps {
   subtestId: string;
@@ -71,7 +72,9 @@ export default function FormEditQuestion({
     defaultValues: {
       order_no: 1,
       question_text: "",
+      delete_question_image: false,
       discussion: "",
+      delete_discussion_image: false,
       correct_answer: "A",
       is_active: true,
       options: [
@@ -102,7 +105,9 @@ export default function FormEditQuestion({
     form.reset({
       order_no: defaultData.order_no,
       question_text: defaultData.question_text,
+      delete_question_image: false,
       discussion: defaultData.discussion ?? "",
+      delete_discussion_image: false,
       correct_answer: normalizedCorrectAnswer,
       is_active: defaultData.is_active,
       options: normalizedOptions,
@@ -196,7 +201,11 @@ export default function FormEditQuestion({
                     <FieldLabel>
                       Soal <span className="text-red-500">*</span>
                     </FieldLabel>
-                    <Textarea {...field} rows={5} />
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Tulis soal..."
+                    />
                     {fieldState.error && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -217,7 +226,10 @@ export default function FormEditQuestion({
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       field.onChange(file);
-                      if (file) setQuestionPreview(URL.createObjectURL(file));
+                      if (file) {
+                        form.setValue("delete_question_image", false);
+                        setQuestionPreview(URL.createObjectURL(file));
+                      }
                     }}
                   />
                   {questionPreview && (
@@ -235,6 +247,7 @@ export default function FormEditQuestion({
                         onClick={() => {
                           setQuestionPreview(null);
                           form.setValue("question_image", null);
+                          form.setValue("delete_question_image", true);
                         }}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -308,7 +321,7 @@ export default function FormEditQuestion({
                     <SelectContent>
                       {fields.map((option, index) => {
                         const text =
-                          form.watch(`options.${index}.option_text`) ||
+                          stripHtmlToPreviewText(form.watch(`options.${index}.option_text`)) ||
                           "(belum diisi)";
                         return (
                           <SelectItem key={option.id} value={optionKeys[index]}>
@@ -329,7 +342,11 @@ export default function FormEditQuestion({
                 render={({ field }) => (
                   <Field>
                     <FieldLabel>Pembahasan</FieldLabel>
-                    <Textarea {...field} rows={4} />
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Tulis pembahasan..."
+                    />
                   </Field>
                 )}
               />
@@ -347,7 +364,10 @@ export default function FormEditQuestion({
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       field.onChange(file);
-                      if (file) setDiscussionPreview(URL.createObjectURL(file));
+                      if (file) {
+                        form.setValue("delete_discussion_image", false);
+                        setDiscussionPreview(URL.createObjectURL(file));
+                      }
                     }}
                   />
                   {discussionPreview && (
@@ -365,6 +385,7 @@ export default function FormEditQuestion({
                         onClick={() => {
                           setDiscussionPreview(null);
                           form.setValue("discussion_image", null);
+                          form.setValue("delete_discussion_image", true);
                         }}
                       >
                         <Trash2 className="w-4 h-4" />

@@ -5,6 +5,7 @@ import { Question } from "@/types/questions/question";
 import Image from "next/image";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import RichTextRenderer from "@/components/atoms/rich-text/RichTextRenderer";
 
 interface CardQuestionDetailProps {
   data?: Question;
@@ -105,9 +106,7 @@ export default function CardQuestionDetail({
           <span className="font-medium text-muted-foreground uppercase tracking-widest">
             Pertanyaan
           </span>
-          <p className="text-sm leading-relaxed text-foreground">
-            {data?.question_text}
-          </p>
+          <RichTextRenderer html={data?.question_text} className="text-foreground" />
         </div>
 
         {data?.question_image && data?.question_image_url && (
@@ -153,16 +152,14 @@ export default function CardQuestionDetail({
                     >
                       {option.option_key}
                     </span>
-                    <span
+                    <RichTextRenderer
+                      html={option.option_text}
                       className={cn(
-                        "text-sm",
                         isCorrect
                           ? "font-medium text-emerald-800 dark:text-emerald-300"
                           : "text-foreground",
                       )}
-                    >
-                      {option.option_text}
-                    </span>
+                    />
                   </div>
                 );
               })}
@@ -182,9 +179,11 @@ export default function CardQuestionDetail({
               Kunci: {data?.correct_answer}
             </Badge>
           </div>
-          <p className="text-sm leading-relaxed text-foreground">
-            {data?.discussion}
-          </p>
+          <RichTextRenderer
+            html={data?.discussion}
+            className="text-foreground"
+            fallback="Pembahasan belum tersedia untuk soal ini."
+          />
         </div>
 
         {data?.discussion_image && data?.discussion_image_url && (
