@@ -25,6 +25,7 @@ export function sanitizeRichTextHtml(value?: string | null): string {
 
   const parser = new DOMParser();
   const document = parser.parseFromString(`<div>${value}</div>`, "text/html");
+  const container = document.body.firstElementChild;
 
   const cleanNode = (node: Node) => {
     Array.from(node.childNodes).forEach((child) => {
@@ -61,9 +62,11 @@ export function sanitizeRichTextHtml(value?: string | null): string {
     });
   };
 
-  cleanNode(document.body);
+  if (!container) return "";
 
-  return document.body.firstElementChild?.innerHTML ?? "";
+  cleanNode(container);
+
+  return container.innerHTML;
 }
 
 export function stripHtmlToPreviewText(value?: string | null): string {
