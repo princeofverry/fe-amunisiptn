@@ -31,6 +31,7 @@ export default function TryoutPage() {
 
   const { data: historyData } = useGetHistoryTryout({ token });
   const enrolledTryoutIds = new Set(historyData?.data?.map((t) => t.id) || []);
+  const historyMap = new Map(historyData?.data?.map((t) => [t.id, t]) || []);
 
   const getStatusOrder = (item: { startDate: string; endDate: string }) => {
     const start = new Date(item.startDate).getTime();
@@ -138,6 +139,8 @@ export default function TryoutPage() {
             endDate={item.endDate}
             imageUrl={item.image_url}
             participantsCount={item.participantsCount}
+            isEnrolled={enrolledTryoutIds.has(item.id)}
+            hasAttempted={historyMap.get(item.id)?.hasAttempted ?? false}
           />
         ))}
       </div>

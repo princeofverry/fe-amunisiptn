@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Radio, Calendar, Clock, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getTryoutButtonState, TRYOUT_BUTTON_CLASS } from "@/utils/tryout-button-state";
 
 interface TryoutCardProps {
   id: number | string;
@@ -13,6 +15,8 @@ interface TryoutCardProps {
   endDate: string;
   imageUrl?: string | null;
   participantsCount?: number;
+  isEnrolled?: boolean;
+  hasAttempted?: boolean;
 }
 
 export default function TryoutCard({
@@ -23,7 +27,11 @@ export default function TryoutCard({
   endDate,
   imageUrl,
   participantsCount = 0,
+  isEnrolled = false,
+  hasAttempted = false,
 }: TryoutCardProps) {
+  const buttonState = getTryoutButtonState({ isEnrolled, hasAttempted });
+  const buttonHref = isEnrolled ? `/dashboard/try-out/${id}/start` : `/dashboard/try-out/${id}`;
 
   const [statusText, setStatusText] = useState("Menghitung...");
   const [statusTheme, setStatusTheme] = useState("bg-gray-400"); // for the left tag
@@ -146,11 +154,11 @@ export default function TryoutCard({
         </div>
 
         {/* Button */}
-        <Link 
-          href={`/dashboard/try-out/${id}`}
-          className="w-full bg-[#004AAB] hover:bg-[#003B8A] transition-colors text-white py-2.5 rounded-lg text-sm font-semibold mt-auto flex justify-center items-center"
+        <Link
+          href={buttonHref}
+          className={`w-full transition-colors py-2.5 rounded-lg text-sm font-semibold mt-auto flex justify-center items-center ${TRYOUT_BUTTON_CLASS[buttonState.variant]}`}
         >
-          Daftar
+          {buttonState.label}
         </Link>
       </div>
     </div>

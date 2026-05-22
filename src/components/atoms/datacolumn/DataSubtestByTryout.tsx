@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Eye, SquarePen } from "lucide-react";
+import { Eye, SquarePen, Trash2 } from "lucide-react";
 
 import ActionButton from "@/components/molecules/datatable/ActionButton";
 import {
@@ -14,7 +14,13 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 
-export const subtestTryoutColumns: ColumnDef<SubtestByTryout>[] = [
+interface SubtestTryoutColumnsProps {
+  deleteHandler: (data: SubtestByTryout) => void;
+}
+
+export const subtestTryoutColumns = (
+  props: SubtestTryoutColumnsProps,
+): ColumnDef<SubtestByTryout>[] => [
   {
     id: "index",
     header: "No",
@@ -106,12 +112,21 @@ export const subtestTryoutColumns: ColumnDef<SubtestByTryout>[] = [
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
-              href={`/dashboard/admin/try-out/${data.id}/edit`}
+              href={`/dashboard/admin/subtest/${data.subtest.id}/edit`}
               className="flex cursor-pointer items-center text-yellow-700 hover:underline hover:text-yellow-900"
             >
               <SquarePen className="h-4 w-4 text-yellow-700 hover:text-yellow-900" />
               <span className="ml-2">Edit</span>
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <div
+              className="flex cursor-pointer items-center text-red-600 hover:text-red-800 hover:underline"
+              onClick={() => props.deleteHandler(data)}
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+              <span className="ml-2">Hapus dari Tryout</span>
+            </div>
           </DropdownMenuItem>
         </ActionButton>
       );

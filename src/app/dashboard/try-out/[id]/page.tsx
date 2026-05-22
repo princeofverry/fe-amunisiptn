@@ -243,9 +243,9 @@ export default function TryoutDetailPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
-                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
+                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-yellow-500 hover:bg-yellow-600 text-white shadow-[0_4px_0_0_#a16207] active:shadow-none active:translate-y-1 transition-all"
                 >
-                  Mulai Lagi
+                  Kerjakan Ulang
                 </button>
                 <button
                   onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
@@ -255,11 +255,11 @@ export default function TryoutDetailPage({
                 </button>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => router.push(`/dashboard/try-out/${tryoutId}/start`)}
                 className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#3B9245] hover:bg-[#317A3A] text-white shadow-[0_4px_0_0_#2b6a32] active:shadow-none active:translate-y-1 transition-all"
               >
-                Mulai Tryout
+                Mulai Kerjakan
               </button>
             )
           ) : (

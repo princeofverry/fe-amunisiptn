@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { compressImage } from "@/utils/compress-image";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -254,10 +256,17 @@ export default function FormCreateTryout() {
 
                   <Input
                     type="file"
-                    accept="image/*"
-                    onChange={(e) => {
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
-                      field.onChange(file);
+                      if (!file) return;
+                      try {
+                        const compressed = await compressImage(file);
+                        field.onChange(compressed);
+                      } catch {
+                        toast.error("Gagal mengompresi gambar. Coba file lain.");
+                        e.target.value = "";
+                      }
                     }}
                   />
 

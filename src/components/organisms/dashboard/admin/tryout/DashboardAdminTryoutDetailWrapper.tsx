@@ -14,6 +14,11 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import DialogCreateSubtestTryout from "@/components/atoms/dialog/subtest/DialogCreateSubtestTryout";
 import Image from "next/image";
+import { useDeleteSubtestFromTryout } from "@/http/subtest/delete-subtest-from-tryout";
+import AlertDialogDeleteSubtest from "@/components/atoms/alert-dialog/subtest/AlertDialogDeleteSubtest";
+import { SubtestByTryout } from "@/types/subtest/subtest";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface DashboardAdminTryoutDetailWrapperProps {
   id: string;
@@ -23,7 +28,36 @@ export default function DashboardAdminTryoutDetailWrapper({
   id,
 }: DashboardAdminTryoutDetailWrapperProps) {
   const { data: session, status } = useSession();
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedSubtest, setSelectedSubtest] = useState<SubtestByTryout | null>(null);
+
+  const { mutate: deleteSubtest, isPending: isDeleting } = useDeleteSubtestFromTryout({
+    onSuccess: () => {
+      toast.success("Subtes berhasil dihapus dari tryout.");
+      setDeleteDialogOpen(false);
+      setSelectedSubtest(null);
+      queryClient.invalidateQueries({ queryKey: ["get-subtest-by-tryout", id] });
+    },
+    onError: () => {
+      toast.error("Gagal menghapus subtes dari tryout.");
+    },
+  });
+
+  const handleDeleteClick = (data: SubtestByTryout) => {
+    setSelectedSubtest(data);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!selectedSubtest || !session?.access_token) return;
+    deleteSubtest({
+      tryoutId: id,
+      tryoutSubtestId: selectedSubtest.id,
+      token: session.access_token,
+    });
+  };
 
   const { data } = useGetDetailTryout({
     id,
@@ -144,7 +178,7 @@ export default function DashboardAdminTryoutDetailWrapper({
               </Button>
             </div>
             <DataTable
-              columns={subtestTryoutColumns}
+              columns={subtestTryoutColumns({ deleteHandler: handleDeleteClick })}
               data={subtest?.data ?? []}
               isLoading={isPendingSubtest}
             />
@@ -156,6 +190,13 @@ export default function DashboardAdminTryoutDetailWrapper({
         open={isDialogOpen}
         setOpen={setIsDialogOpen}
         tryoutId={id}
+      />
+
+      <AlertDialogDeleteSubtest
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        confirmDelete={handleConfirmDelete}
+        isPending={isDeleting}
       />
     </section>
   );

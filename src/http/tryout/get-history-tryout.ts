@@ -9,10 +9,14 @@ export interface TryoutHistoryData {
   dateTaken: string;
   score: number;
   status: "selesai" | "sedang dikerjakan";
+  hasAttempted: boolean;
+  isFree: boolean;
 }
 
 function mapMyTryoutToHistory(tryout: Tryout): TryoutHistoryData {
   const isFinished = tryout.user_session_status === "finished";
+  // "not_started" means enrolled but never opened; any other status means at least one attempt exists
+  const hasAttempted = !!tryout.user_session_status && tryout.user_session_status !== "not_started";
 
   return {
     id: tryout.id,
@@ -24,6 +28,8 @@ function mapMyTryoutToHistory(tryout: Tryout): TryoutHistoryData {
         : "",
     score: 0, // Score needs separate API call to /result
     status: isFinished ? "selesai" : "sedang dikerjakan",
+    hasAttempted,
+    isFree: tryout.is_free ?? false,
   };
 }
 
