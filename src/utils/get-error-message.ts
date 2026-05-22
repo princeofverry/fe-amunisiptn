@@ -1,9 +1,7 @@
 type ErrorWithResponseMessage = {
   response?: {
     data?: {
-      errors?: {
-        email?: unknown[];
-      };
+      errors?: Record<string, unknown[]>;
       message?: unknown;
     };
   };
@@ -16,15 +14,19 @@ export function getErrorMessage(error: unknown, fallback: string): string {
     "response" in error
   ) {
     const data = (error as ErrorWithResponseMessage).response?.data;
-    const message = data?.message;
-    const emailError = data?.errors?.email?.[0];
 
-    if (typeof message === "string" && message.length > 0) {
-      return message;
+    // Try to get the first field-level validation error (e.g. proof_image, email, etc.)
+    if (data?.errors && typeof data.errors === "object") {
+      for (const fieldErrors of Object.values(data.errors)) {
+        if (Array.isArray(fieldErrors) && typeof fieldErrors[0] === "string" && fieldErrors[0].length > 0) {
+          return fieldErrors[0];
+        }
+      }
     }
 
-    if (typeof emailError === "string" && emailError.length > 0) {
-      return emailError;
+    const message = data?.message;
+    if (typeof message === "string" && message.length > 0) {
+      return message;
     }
   }
 

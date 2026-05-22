@@ -70,11 +70,15 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     jwt: async ({ token, user, trigger, session }) => {
-      // Intercept purely front-end fields on session update and store them in the JWT token
+      // Intercept purely front-end fields on session update and store them in the JWT token.
+      // Exclude server-managed fields (ticket_balance, id, role, email) so they always come
+      // fresh from BE and are never frozen by an optimistic session update.
       if (trigger === "update" && session?.user) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { ticket_balance, id, role, email, ...safeOverrides } = session.user as Auth & { ticket_balance?: number };
         token.userOverrides = {
           ...(token.userOverrides || {}),
-          ...session.user,
+          ...safeOverrides,
         };
       }
 

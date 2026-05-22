@@ -116,14 +116,29 @@ export default function TryoutDetailPage({
     });
   };
 
+  const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const MAX_FILE_SIZE_MB = 2;
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setProofImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setProofPreview(reader.result as string);
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Format gambar tidak didukung. Gunakan JPG, PNG, atau WebP.");
+      e.target.value = "";
+      return;
     }
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`Ukuran gambar melebihi batas ${MAX_FILE_SIZE_MB}MB.`);
+      e.target.value = "";
+      return;
+    }
+
+    setProofImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setProofPreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   if (sessionStatus === "loading" || isLoading || historyLoading) {
@@ -293,8 +308,8 @@ export default function TryoutDetailPage({
                       <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#004AAB] transition-colors">
                         <Upload className="w-8 h-8 text-gray-400 mb-2" />
                         <span className="text-sm text-gray-500 font-medium">Klik untuk upload gambar</span>
-                        <span className="text-xs text-gray-400 mt-1">JPG, PNG Max 5MB</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                        <span className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — Maks 2MB</span>
+                        <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
                       </label>
                     )}
                   </div>

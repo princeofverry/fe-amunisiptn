@@ -46,16 +46,15 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
         // Attempt to sync with backend
         await updateProfileApiHandler(session.access_token, body);
         
-        // Update local NextAuth session
+        // Update local NextAuth session — only pass the fields being edited.
+        // Do NOT spread session.user here; that would freeze server-managed fields
+        // like ticket_balance into userOverrides and prevent them from updating.
         await update({
-          ...session,
           user: {
-            ...session.user,
             name: body.name,
             phone_number: body.phone_number,
             school_origin: body.school_origin,
             grade_level: body.grade_level === 'Gap Year' ? 'Gap Year' : `${body.grade_level} ${body.class_level || ''}`.trim(),
-            // We may not get these from DB sync immediately depending on the GET API, so we manually optimistic update the session
             gender: body.gender,
             birth_date: body.birth_date,
             province: body.province,
@@ -74,11 +73,9 @@ export default function FormCompleteProfile({ onSuccess }: FormCompleteProfilePr
       // If it fails on the backend, we still want to let them through to the dashboard
       console.error("Failed to update profile to backend:", error);
       
-      // Still update local session so the popup goes away
+      // Still update local session so the popup goes away — same safe pattern
       await update({
-        ...session,
         user: {
-          ...session?.user,
           name: body.name,
           phone_number: body.phone_number,
           school_origin: body.school_origin,
