@@ -53,13 +53,18 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
 
     return [...tryoutDetail.data.tryout_subtests]
         .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
-        .map((ts: SubtestByTryout) => ({
-          id: ts.id,
-          name: ts.subtest.name,
-          category: ts.subtest.category === "TPS" ? "Tes Potensi Skolastik" : "Tes Literasi",
-          duration: ts.duration_minutes,
-          questionCount: ts.subtest.max_questions,
-        }));
+        .map((ts: SubtestByTryout) => {
+          const rawName = ts.subtest.name;
+          const displayName = rawName.includes("_") ? rawName.split("_").slice(1).join("_") : rawName;
+          
+          return {
+            id: ts.id,
+            name: displayName,
+            category: ts.subtest.category === "TPS" ? "Tes Potensi Skolastik" : "Tes Literasi",
+            duration: ts.duration_minutes,
+            questionCount: ts.subtest.max_questions,
+          };
+        });
   }, [tryoutDetail]);
 
   const currentSubtest = subtests[currentSubtestIndex];

@@ -56,9 +56,11 @@ export default function TryoutStartPage({
   const allSubtests: TryoutSubtestSummary[] = (tryout?.tryout_subtests || [])
     .sort((a: SubtestByTryout, b: SubtestByTryout) => a.order_no - b.order_no)
     .map((ts: SubtestByTryout) => {
-      const fallback = DUMMY_SUBTEST_DATA[ts.subtest.name];
+      const rawName = ts.subtest.name;
+      const displayName = rawName.includes("_") ? rawName.split("_").slice(1).join("_") : rawName;
+      const fallback = DUMMY_SUBTEST_DATA[rawName];
       return {
-        name: ts.subtest.name,
+        name: displayName,
         questions: fallback ? fallback.questions : (ts.subtest.max_questions || 0),
         duration: fallback ? fallback.duration : (ts.duration_minutes || 0),
         category: ts.subtest.category,
