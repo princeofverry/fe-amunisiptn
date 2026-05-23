@@ -60,6 +60,11 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
 
   const defaultData = useMemo(() => detailData?.data, [detailData]);
 
+  const normalizeCategory = (category: string | null | undefined): "UTBK" | "UM" => {
+    const normalized = category?.trim().toUpperCase();
+    return normalized === "UM" ? "UM" : "UTBK";
+  };
+
   const form = useForm<TryoutType>({
     resolver: zodResolver(tryoutSchema),
     defaultValues: {
@@ -88,12 +93,7 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
     form.reset({
       title: defaultData.title ?? "",
       description: defaultData.description ?? "",
-      category:
-        defaultData.category?.toUpperCase() === "UM"
-          ? "UM"
-          : defaultData.category?.toUpperCase() === "UTBK"
-          ? "UTBK"
-          : "UTBK", // Default fallback if data is missing
+      category: normalizeCategory(defaultData.category),
       start_date: formatDate(defaultData.start_date),
       end_date: formatDate(defaultData.end_date),
       is_published: defaultData.is_published ?? false,
@@ -133,7 +133,13 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
   });
 
   const onSubmit = (body: TryoutType) => {
-    updateTryoutHandler({ id: tryoutId, body });
+    updateTryoutHandler({
+      id: tryoutId,
+      body: {
+        ...body,
+        category: body.category ?? normalizeCategory(defaultData?.category),
+      },
+    });
   };
 
   if (isLoadingDetail) {
@@ -199,7 +205,7 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Kategori</FieldLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <Select onValueChange={field.onChange} value={field.value ?? "UTBK"}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>

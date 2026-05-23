@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { X } from "lucide-react";
 import ExamSidebar from "@/components/molecules/exam/ExamSidebar";
@@ -22,6 +22,9 @@ export default function ReviewPage({
 }) {
   const { id: tryoutId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const attempt = Number(searchParams.get("attempt") || 0) || undefined;
+  const attemptQuery = attempt ? `?attempt=${attempt}` : "";
   const { data: session } = useSession();
   const token = session?.access_token || "";
   const [selectedSubtestId, setSelectedSubtestId] = useState<string>("all");
@@ -32,6 +35,7 @@ export default function ReviewPage({
   const { data: beReview, isError, isLoading, refetch } = useGetTryoutReview({
     tryoutId,
     token,
+    attempt,
   });
 
   const unlockMutation = useUnlockDiscussion({
@@ -130,7 +134,7 @@ export default function ReviewPage({
       <header className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-200 bg-white">
         <button
           type="button"
-          onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+          onClick={() => router.push(`/dashboard/try-out/${tryoutId}/result${attemptQuery}`)}
           className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -207,7 +211,7 @@ export default function ReviewPage({
           onSelectAnswer={() => undefined}
           onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
           onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-          onFinish={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+          onFinish={() => router.push(`/dashboard/try-out/${tryoutId}/result${attemptQuery}`)}
           hasPrev={currentQuestionIndex > 0}
           hasNext={currentQuestionIndex < questions.length - 1}
           mode="review"

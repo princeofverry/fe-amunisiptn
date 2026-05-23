@@ -25,6 +25,7 @@ export default function ResultPage({
   });
 
   const result = beResult?.data;
+  const attemptQuery = attempt ? `?attempt=${attempt}` : "";
 
   if (isLoading) {
     return (
@@ -161,7 +162,7 @@ export default function ResultPage({
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
         <Link
-          href={`/dashboard/try-out/${tryoutId}/review`}
+          href={`/dashboard/try-out/${tryoutId}/review${attemptQuery}`}
           className="flex-1 py-3.5 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold rounded-xl text-center transition-colors"
         >
           Lihat Pembahasan

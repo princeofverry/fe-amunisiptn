@@ -125,6 +125,7 @@ export interface ReviewQuestion {
 export interface ReviewData {
   tryout_id: string;
   tryout_title: string;
+  attempt_number?: number;
   review: ReviewQuestion[];
 }
 
