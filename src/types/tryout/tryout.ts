@@ -22,4 +22,26 @@ export interface Tryout {
   user_session_status?: "not_started" | "in_progress" | "finished" | "expired";
   user_started_at?: Date | string | null;
   user_finished_at?: Date | string | null;
+  user_attempts?: TryoutAttemptHistory[];
+}
+
+export interface TryoutAttemptHistory {
+  session_id: string;
+  tryout_id: string;
+  attempt_number: number;
+  status: "not_started" | "in_progress" | "finished" | "expired";
+  started_at: Date | string | null;
+  finished_at: Date | string | null;
+  score: {
+    raw_score: number;
+    final_score: number;
+    accuracy: number;
+  };
+  summary: {
+    total_questions: number;
+    answered: number;
+    correct: number;
+    wrong: number;
+    unanswered: number;
+  };
 }

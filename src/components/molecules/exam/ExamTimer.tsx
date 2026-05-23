@@ -8,8 +8,8 @@ interface ExamTimerProps {
 }
 
 export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps) {
-  const [displaySeconds, setDisplaySeconds] = useState(remainingSeconds);
-  const [prevRemainingSeconds, setPrevRemainingSeconds] = useState(remainingSeconds);
+  const normalizedRemainingSeconds = Math.max(0, Math.ceil(Number(remainingSeconds) || 0));
+  const [displaySeconds, setDisplaySeconds] = useState(normalizedRemainingSeconds);
 
   // Use ref to avoid dependency issues with the callback
   const onTimeUpRef = useRef(onTimeUp);
@@ -17,23 +17,21 @@ export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps
     onTimeUpRef.current = onTimeUp;
   }, [onTimeUp]);
 
-  // Sync state with prop if it changes (e.g. next subtest)
-  if (remainingSeconds !== prevRemainingSeconds) {
-    setPrevRemainingSeconds(remainingSeconds);
-    setDisplaySeconds(remainingSeconds);
-  }
+  useEffect(() => {
+    setDisplaySeconds(normalizedRemainingSeconds);
+  }, [normalizedRemainingSeconds]);
 
   useEffect(() => {
-    if (remainingSeconds <= 0) {
+    if (normalizedRemainingSeconds <= 0) {
       onTimeUpRef.current();
       return;
     }
 
-    const endTime = Date.now() + remainingSeconds * 1000;
+    const endTime = Date.now() + normalizedRemainingSeconds * 1000;
 
     const timer = setInterval(() => {
       const now = Date.now();
-      const diff = Math.ceil((endTime - now) / 1000);
+      const diff = Math.max(Math.ceil((endTime - now) / 1000), 0);
       
       if (diff <= 0) {
         clearInterval(timer);
@@ -45,11 +43,12 @@ export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [remainingSeconds]);
+  }, [normalizedRemainingSeconds]);
 
-  const mins = Math.floor(displaySeconds / 60);
-  const secs = displaySeconds % 60;
-  const isLow = displaySeconds < 300; // Less than 5 minutes
+  const safeDisplaySeconds = Math.max(0, Math.ceil(Number(displaySeconds) || 0));
+  const mins = Math.floor(safeDisplaySeconds / 60);
+  const secs = safeDisplaySeconds % 60;
+  const isLow = safeDisplaySeconds < 300; // Less than 5 minutes
 
   return (
     <div

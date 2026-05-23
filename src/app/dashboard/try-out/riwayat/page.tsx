@@ -36,11 +36,12 @@ export default function RiwayatTryoutPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {histories.map((hist) => (
-              <div key={hist.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 border border-slate-100 bg-slate-50 rounded-xl gap-4 hover:shadow-sm transition-shadow">
+              <div key={hist.historyId} className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 border border-slate-100 bg-slate-50 rounded-xl gap-4 hover:shadow-sm transition-shadow">
                 <div className="flex flex-col gap-1">
                   <span className="font-bold text-slate-800 text-lg">{hist.tryoutName}</span>
                   <div className="flex items-center gap-3 text-sm text-slate-500">
-                    <span>Dikirim: {new Date(hist.dateTaken).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:'2-digit' })}</span>
+                    <span>Attempt {hist.attemptNumber}</span>
+                    <span>Dikerjakan: {new Date(hist.dateTaken).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:'2-digit' })}</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -52,7 +53,7 @@ export default function RiwayatTryoutPage() {
                     <div className="flex flex-col items-end gap-2">
                       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">Selesai</span>
                       <Link 
-                        href={`/dashboard/try-out/${hist.id}/result`}
+                        href={`/dashboard/try-out/${hist.id}/result?attempt=${hist.attemptNumber}`}
                         className="mt-1 text-sm font-semibold text-white bg-[#004AAB] px-4 py-1.5 rounded-lg hover:bg-[#003B8A] transition-colors"
                       >
                         Lihat Hasil

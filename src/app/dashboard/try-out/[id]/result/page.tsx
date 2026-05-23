@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ChevronLeft, Trophy, Target, CheckCircle2, XCircle, MinusCircle, Clock, BarChart3 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useGetTryoutResult } from "@/http/tryout/get-tryout-result";
@@ -12,12 +13,15 @@ export default function ResultPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: tryoutId } = use(params);
+  const searchParams = useSearchParams();
+  const attempt = Number(searchParams.get("attempt") || 0) || undefined;
   const { data: session } = useSession();
   const token = session?.access_token || "";
 
   const { data: beResult, isLoading } = useGetTryoutResult({
     tryoutId,
     token,
+    attempt,
   });
 
   const result = beResult?.data;
