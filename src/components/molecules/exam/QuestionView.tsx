@@ -56,7 +56,7 @@ export default function QuestionView({
 
         <RichTextRenderer
           html={question.question_text}
-          className="mb-6 text-gray-800 text-[15px] font-medium"
+          className="mb-6 text-gray-800 font-medium"
         />
 
         <div className="flex flex-col gap-3">

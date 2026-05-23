@@ -21,7 +21,7 @@ export default function RichTextRenderer({
   return (
     <div
       className={cn(
-        "rich-text-content text-sm leading-relaxed [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-1 [&_p]:my-2",
+        "rich-text-content text-base leading-[1.5] tracking-[0.25px] [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-1 [&_p]:my-2",
         className,
       )}
       dangerouslySetInnerHTML={{ __html: safeHtml }}
