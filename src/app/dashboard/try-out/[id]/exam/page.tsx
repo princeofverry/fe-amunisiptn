@@ -8,6 +8,7 @@ import ExamTimer from "@/components/molecules/exam/ExamTimer";
 import ExamSidebar from "@/components/molecules/exam/ExamSidebar";
 import QuestionView from "@/components/molecules/exam/QuestionView";
 import DialogFinishSubtest from "@/components/molecules/dialog/DialogFinishSubtest";
+import DialogExitExam from "@/components/molecules/dialog/DialogExitExam";
 import { useSubmitAnswer } from "@/http/tryout/submit-answer";
 import { useFinishSubtest } from "@/http/tryout/finish-subtest";
 import { useStartSubtest } from "@/http/tryout/start-subtest";
@@ -38,6 +39,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | null>>({});
   const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -226,9 +228,12 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   };
 
   const handleExitExam = () => {
-    if (confirm("Yakin ingin keluar? Progress kamu akan tersimpan.")) {
-      router.push(`/dashboard/try-out/${tryoutId}`);
-    }
+    setShowExitDialog(true);
+  };
+
+  const confirmExitExam = () => {
+    setShowExitDialog(false);
+    router.push(`/dashboard/try-out/${tryoutId}`);
   };
 
   // --- Render ---
@@ -295,6 +300,13 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
         onOpenChange={setShowFinishDialog}
         unansweredCount={unansweredCount}
         onConfirm={confirmFinishSubtest}
+      />
+
+      {/* Exit Exam Dialog */}
+      <DialogExitExam
+        open={showExitDialog}
+        onOpenChange={setShowExitDialog}
+        onConfirm={confirmExitExam}
       />
     </div>
   );
