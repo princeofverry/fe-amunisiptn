@@ -64,6 +64,7 @@ export default function DialogBulkImportQuestion({
       setResult({ imported: data.imported, skipped: data.skipped, errors: data.errors });
       if (data.imported > 0) {
         queryClient.invalidateQueries({ queryKey: ["get-all-question-by-subtest", subtestId] });
+        queryClient.invalidateQueries({ queryKey: ["get-detail-subtest", subtestId] });
         toast.success(data.message);
       } else {
         toast.error("Tidak ada soal yang berhasil diimpor.");

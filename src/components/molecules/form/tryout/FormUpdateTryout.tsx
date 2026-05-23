@@ -89,9 +89,11 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
       title: defaultData.title ?? "",
       description: defaultData.description ?? "",
       category:
-        defaultData.category === "UM" || defaultData.category === "UTBK"
-          ? defaultData.category
-          : null,
+        defaultData.category?.toUpperCase() === "UM"
+          ? "UM"
+          : defaultData.category?.toUpperCase() === "UTBK"
+          ? "UTBK"
+          : "UTBK", // Default fallback if data is missing
       start_date: formatDate(defaultData.start_date),
       end_date: formatDate(defaultData.end_date),
       is_published: defaultData.is_published ?? false,

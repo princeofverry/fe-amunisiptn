@@ -7,8 +7,11 @@ import { X } from "lucide-react";
 import ExamSidebar from "@/components/molecules/exam/ExamSidebar";
 import QuestionView from "@/components/molecules/exam/QuestionView";
 import { useGetTryoutReview } from "@/http/tryout/get-tryout-review";
+import { useUnlockDiscussion } from "@/http/tryout/unlock-discussion";
 import type { ExamQuestion, ReviewQuestion } from "@/types/exam/exam";
 import { getReviewQuestionStatus } from "@/utils/tryout-review";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/get-error-message";
 
 export default function ReviewPage({
   params,
@@ -22,12 +25,34 @@ export default function ReviewPage({
   const [selectedSubtestId, setSelectedSubtestId] = useState<string>("all");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const { data: beReview, isError, isLoading } = useGetTryoutReview({
+  const { data: beReview, isError, isLoading, refetch } = useGetTryoutReview({
     tryoutId,
     token,
   });
 
+  const unlockMutation = useUnlockDiscussion({
+    token,
+    options: {
+      onSuccess: (data) => {
+        toast.success(data.message);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, "Gagal membuka pembahasan"));
+      },
+    },
+  });
+
+  const handleUnlock = () => {
+    if (confirm("Gunakan 1 Tiket untuk membuka semua pembahasan tryout ini?")) {
+      unlockMutation.mutate({ tryoutId });
+    }
+  };
+
   const reviewItems = useMemo(() => beReview?.data?.review ?? [], [beReview]);
+  const isLocked = useMemo(() => {
+    return reviewItems.some(item => item.question.discussion === '(Gunakan 1 Tiket untuk melihat semua pembahasan)');
+  }, [reviewItems]);
   const subtests = useMemo(() => {
     const map = new Map<string, string>();
     reviewItems.forEach((item) => {
@@ -161,6 +186,17 @@ export default function ReviewPage({
             mode="review"
             reviewStatuses={reviewStatuses}
           />
+
+          {isLocked && (
+            <button
+              type="button"
+              onClick={handleUnlock}
+              disabled={unlockMutation.isPending}
+              className="mt-4 w-full rounded-xl bg-amber-500 py-3 text-sm font-bold text-white shadow-[0_4px_0_0_#b45309] transition-all hover:bg-amber-600 active:translate-y-1 active:shadow-none disabled:opacity-50 lg:w-65"
+            >
+              {unlockMutation.isPending ? "Memproses..." : "🔓 Buka Semua Pembahasan (1 Tiket)"}
+            </button>
+          )}
         </aside>
 
         <QuestionView

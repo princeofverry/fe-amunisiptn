@@ -44,16 +44,17 @@ export default function DashboardTitle({
         </>
       ) : (
         <>
-          {showBackButton && (
-            <AdminBackButton
-              label={backLabel}
-              fallbackHref={backFallbackHref}
-              onBeforeBack={onBeforeBack}
-              className="mb-3"
-            />
-          )}
-          <h1 className="text-4xl font-extrabold">{title}</h1>
-          <p className="text-muted-foreground" suppressHydrationWarning>
+          <div className="flex items-center gap-3">
+            {showBackButton && (
+              <AdminBackButton
+                label={backLabel}
+                fallbackHref={backFallbackHref}
+                onBeforeBack={onBeforeBack}
+              />
+            )}
+            <h1 className="text-4xl font-extrabold">{title}</h1>
+          </div>
+          <p className="text-muted-foreground ml-1" suppressHydrationWarning>
             {time > 0 ? format(time, "EEEE, d MMMM yyyy, HH:mm:ss", { locale: id }) : ""}
           </p>
         </>

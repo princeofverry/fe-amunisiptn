@@ -11,6 +11,7 @@ interface AdminBackButtonProps {
   fallbackHref?: string;
   className?: string;
   onBeforeBack?: () => boolean | Promise<boolean>;
+  iconOnly?: boolean;
 }
 
 export default function AdminBackButton({
@@ -18,6 +19,7 @@ export default function AdminBackButton({
   fallbackHref = "/dashboard/admin",
   className,
   onBeforeBack,
+  iconOnly = true,
 }: AdminBackButtonProps) {
   const router = useRouter();
 
@@ -47,16 +49,16 @@ export default function AdminBackButton({
     <Button
       type="button"
       variant="ghost"
-      size="sm"
+      size="icon"
       onClick={handleBack}
       className={cn(
-        "w-fit gap-2 px-0 text-gray-600 hover:bg-transparent hover:text-gray-900 focus-visible:ring-[#004AAB]",
+        "h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-[#004AAB] rounded-full",
         className,
       )}
       aria-label="Kembali ke halaman sebelumnya"
     >
-      <ArrowLeft className="h-4 w-4" />
-      {label}
+      <ArrowLeft className="h-6 w-6" />
+      {!iconOnly && label}
     </Button>
   );
 }

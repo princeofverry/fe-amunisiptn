@@ -83,6 +83,10 @@ export default function FormCreateQuestion({ id }: FormCreateQuestionProps) {
         queryKey: ["get-all-subtests"],
       });
 
+      queryClient.invalidateQueries({
+        queryKey: ["get-detail-subtest", id],
+      });
+
       router.push("/dashboard/admin/subtest");
     },
   });

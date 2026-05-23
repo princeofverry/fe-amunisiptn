@@ -70,6 +70,9 @@ export default function DashboardadminSubtestDetailWrapper({
       queryClient.invalidateQueries({
         queryKey: ["get-all-question-by-subtest", id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["get-detail-subtest", id],
+      });
     },
   });
 
