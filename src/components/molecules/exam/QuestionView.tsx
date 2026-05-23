@@ -40,8 +40,8 @@ export default function QuestionView({
   };
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 p-6 lg:p-8 overflow-y-visible lg:overflow-y-auto">
+    <div className="flex flex-col lg:flex-1 lg:min-h-0">
+      <div className="p-6 lg:p-8 lg:flex-1 lg:overflow-y-auto">
         {question.question_image_url && (
           <div className="mb-6 flex justify-center">
             <div className="relative max-w-full max-h-75 w-auto">

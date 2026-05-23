@@ -144,7 +144,7 @@ export default function ReviewPage({
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
         <aside className="w-full lg:w-auto lg:border-r lg:border-gray-100 p-4 lg:overflow-y-auto bg-gray-50/50 shrink-0">
           <div className="mb-4 flex gap-2 overflow-x-auto pb-1 lg:w-65 lg:flex-col lg:overflow-visible lg:pb-0">
             <button
@@ -199,19 +199,17 @@ export default function ReviewPage({
           )}
         </aside>
 
-        <div className="flex-1 flex flex-col min-h-0">
-          <QuestionView
-            question={currentQuestion}
-            selectedAnswer={currentReviewItem?.my_answer ?? null}
-            onSelectAnswer={() => undefined}
-            onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
-            onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-            onFinish={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
-            hasPrev={currentQuestionIndex > 0}
-            hasNext={currentQuestionIndex < questions.length - 1}
-            mode="review"
-          />
-        </div>
+        <QuestionView
+          question={currentQuestion}
+          selectedAnswer={currentReviewItem?.my_answer ?? null}
+          onSelectAnswer={() => undefined}
+          onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+          onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+          onFinish={() => router.push(`/dashboard/try-out/${tryoutId}/result`)}
+          hasPrev={currentQuestionIndex > 0}
+          hasNext={currentQuestionIndex < questions.length - 1}
+          mode="review"
+        />
       </div>
     </div>
   );

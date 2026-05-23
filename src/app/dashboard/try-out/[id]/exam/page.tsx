@@ -262,7 +262,7 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
         {/* Sidebar */}
         <div className="w-full lg:w-auto lg:border-r lg:border-gray-100 p-4 lg:overflow-y-auto bg-gray-50/50 shrink-0">
           <ExamSidebar
@@ -277,18 +277,16 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
         </div>
 
         {/* Question Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <QuestionView
-            question={currentQuestion}
-            selectedAnswer={answers[currentQuestion.id] ?? currentQuestion.my_answer}
-            onSelectAnswer={handleSelectAnswer}
-            onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
-            onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-            onFinish={handleFinishSubtest}
-            hasPrev={currentQuestionIndex > 0}
-            hasNext={currentQuestionIndex < questions.length - 1}
-          />
-        </div>
+        <QuestionView
+          question={currentQuestion}
+          selectedAnswer={answers[currentQuestion.id] ?? currentQuestion.my_answer}
+          onSelectAnswer={handleSelectAnswer}
+          onPrev={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+          onNext={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+          onFinish={handleFinishSubtest}
+          hasPrev={currentQuestionIndex > 0}
+          hasNext={currentQuestionIndex < questions.length - 1}
+        />
       </div>
 
       {/* Finish Subtest Dialog */}
