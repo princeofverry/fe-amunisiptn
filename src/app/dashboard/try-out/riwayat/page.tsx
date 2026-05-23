@@ -17,29 +17,37 @@ import {
 
 const STATUS_FILTERS = ["Semua", "Selesai", "Mengerjakan"];
 const PER_PAGE_OPTIONS = [5, 9, 15];
+const ALL_TRYOUTS_FILTER = "all";
 
 export default function RiwayatTryoutPage() {
   const { data: session } = useSession();
   const token = session?.access_token || "";
   const [searchQuery, setSearchQuery] = useState("");
+  const [tryoutNameFilter, setTryoutNameFilter] = useState(ALL_TRYOUTS_FILTER);
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
 
   const { data, isLoading } = useGetHistoryTryout({ token });
-  const histories = data?.data || [];
+  const histories = useMemo(() => data?.data || [], [data?.data]);
+  const tryoutNameOptions = useMemo(
+    () => Array.from(new Set(histories.map((hist) => hist.tryoutName))).sort((a, b) => a.localeCompare(b, "id-ID")),
+    [histories],
+  );
 
   const filteredHistories = useMemo(() => {
     return histories
       .filter((hist) => {
         const matchesSearch = hist.tryoutName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesTryoutName =
+          tryoutNameFilter === ALL_TRYOUTS_FILTER || hist.tryoutName === tryoutNameFilter;
         const matchesStatus =
           statusFilter === "Semua" ||
           (statusFilter === "Selesai" && hist.status === "selesai") ||
           (statusFilter === "Mengerjakan" && hist.status === "sedang dikerjakan");
 
-        return matchesSearch && matchesStatus;
+        return matchesSearch && matchesTryoutName && matchesStatus;
       })
       .sort((a, b) => {
         if (sortBy === "oldest") return new Date(a.dateTaken).getTime() - new Date(b.dateTaken).getTime();
@@ -48,7 +56,7 @@ export default function RiwayatTryoutPage() {
         if (sortBy === "attempt") return b.attemptNumber - a.attemptNumber;
         return new Date(b.dateTaken).getTime() - new Date(a.dateTaken).getTime();
       });
-  }, [histories, searchQuery, sortBy, statusFilter]);
+  }, [histories, searchQuery, sortBy, statusFilter, tryoutNameFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredHistories.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -105,24 +113,46 @@ export default function RiwayatTryoutPage() {
           ))}
         </div>
 
-        <Select
-          value={sortBy}
-          onValueChange={(value) => {
-            setSortBy(value);
-            resetPage();
-          }}
-        >
-          <SelectTrigger className="h-10 w-full bg-white sm:w-52">
-            <SelectValue placeholder="Urutkan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Terbaru dikerjakan</SelectItem>
-            <SelectItem value="oldest">Terlama dikerjakan</SelectItem>
-            <SelectItem value="score_high">Skor tertinggi</SelectItem>
-            <SelectItem value="score_low">Skor terendah</SelectItem>
-            <SelectItem value="attempt">Attempt terbesar</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Select
+            value={tryoutNameFilter}
+            onValueChange={(value) => {
+              setTryoutNameFilter(value);
+              resetPage();
+            }}
+          >
+            <SelectTrigger className="h-10 w-full bg-white sm:w-72">
+              <SelectValue placeholder="Pilih nama Try Out" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_TRYOUTS_FILTER}>Semua Try Out</SelectItem>
+              {tryoutNameOptions.map((tryoutName) => (
+                <SelectItem key={tryoutName} value={tryoutName}>
+                  {tryoutName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sortBy}
+            onValueChange={(value) => {
+              setSortBy(value);
+              resetPage();
+            }}
+          >
+            <SelectTrigger className="h-10 w-full bg-white sm:w-52">
+              <SelectValue placeholder="Urutkan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Terbaru dikerjakan</SelectItem>
+              <SelectItem value="oldest">Terlama dikerjakan</SelectItem>
+              <SelectItem value="score_high">Skor tertinggi</SelectItem>
+              <SelectItem value="score_low">Skor terendah</SelectItem>
+              <SelectItem value="attempt">Attempt terbesar</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-6">

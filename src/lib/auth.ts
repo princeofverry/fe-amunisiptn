@@ -15,6 +15,7 @@ declare module "next-auth" {
   interface Session {
     user: Auth;
     access_token: string;
+    authError?: "TOKEN_INVALID" | "AUTH_UNAVAILABLE";
   }
 }
 
@@ -103,6 +104,8 @@ export const authOptions: NextAuthOptions = {
       } catch (error: unknown) {
         // If BE returns 401 or is unreachable, return a degraded session
         // This prevents the entire app from crashing
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        const authError = status === 401 ? "TOKEN_INVALID" : "AUTH_UNAVAILABLE";
         const message = error instanceof Error ? error.message : String(error);
         console.warn("[auth] Failed to fetch user from BE:", message);
 
@@ -117,6 +120,7 @@ export const authOptions: NextAuthOptions = {
             ...overrides,
           } as Auth,
           access_token,
+          authError,
         };
       }
     },

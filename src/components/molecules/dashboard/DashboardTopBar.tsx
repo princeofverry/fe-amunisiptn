@@ -23,15 +23,18 @@ interface DashboardTopBarProps {
 }
 
 export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user as { fullname?: string; name?: string } | undefined;
   const userNameFromSession = user?.fullname || user?.name;
   const name = userName || userNameFromSession || "Amunisian";
   const { ticketCount } = useTickets();
+  const isTicketReady = status === "authenticated" && session?.user?.ticket_balance !== undefined;
   const previousTicketCount = useRef<number | null>(null);
   const [ticketChange, setTicketChange] = useState<{ amount: number; current: number } | null>(null);
 
   useEffect(() => {
+    if (!isTicketReady) return;
+
     if (previousTicketCount.current === null) {
       previousTicketCount.current = ticketCount;
       return;
@@ -43,7 +46,7 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
     if (diff !== 0) {
       setTicketChange({ amount: diff, current: ticketCount });
     }
-  }, [ticketCount]);
+  }, [isTicketReady, ticketCount]);
 
   const isPositiveChange = (ticketChange?.amount ?? 0) > 0;
   const changeAmount = Math.abs(ticketChange?.amount ?? 0);
