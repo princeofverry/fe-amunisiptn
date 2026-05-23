@@ -11,11 +11,12 @@ import { useVerifyPayment } from "@/http/pembelian/verify-payment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/get-error-message";
+import { notifyTicketBalanceUpdated } from "@/hooks/useTickets";
 
 type PaymentState = "idle" | "loading" | "success" | "pending" | "error";
 
 export default function DetailPaketPage() {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const token = session?.access_token || "";
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -62,7 +63,10 @@ export default function DetailPaketPage() {
                 {
                   onSettled: () => {
                     queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
-                    updateSession(); // refresh session agar ticket_balance ter-update
+                    notifyTicketBalanceUpdated({
+                      ticketBalance: (session?.user?.ticket_balance ?? 0) + (pkg?.ticketAmount ?? 0),
+                      suppressModal: true,
+                    });
                   },
                 }
               );

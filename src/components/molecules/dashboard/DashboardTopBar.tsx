@@ -16,7 +16,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useTickets } from "@/hooks/useTickets";
+import { SUPPRESS_NEXT_TICKET_MODAL_KEY, useTickets } from "@/hooks/useTickets";
 
 interface DashboardTopBarProps {
   userName?: string;
@@ -44,6 +44,11 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
     previousTicketCount.current = ticketCount;
 
     if (diff !== 0) {
+      if (window.sessionStorage.getItem(SUPPRESS_NEXT_TICKET_MODAL_KEY) === "1") {
+        window.sessionStorage.removeItem(SUPPRESS_NEXT_TICKET_MODAL_KEY);
+        return;
+      }
+
       setTicketChange({ amount: diff, current: ticketCount });
     }
   }, [isTicketReady, ticketCount]);

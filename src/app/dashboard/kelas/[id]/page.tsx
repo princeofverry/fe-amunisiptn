@@ -11,6 +11,7 @@ import { useCreateKelasOrder } from "@/http/kelas/create-kelas-order";
 import { useCancelKelasOrder } from "@/http/kelas/cancel-kelas-order";
 import { useVerifyKelasPayment } from "@/http/kelas/verify-kelas-payment";
 import { getErrorMessage } from "@/utils/get-error-message";
+import { notifyTicketBalanceUpdated } from "@/hooks/useTickets";
 
 type PaymentState = "idle" | "loading" | "success" | "pending" | "error";
 
@@ -20,7 +21,7 @@ interface DetailKelasPageProps {
 
 export default function DetailKelasPage({ params }: DetailKelasPageProps) {
   const { id: kelasId } = use(params);
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const token = session?.access_token || "";
   const queryClient = useQueryClient();
 
@@ -66,7 +67,10 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
                     queryClient.invalidateQueries({
                       queryKey: ["get-my-kelas"],
                     });
-                    updateSession();
+                    notifyTicketBalanceUpdated({
+                      ticketBalance: (session?.user?.ticket_balance ?? 0) + (kelas?.ticket_amount ?? 0),
+                      suppressModal: true,
+                    });
                   },
                 }
               );
