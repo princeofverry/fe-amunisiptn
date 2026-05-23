@@ -4,12 +4,18 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetAuditLogs } from "@/http/audit/get-audit-logs";
+import {
+  exportAdminRowsToExcel,
+  exportAdminRowsToPdf,
+  type AdminExportColumn,
+} from "@/components/molecules/datatable/AdminDataControls";
+import type { AuditLogEntry } from "@/http/audit/get-audit-logs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { Shield, ChevronLeft, ChevronRight, Search, X, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 
@@ -37,6 +43,14 @@ const ACTION_COLORS: Record<string, string> = {
 
 const MODULES = ["Auth", "Tryout", "Subtest", "Question", "Order", "Package"];
 const ACTIONS = ["login", "logout", "register", "create", "update", "delete", "approve", "reject", "cancel", "bulk_import"];
+const auditExportColumns: AdminExportColumn<AuditLogEntry>[] = [
+  { header: "Waktu", accessor: (row) => new Date(row.created_at).toLocaleString("id-ID") },
+  { header: "Pengguna", accessor: (row) => row.user_name ?? "System" },
+  { header: "Modul", accessor: (row) => row.module },
+  { header: "Aksi", accessor: (row) => row.action },
+  { header: "Deskripsi", accessor: (row) => row.description },
+  { header: "IP Address", accessor: (row) => row.ip_address ?? "-" },
+];
 
 export default function AuditLogPage() {
   const { data: session } = useSession();
@@ -150,6 +164,26 @@ export default function AuditLogPage() {
 
       <Card>
         <CardContent className="p-0">
+          <div className="flex flex-wrap justify-end gap-2 border-b p-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-green-200 text-green-700 hover:bg-green-50"
+              onClick={() => exportAdminRowsToExcel({ rows: data?.data ?? [], columns: auditExportColumns, title: "laporan-audit-log" })}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              onClick={() => exportAdminRowsToPdf({ rows: data?.data ?? [], columns: auditExportColumns, title: "laporan-audit-log", filterSummary: `Search: ${search || "-"}; Modul: ${module || "Semua"}; Aksi: ${action || "Semua"}; Tanggal: ${date || "Semua"}` })}
+            >
+              <FileText className="h-4 w-4" />
+              PDF
+            </Button>
+          </div>
           {isLoading ? (
             <div className="p-10 text-center text-gray-400">Memuat log...</div>
           ) : !data?.data.length ? (

@@ -84,6 +84,8 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
             toast.error("Pembayaran gagal. Silakan coba lagi.");
           },
           onClose: () => {
+            if (paymentCompleted.current) return;
+
             if (!paymentCompleted.current && currentOrderId.current) {
               cancelKelasOrder({ orderId: currentOrderId.current, token });
             }

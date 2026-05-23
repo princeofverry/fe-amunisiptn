@@ -20,6 +20,7 @@ export interface Question {
   correct_answer: string;
   difficulty: string;
   is_active: boolean;
+  user_answers_count?: number;
   options: QuestionOption[];
   subtest: Subtest;
   creator: User;

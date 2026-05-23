@@ -80,6 +80,8 @@ export default function DetailPaketPage() {
             toast.error("Pembayaran gagal. Silakan coba lagi.");
           },
           onClose: () => {
+            if (paymentCompleted.current) return;
+
             setPaymentState("idle");
             toast.info("Pembayaran ditutup. Kamu bisa lanjut bayar dari paket ini atau riwayat pembelian.");
           },

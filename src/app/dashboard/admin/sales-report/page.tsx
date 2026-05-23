@@ -9,7 +9,13 @@ import {
   type SalesReportRow,
 } from "@/http/sales-report/get-sales-report";
 import SmartPagination from "@/components/molecules/pagination/SmartPagination";
+import {
+  exportAdminRowsToExcel,
+  exportAdminRowsToPdf,
+  type AdminExportColumn,
+} from "@/components/molecules/datatable/AdminDataControls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -34,7 +40,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Banknote, Boxes, ChevronDown, ChevronUp, CircleDollarSign, ReceiptText, TrendingUp, Users } from "lucide-react";
+import { Banknote, Boxes, ChevronDown, ChevronUp, CircleDollarSign, FileSpreadsheet, FileText, ReceiptText, TrendingUp, Users } from "lucide-react";
 import { formatPrice } from "@/utils/format-price";
 import { formatJakartaDate } from "@/utils/date-time";
 
@@ -58,6 +64,20 @@ const THIS_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = [THIS_YEAR, THIS_YEAR - 1, THIS_YEAR - 2, THIS_YEAR - 3];
 const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 const ALL_FILTER = "all";
+const salesExportColumns: AdminExportColumn<SalesReportRow>[] = [
+  { header: "Periode", accessor: (row) => monthLabel(row.month, row.year) },
+  { header: "Produk/TO", accessor: (row) => row.product_name },
+  { header: "Harga", accessor: (row) => row.average_price, format: (value) => formatPrice(Number(value || 0)) },
+  { header: "Item Terjual", accessor: (row) => row.total_item_sold },
+  { header: "Order", accessor: (row) => row.order_count },
+  { header: "Total", accessor: (row) => row.total_sales, format: (value) => formatPrice(Number(value || 0)) },
+];
+const feeExportColumns: AdminExportColumn<FeeTryoutReportRow>[] = [
+  { header: "Periode", accessor: (row) => row.period_start ? formatJakartaDate(row.period_start, { month: "long", year: "numeric" }) : monthLabel(row.month, row.year) },
+  { header: "Nama TO", accessor: (row) => row.tryout_name },
+  { header: "Peserta", accessor: (row) => row.participant_count },
+  { header: "Total Fee", accessor: (row) => row.total_fee, format: (value) => formatPrice(Number(value || 0)) },
+];
 
 type ActiveReport = "sales" | "fee";
 type SortDirection = "asc" | "desc";
@@ -522,7 +542,31 @@ export default function SalesReportPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Tabel Penjualan</CardTitle>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle className="text-base">Tabel Penjualan</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-green-200 text-green-700 hover:bg-green-50"
+                    onClick={() => exportAdminRowsToExcel({ rows: filteredSalesRows, columns: salesExportColumns, title: "laporan-penjualan" })}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Excel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={() => exportAdminRowsToPdf({ rows: filteredSalesRows, columns: salesExportColumns, title: "laporan-penjualan", filterSummary: `Tahun: ${year ?? "Semua"}; Bulan: ${month ? MONTH_NAMES[month] : "Semua"}; Produk: ${salesProductFilter === ALL_FILTER ? "Semua" : salesProductFilter}` })}
+                  >
+                    <FileText className="h-4 w-4" />
+                    PDF
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {salesQuery.isError ? (
@@ -657,7 +701,31 @@ export default function SalesReportPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Tabel Fee TO</CardTitle>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle className="text-base">Tabel Fee TO</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-green-200 text-green-700 hover:bg-green-50"
+                    onClick={() => exportAdminRowsToExcel({ rows: filteredFeeRows, columns: feeExportColumns, title: "laporan-fee-tryout" })}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Excel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={() => exportAdminRowsToPdf({ rows: filteredFeeRows, columns: feeExportColumns, title: "laporan-fee-tryout", filterSummary: `Tahun: ${year ?? "Semua"}; Bulan: ${month ? MONTH_NAMES[month] : "Semua"}; Try Out: ${feeTryoutFilter === ALL_FILTER ? "Semua" : feeTryoutFilter}` })}
+                  >
+                    <FileText className="h-4 w-4" />
+                    PDF
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {feeQuery.isError ? (

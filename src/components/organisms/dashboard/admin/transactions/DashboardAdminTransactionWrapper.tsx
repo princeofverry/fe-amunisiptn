@@ -2,16 +2,52 @@
 
 import { useState } from "react";
 import { transactionColumns } from "@/components/atoms/datacolumn/DataTransaction";
+import {
+  AdminDataToolbar,
+  AdminExportColumn,
+  AdminFilterOption,
+  AdminSortOption,
+  useAdminTableControls,
+} from "@/components/molecules/datatable/AdminDataControls";
 import { DataTable } from "@/components/molecules/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGetAllTransaction } from "@/http/transactions/get-all-transactions";
+import { Transaction } from "@/types/transactions/transaction";
+import { formatPrice } from "@/utils/format-price";
 import { useSession } from "next-auth/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 50];
+const transactionStatusLabels: Record<string, string> = {
+  pending: "Menunggu",
+  waiting_approval: "Menunggu Persetujuan",
+  waiting_aproval: "Menunggu Persetujuan",
+  paid: "Dibayar",
+  rejected: "Ditolak",
+  expired: "Kedaluwarsa",
+  cancelled: "Dibatalkan",
+  failed: "Gagal",
+};
+const transactionExportColumns: AdminExportColumn<Transaction>[] = [
+  { header: "Kode Order", accessor: (row) => row.order_code },
+  { header: "Pengguna", accessor: (row) => row.user?.name || "-" },
+  { header: "Email", accessor: (row) => row.user?.email || "-" },
+  { header: "Status", accessor: (row) => transactionStatusLabels[row.status] ?? row.status },
+  { header: "Total", accessor: (row) => row.grand_total, format: (value) => formatPrice(Number(value || 0)) },
+  { header: "Tanggal Order", accessor: (row) => new Date(row.created_at).toLocaleString("id-ID") },
+  { header: "Tanggal Bayar", accessor: (row) => (row.paid_at ? new Date(row.paid_at).toLocaleString("id-ID") : "-") },
+  { header: "Disetujui Oleh", accessor: (row) => row.approved_by?.name ?? "-" },
+];
+const transactionSortOptions: AdminSortOption<Transaction>[] = [
+  { key: "newest", label: "Order terbaru", compare: (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime() },
+  { key: "oldest", label: "Order terlama", compare: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime() },
+  { key: "total-high", label: "Total tertinggi", compare: (a, b) => Number(b.grand_total || 0) - Number(a.grand_total || 0) },
+  { key: "total-low", label: "Total terendah", compare: (a, b) => Number(a.grand_total || 0) - Number(b.grand_total || 0) },
+  { key: "user-az", label: "Pengguna A-Z", compare: (a, b) => (a.user?.name || "").localeCompare(b.user?.name || "", "id-ID") },
+];
 
 export default function DashboardAdminTransactionWrapper() {
   const { data: session, status } = useSession();
@@ -27,6 +63,23 @@ export default function DashboardAdminTransactionWrapper() {
     perPage,
     search,
     options: { enabled: status === "authenticated" },
+  });
+  const transactionRows = data?.data ?? [];
+  const transactionFilters: AdminFilterOption<Transaction>[] = [
+    {
+      key: "status",
+      label: "Semua Status",
+      placeholder: "Status",
+      options: Object.entries(transactionStatusLabels).map(([value, label]) => ({ value, label })),
+      getValue: (row) => row.status,
+    },
+  ];
+  const controls = useAdminTableControls({
+    data: transactionRows,
+    searchFields: [(row) => row.order_code, (row) => row.user?.name, (row) => row.user?.email],
+    filters: transactionFilters,
+    sortOptions: transactionSortOptions,
+    defaultSort: "newest",
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -49,10 +102,27 @@ export default function DashboardAdminTransactionWrapper() {
               />
               <Button type="submit" variant="outline">Cari</Button>
             </form>
+            <AdminDataToolbar
+              search={controls.search}
+              onSearchChange={controls.setSearch}
+              searchPlaceholder="Filter halaman ini..."
+              filters={transactionFilters}
+              filterValues={controls.filterValues}
+              onFilterChange={controls.setFilter}
+              sortOptions={transactionSortOptions}
+              sortKey={controls.sortKey}
+              onSortChange={controls.setSortKey}
+              onReset={controls.reset}
+              hasActiveControls={controls.hasActiveControls}
+              rows={controls.rows}
+              exportColumns={transactionExportColumns}
+              exportTitle="laporan-transaksi"
+              filterSummary={`Search server: ${search || "-"}; hasil halaman: ${controls.rows.length}`}
+            />
 
             <DataTable
               columns={transactionColumns}
-              data={data?.data ?? []}
+              data={controls.rows}
               isLoading={isPending}
               disablePagination={true}
             />

@@ -36,6 +36,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading: boolean;
+  isError?: boolean;
+  errorMessage?: string;
   defaultPageSize?: number;
   disablePagination?: boolean;
 }
@@ -44,6 +46,8 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  isError = false,
+  errorMessage = "Gagal memuat data.",
   defaultPageSize = 10,
   disablePagination = false,
 }: DataTableProps<TData, TValue>) {
@@ -104,7 +108,16 @@ export function DataTable<TData, TValue>({
           </TableHeader>
 
           <TableBody>
-            {isLoading ? (
+            {isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-red-500"
+                >
+                  {errorMessage}
+                </TableCell>
+              </TableRow>
+            ) : isLoading ? (
               Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, rowIndex) => (
                 <TableRow key={`skeleton-${rowIndex}`}>
                   {columns.map((_, colIndex) => (

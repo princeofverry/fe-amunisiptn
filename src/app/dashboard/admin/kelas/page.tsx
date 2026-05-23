@@ -8,10 +8,18 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useGetAllKelasAdmin } from "@/http/kelas/get-all-kelas-admin";
 import { useDeleteKelasAdmin } from "@/http/kelas/delete-kelas-admin";
+import {
+  AdminDataToolbar,
+  AdminExportColumn,
+  AdminFilterOption,
+  AdminSortOption,
+  useAdminTableControls,
+} from "@/components/molecules/datatable/AdminDataControls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/utils/get-error-message";
+import { Kelas } from "@/types/kelas/kelas";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +32,20 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 50];
+const kelasExportColumns: AdminExportColumn<Kelas>[] = [
+  { header: "Nama", accessor: (row) => row.name },
+  { header: "Harga", accessor: (row) => row.price, format: (value) => Number(value || 0) === 0 ? "Gratis" : `Rp${Number(value || 0).toLocaleString("id-ID")}` },
+  { header: "Diskon", accessor: (row) => row.discount_price, format: (value) => value == null ? "-" : `Rp${Number(value).toLocaleString("id-ID")}` },
+  { header: "Tiket Bonus", accessor: (row) => row.ticket_amount },
+  { header: "Peserta", accessor: (row) => row.enrollments_count ?? 0 },
+  { header: "Status", accessor: (row) => row.is_active ? "Aktif" : "Nonaktif" },
+];
+const kelasSortOptions: AdminSortOption<Kelas>[] = [
+  { key: "newest", label: "Terbaru", compare: (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime() },
+  { key: "az", label: "Nama A-Z", compare: (a, b) => a.name.localeCompare(b.name, "id-ID") },
+  { key: "price-high", label: "Harga tertinggi", compare: (a, b) => Number(b.discount_price ?? b.price) - Number(a.discount_price ?? a.price) },
+  { key: "participants", label: "Peserta terbanyak", compare: (a, b) => (b.enrollments_count ?? 0) - (a.enrollments_count ?? 0) },
+];
 
 export default function AdminKelasPage() {
   const { data: session } = useSession();
@@ -37,6 +59,25 @@ export default function AdminKelasPage() {
 
   const { data, isLoading } = useGetAllKelasAdmin({ token, page, perPage, search });
   const kelasList = data?.data ?? [];
+  const kelasFilters: AdminFilterOption<Kelas>[] = [
+    {
+      key: "status",
+      label: "Semua Status",
+      placeholder: "Status",
+      options: [
+        { label: "Aktif", value: "active" },
+        { label: "Nonaktif", value: "inactive" },
+      ],
+      getValue: (row) => row.is_active ? "active" : "inactive",
+    },
+  ];
+  const controls = useAdminTableControls({
+    data: kelasList,
+    searchFields: [(row) => row.name, (row) => row.description],
+    filters: kelasFilters,
+    sortOptions: kelasSortOptions,
+    defaultSort: "newest",
+  });
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -99,6 +140,23 @@ export default function AdminKelasPage() {
         />
         <Button type="submit" variant="outline">Cari</Button>
       </form>
+      <AdminDataToolbar
+        search={controls.search}
+        onSearchChange={controls.setSearch}
+        searchPlaceholder="Filter halaman ini..."
+        filters={kelasFilters}
+        filterValues={controls.filterValues}
+        onFilterChange={controls.setFilter}
+        sortOptions={kelasSortOptions}
+        sortKey={controls.sortKey}
+        onSortChange={controls.setSortKey}
+        onReset={controls.reset}
+        hasActiveControls={controls.hasActiveControls}
+        rows={controls.rows}
+        exportColumns={kelasExportColumns}
+        exportTitle="laporan-kelas"
+        filterSummary={`Search server: ${search || "-"}; hasil halaman: ${controls.rows.length}`}
+      />
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -116,7 +174,7 @@ export default function AdminKelasPage() {
               </div>
             ))}
           </div>
-        ) : kelasList.length === 0 ? (
+        ) : controls.rows.length === 0 ? (
           <div className="p-12 text-center text-gray-400">
             <p className="text-base">
               {search ? "Tidak ada kelas ditemukan." : "Belum ada kelas. Tambahkan kelas pertama!"}
@@ -137,7 +195,7 @@ export default function AdminKelasPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {kelasList.map((kelas) => (
+                {controls.rows.map((kelas) => (
                   <tr
                     key={kelas.id}
                     className="hover:bg-gray-50 transition-colors"

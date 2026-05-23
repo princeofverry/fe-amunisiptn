@@ -9,6 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  AdminDataToolbar,
+  AdminExportColumn,
+  AdminFilterOption,
+  AdminSortOption,
+  useAdminTableControls,
+} from "@/components/molecules/datatable/AdminDataControls";
+import {
   useCreateTicketRedeemCode,
   useDeleteTicketRedeemCode,
   useGetTicketRedeemCodes,
@@ -32,6 +39,20 @@ const emptyForm: DraftForm = {
   is_active: true,
   expired_at: "",
 };
+const redeemExportColumns: AdminExportColumn<TicketRedeemCode>[] = [
+  { header: "Kode", accessor: (row) => row.code },
+  { header: "Tiket", accessor: (row) => row.ticket_amount },
+  { header: "Kuota", accessor: (row) => row.quota },
+  { header: "Terpakai", accessor: (row) => row.used_count },
+  { header: "Status", accessor: (row) => row.is_active ? "Aktif" : "Nonaktif" },
+  { header: "Expired", accessor: (row) => row.expired_at ? new Date(row.expired_at).toLocaleDateString("id-ID") : "-" },
+];
+const redeemSortOptions: AdminSortOption<TicketRedeemCode>[] = [
+  { key: "newest", label: "Terbaru", compare: (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime() },
+  { key: "code-az", label: "Kode A-Z", compare: (a, b) => a.code.localeCompare(b.code, "id-ID") },
+  { key: "quota", label: "Kuota terbanyak", compare: (a, b) => Number(b.quota || 0) - Number(a.quota || 0) },
+  { key: "used", label: "Terpakai terbanyak", compare: (a, b) => Number(b.used_count || 0) - Number(a.used_count || 0) },
+];
 
 export default function AdminRedeemCodePage() {
   const { data: session } = useSession();
@@ -41,6 +62,26 @@ export default function AdminRedeemCodePage() {
   const [editing, setEditing] = useState<TicketRedeemCode | null>(null);
 
   const { data, isLoading } = useGetTicketRedeemCodes({ token });
+  const codeRows = data?.data ?? [];
+  const redeemFilters: AdminFilterOption<TicketRedeemCode>[] = [
+    {
+      key: "status",
+      label: "Semua Status",
+      placeholder: "Status",
+      options: [
+        { label: "Aktif", value: "active" },
+        { label: "Nonaktif", value: "inactive" },
+      ],
+      getValue: (row) => row.is_active ? "active" : "inactive",
+    },
+  ];
+  const controls = useAdminTableControls({
+    data: codeRows,
+    searchFields: [(row) => row.code],
+    filters: redeemFilters,
+    sortOptions: redeemSortOptions,
+    defaultSort: "newest",
+  });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["ticket-redeem-codes"] });
 
@@ -193,9 +234,28 @@ export default function AdminRedeemCodePage() {
 
       <Card>
         <CardContent className="p-0">
+          <div className="border-b p-4">
+            <AdminDataToolbar
+              search={controls.search}
+              onSearchChange={controls.setSearch}
+              searchPlaceholder="Cari kode redeem..."
+              filters={redeemFilters}
+              filterValues={controls.filterValues}
+              onFilterChange={controls.setFilter}
+              sortOptions={redeemSortOptions}
+              sortKey={controls.sortKey}
+              onSortChange={controls.setSortKey}
+              onReset={controls.reset}
+              hasActiveControls={controls.hasActiveControls}
+              rows={controls.rows}
+              exportColumns={redeemExportColumns}
+              exportTitle="laporan-kode-redeem"
+              filterSummary={`Total hasil: ${controls.rows.length}`}
+            />
+          </div>
           {isLoading ? (
             <div className="p-10 text-center text-gray-400">Memuat kode redeem...</div>
-          ) : (data?.data ?? []).length === 0 ? (
+          ) : controls.rows.length === 0 ? (
             <div className="p-10 text-center text-gray-400">Belum ada kode redeem tiket.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -212,7 +272,7 @@ export default function AdminRedeemCodePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {(data?.data ?? []).map((item) => (
+                  {controls.rows.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-mono font-bold text-gray-900">{item.code}</td>
                       <td className="px-4 py-3 text-right">{item.ticket_amount}</td>

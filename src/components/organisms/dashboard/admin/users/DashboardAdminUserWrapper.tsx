@@ -1,6 +1,13 @@
 "use client";
 
 import AlertDialogDeleteUser from "@/components/atoms/alert-dialog/user/AlertDialogDeleteUser";
+import {
+  AdminDataToolbar,
+  AdminExportColumn,
+  AdminFilterOption,
+  AdminSortOption,
+  useAdminTableControls,
+} from "@/components/molecules/datatable/AdminDataControls";
 import { userColumns } from "@/components/atoms/datacolumn/DataUser";
 import { DataTable } from "@/components/molecules/datatable/DataTable";
 import { Button } from "@/components/ui/button";
@@ -13,11 +20,27 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { api } from "@/lib/axios";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const userExportColumns: AdminExportColumn<User>[] = [
+  { header: "Nama", accessor: (row) => row.name },
+  { header: "Email", accessor: (row) => row.email },
+  { header: "Role", accessor: (row) => (row.role === "admin" ? "Admin" : "Siswa") },
+  { header: "No HP", accessor: (row) => row.phone_number || "-" },
+  { header: "Asal Sekolah", accessor: (row) => row.school_origin || "-" },
+  { header: "Kelas", accessor: (row) => row.grade_level || "-" },
+  { header: "Tiket", accessor: (row) => row.ticket_balance ?? 0 },
+  { header: "Tanggal Daftar", accessor: (row) => new Date(row.created_at).toLocaleDateString("id-ID") },
+];
+const userSortOptions: AdminSortOption<User>[] = [
+  { key: "newest", label: "Terbaru", compare: (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime() },
+  { key: "oldest", label: "Terlama", compare: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime() },
+  { key: "az", label: "Nama A-Z", compare: (a, b) => a.name.localeCompare(b.name, "id-ID") },
+  { key: "za", label: "Nama Z-A", compare: (a, b) => b.name.localeCompare(a.name, "id-ID") },
+  { key: "tickets", label: "Tiket terbanyak", compare: (a, b) => (b.ticket_balance ?? 0) - (a.ticket_balance ?? 0) },
+];
 
 export default function DashboardAdminUserWrapper() {
   const { data: session, status } = useSession();
@@ -30,7 +53,6 @@ export default function DashboardAdminUserWrapper() {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeleteUser, setSelectedDeleteUser] = useState<User | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data, isPending } = useGetAllUsers({
     token: session?.access_token as string,
@@ -38,6 +60,26 @@ export default function DashboardAdminUserWrapper() {
     perPage,
     search,
     options: { enabled: status === "authenticated" },
+  });
+  const userRows = data?.data ?? [];
+  const userFilters: AdminFilterOption<User>[] = [
+    {
+      key: "role",
+      label: "Semua Role",
+      placeholder: "Role",
+      options: [
+        { label: "Admin", value: "admin" },
+        { label: "Siswa", value: "user" },
+      ],
+      getValue: (row) => row.role,
+    },
+  ];
+  const controls = useAdminTableControls({
+    data: userRows,
+    searchFields: [(row) => row.name, (row) => row.email, (row) => row.school_origin, (row) => row.grade_level],
+    filters: userFilters,
+    sortOptions: userSortOptions,
+    defaultSort: "newest",
   });
 
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser({
@@ -53,27 +95,6 @@ export default function DashboardAdminUserWrapper() {
       queryClient.invalidateQueries({ queryKey: ["get-all-users"] });
     },
   });
-
-  const handleDownloadExcel = async () => {
-    setIsDownloading(true);
-    try {
-      const response = await api.get('/admin/users/export', {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-        params: { search: search || undefined },
-        responseType: 'blob',
-      });
-      const url = URL.createObjectURL(new Blob([response.data]));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `data-pengguna-${new Date().toISOString().slice(0, 10)}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Gagal mengunduh data pengguna');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,25 +116,33 @@ export default function DashboardAdminUserWrapper() {
       <Card>
         <CardContent>
           <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="space-y-3">
               <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
                 <Input
                   placeholder="Cari nama atau email pengguna..."
-                  className="max-w-xs w-full"
+                  className="max-w-xs"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <Button type="submit" variant="outline">Cari</Button>
               </form>
-              <Button
-                variant="outline"
-                onClick={handleDownloadExcel}
-                disabled={isDownloading}
-                className="flex items-center gap-2 text-green-700 border-green-300 hover:bg-green-50"
-              >
-                <Download className="w-4 h-4" />
-                {isDownloading ? 'Mengunduh...' : 'Download Excel'}
-              </Button>
+              <AdminDataToolbar
+                search={controls.search}
+                onSearchChange={controls.setSearch}
+                searchPlaceholder="Filter halaman ini..."
+                filters={userFilters}
+                filterValues={controls.filterValues}
+                onFilterChange={controls.setFilter}
+                sortOptions={userSortOptions}
+                sortKey={controls.sortKey}
+                onSortChange={controls.setSortKey}
+                onReset={controls.reset}
+                hasActiveControls={controls.hasActiveControls}
+                rows={controls.rows}
+                exportColumns={userExportColumns}
+                exportTitle="laporan-pengguna"
+                filterSummary={`Search server: ${search || "-"}; hasil halaman: ${controls.rows.length}`}
+              />
             </div>
 
             <DataTable
@@ -123,7 +152,7 @@ export default function DashboardAdminUserWrapper() {
                   setIsDeleteDialogOpen(true);
                 },
               })}
-              data={data?.data ?? []}
+              data={controls.rows}
               isLoading={isPending}
               disablePagination={true}
             />
