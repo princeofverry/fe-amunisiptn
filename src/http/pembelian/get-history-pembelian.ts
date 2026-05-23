@@ -46,6 +46,7 @@ export const useGetHistoryPembelian = ({ token, options }: { token: string; opti
   return useQuery({
     queryKey: ["get-history-pembelian"],
     queryFn: () => GetHistoryPembelianHandler(token),
+    enabled: !!token,
     ...options,
   });
 };

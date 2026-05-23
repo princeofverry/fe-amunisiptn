@@ -15,8 +15,15 @@ api.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
     const url = String(error?.config?.url || "");
+    const authorization = String(error?.config?.headers?.Authorization || "");
+    const hasBearerToken = authorization.startsWith("Bearer ") && authorization.trim() !== "Bearer";
 
-    if (status === 401 && typeof window !== "undefined" && !url.includes("/auth/login")) {
+    if (
+      status === 401 &&
+      typeof window !== "undefined" &&
+      hasBearerToken &&
+      !url.includes("/auth/login")
+    ) {
       window.dispatchEvent(new CustomEvent(AUTH_TOKEN_INVALID_EVENT));
     }
 

@@ -16,42 +16,64 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { SUPPRESS_NEXT_TICKET_MODAL_KEY, useTickets } from "@/hooks/useTickets";
+import {
+  SUPPRESS_NEXT_TICKET_MODAL_KEY,
+  TICKET_BALANCE_UPDATED_EVENT,
+  TicketBalanceUpdatedDetail,
+  useTickets,
+} from "@/hooks/useTickets";
 
 interface DashboardTopBarProps {
   userName?: string;
 }
 
 export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const user = session?.user as { fullname?: string; name?: string } | undefined;
   const userNameFromSession = user?.fullname || user?.name;
   const name = userName || userNameFromSession || "Amunisian";
   const { ticketCount } = useTickets();
-  const isTicketReady = status === "authenticated" && session?.user?.ticket_balance !== undefined;
-  const previousTicketCount = useRef<number | null>(null);
+  const ticketCountRef = useRef(ticketCount);
   const [ticketChange, setTicketChange] = useState<{ amount: number; current: number } | null>(null);
 
   useEffect(() => {
-    if (!isTicketReady) return;
+    ticketCountRef.current = ticketCount;
+  }, [ticketCount]);
 
-    if (previousTicketCount.current === null) {
-      previousTicketCount.current = ticketCount;
-      return;
-    }
+  useEffect(() => {
+    const handleTicketBalanceUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<TicketBalanceUpdatedDetail>).detail;
 
-    const diff = ticketCount - previousTicketCount.current;
-    previousTicketCount.current = ticketCount;
+      if (detail?.suppressModal) {
+        window.sessionStorage.removeItem(SUPPRESS_NEXT_TICKET_MODAL_KEY);
+        return;
+      }
 
-    if (diff !== 0) {
       if (window.sessionStorage.getItem(SUPPRESS_NEXT_TICKET_MODAL_KEY) === "1") {
         window.sessionStorage.removeItem(SUPPRESS_NEXT_TICKET_MODAL_KEY);
         return;
       }
 
-      setTicketChange({ amount: diff, current: ticketCount });
-    }
-  }, [isTicketReady, ticketCount]);
+      const nextTicketCount =
+        typeof detail?.ticketBalance === "number"
+          ? detail.ticketBalance
+          : ticketCountRef.current + (detail?.delta ?? 0);
+      const diff =
+        typeof detail?.delta === "number"
+          ? detail.delta
+          : nextTicketCount - ticketCountRef.current;
+
+      if (diff === 0) return;
+
+      setTicketChange({ amount: diff, current: nextTicketCount });
+    };
+
+    window.addEventListener(TICKET_BALANCE_UPDATED_EVENT, handleTicketBalanceUpdated);
+
+    return () => {
+      window.removeEventListener(TICKET_BALANCE_UPDATED_EVENT, handleTicketBalanceUpdated);
+    };
+  }, []);
 
   const isPositiveChange = (ticketChange?.amount ?? 0) > 0;
   const changeAmount = Math.abs(ticketChange?.amount ?? 0);
