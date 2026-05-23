@@ -1,13 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, History, Search, KeyRound } from "lucide-react";
+import { ChevronLeft, History, Search, KeyRound } from "lucide-react";
 import Link from "next/link";
 import TryoutCard from "@/components/molecules/card/TryoutCard";
 import { useSession } from "next-auth/react";
 import { useGetUserTryouts } from "@/http/tryout/get-user-tryouts";
 import { useGetHistoryTryout } from "@/http/tryout/get-history-tryout";
 import DialogRedeemCode from "@/components/molecules/dialog/DialogRedeemCode";
+import SmartPagination from "@/components/molecules/pagination/SmartPagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const FILTER_OPTIONS = [
   "Semua Tryout",
@@ -17,7 +25,7 @@ const FILTER_OPTIONS = [
 ];
 
 const INITIAL_TIME = Date.now();
-const ITEMS_PER_PAGE = 9;
+const PER_PAGE_OPTIONS = [3, 6, 9];
 
 export default function TryoutPage() {
   const { data: session } = useSession();
@@ -25,15 +33,24 @@ export default function TryoutPage() {
 
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Semua");
+  const [sortBy, setSortBy] = useState("status");
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(9);
 
   const { data: tryoutsData } = useGetUserTryouts({ token });
   const tryouts = tryoutsData?.data || [];
 
   const { data: historyData } = useGetHistoryTryout({ token });
-  const enrolledTryoutIds = new Set(historyData?.data?.map((t) => t.id) || []);
-  const historyMap = new Map(historyData?.data?.map((t) => [t.id, t]) || []);
+  const enrolledTryoutIds = useMemo(
+    () => new Set(historyData?.data?.map((t) => t.id) || []),
+    [historyData],
+  );
+  const historyMap = useMemo(
+    () => new Map(historyData?.data?.map((t) => [t.id, t]) || []),
+    [historyData],
+  );
 
   const getStatusOrder = (item: { startDate: string; endDate: string }) => {
     const start = new Date(item.startDate).getTime();
@@ -48,23 +65,29 @@ export default function TryoutPage() {
       .filter(
         (item) =>
           item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          (categoryFilter === "Semua" || item.category?.toUpperCase() === categoryFilter) &&
           (activeFilter === "Semua Tryout" ||
             (activeFilter === "Tryout Premium" && item.type === "Premium") ||
             (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
             (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
       )
       .sort((a, b) => {
+        if (sortBy === "newest") return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+        if (sortBy === "oldest") return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+        if (sortBy === "title") return a.title.localeCompare(b.title);
+        if (sortBy === "participants") return b.participantsCount - a.participantsCount;
+
         const statusDiff = getStatusOrder(a) - getStatusOrder(b);
         if (statusDiff !== 0) return statusDiff;
         return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
       });
-  }, [activeFilter, enrolledTryoutIds, searchQuery, tryouts]);
+  }, [activeFilter, categoryFilter, enrolledTryoutIds, searchQuery, sortBy, tryouts]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedData = filteredData.slice(
-    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
-    safeCurrentPage * ITEMS_PER_PAGE,
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage,
   );
 
   const handleSearchChange = (value: string) => {
@@ -74,6 +97,21 @@ export default function TryoutPage() {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryFilterChange = (filter: string) => {
+    setCategoryFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
     setCurrentPage(1);
   };
 
@@ -146,6 +184,32 @@ export default function TryoutPage() {
             </button>
           ))}
         </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+            <SelectTrigger className="h-10 w-full bg-white sm:w-36">
+              <SelectValue placeholder="Jenis TO" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Semua">Semua Jenis</SelectItem>
+              <SelectItem value="UTBK">UTBK</SelectItem>
+              <SelectItem value="UM">UM</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="h-10 w-full bg-white sm:w-48">
+              <SelectValue placeholder="Urutkan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="status">Status terdekat</SelectItem>
+              <SelectItem value="newest">Tanggal terbaru</SelectItem>
+              <SelectItem value="oldest">Tanggal terlama</SelectItem>
+              <SelectItem value="title">Judul A-Z</SelectItem>
+              <SelectItem value="participants">Peserta terbanyak</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Tryout Cards Grid */}
@@ -174,52 +238,15 @@ export default function TryoutPage() {
       )}
 
       {filteredData.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-          <p className="text-sm text-gray-500">
-            Menampilkan {(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}-
-            {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filteredData.length)} dari {filteredData.length} tryout
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-              disabled={safeCurrentPage === 1}
-              className="h-10 w-10 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center"
-              aria-label="Halaman sebelumnya"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const page = index + 1;
-              return (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => setCurrentPage(page)}
-                  className={`h-10 min-w-10 rounded-lg px-3 text-sm font-bold transition-colors ${
-                    page === safeCurrentPage
-                      ? "bg-[#004AAB] text-white"
-                      : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-
-            <button
-              type="button"
-              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-              disabled={safeCurrentPage === totalPages}
-              className="h-10 w-10 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center"
-              aria-label="Halaman berikutnya"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <SmartPagination
+          page={safeCurrentPage}
+          totalItems={filteredData.length}
+          perPage={itemsPerPage}
+          perPageOptions={PER_PAGE_OPTIONS}
+          itemLabel="tryout"
+          onPageChange={setCurrentPage}
+          onPerPageChange={handleItemsPerPageChange}
+        />
       )}
 
       {/* Redeem Code Dialog */}

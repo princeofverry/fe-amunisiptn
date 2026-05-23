@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Receipt } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useGetHistoryPembelian } from "@/http/pembelian/get-history-pembelian";
+import { formatJakartaDate } from "@/utils/date-time";
 
 export default function RiwayatPembelianPage() {
   const { data: session } = useSession();
@@ -40,7 +41,7 @@ export default function RiwayatPembelianPage() {
                 <div className="flex flex-col gap-1">
                   <span className="font-bold text-slate-800 text-lg">{trx.packageName}</span>
                   <div className="flex items-center gap-3 text-sm text-slate-500">
-                    <span>{new Date(trx.orderDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    <span>{formatJakartaDate(trx.orderDate, { day: "numeric", month: "long", year: "numeric" })}</span>
                     <span>•</span>
                     <span className="font-medium">ID: {trx.id}</span>
                   </div>

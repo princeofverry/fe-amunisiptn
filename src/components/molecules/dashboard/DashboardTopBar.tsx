@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, Search, LogOut, Settings, Home, User, Ticket } from "lucide-react";
+import { Bell, Search, LogOut, Settings, Home, User, Ticket, PlusCircle, MinusCircle } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useEffect, useRef, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useTickets } from "@/hooks/useTickets";
@@ -26,8 +28,28 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
   const userNameFromSession = user?.fullname || user?.name;
   const name = userName || userNameFromSession || "Amunisian";
   const { ticketCount } = useTickets();
+  const previousTicketCount = useRef<number | null>(null);
+  const [ticketChange, setTicketChange] = useState<{ amount: number; current: number } | null>(null);
+
+  useEffect(() => {
+    if (previousTicketCount.current === null) {
+      previousTicketCount.current = ticketCount;
+      return;
+    }
+
+    const diff = ticketCount - previousTicketCount.current;
+    previousTicketCount.current = ticketCount;
+
+    if (diff !== 0) {
+      setTicketChange({ amount: diff, current: ticketCount });
+    }
+  }, [ticketCount]);
+
+  const isPositiveChange = (ticketChange?.amount ?? 0) > 0;
+  const changeAmount = Math.abs(ticketChange?.amount ?? 0);
 
   return (
+    <>
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 bg-white border-b border-gray-100 px-4 md:px-6 py-3">
       {/* Left: Mobile Sidebar Trigger */}
       <div className="flex items-center gap-3">
@@ -141,5 +163,41 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
 
       </div>
     </header>
+
+    <Dialog open={!!ticketChange} onOpenChange={(open) => !open && setTicketChange(null)}>
+      <DialogContent showCloseButton={false} className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+        <div className={`${isPositiveChange ? "bg-[#3B9245]" : "bg-amber-500"} p-6 text-center text-white`}>
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20">
+            {isPositiveChange ? <PlusCircle className="h-9 w-9" /> : <MinusCircle className="h-9 w-9" />}
+          </div>
+          <DialogTitle className="text-xl font-bold text-white">
+            {isPositiveChange ? "Tiket Bertambah" : "Tiket Digunakan"}
+          </DialogTitle>
+          <DialogDescription className="text-white/85 text-sm mt-1">
+            {isPositiveChange
+              ? "Saldo tiket kamu berhasil diperbarui."
+              : "Saldo tiket kamu berkurang karena transaksi atau akses premium."}
+          </DialogDescription>
+        </div>
+
+        <div className="p-6 space-y-4 text-center">
+          <div className={`${isPositiveChange ? "bg-green-50 border-green-100 text-green-700" : "bg-amber-50 border-amber-100 text-amber-700"} mx-auto w-fit rounded-full border px-5 py-2 text-2xl font-black`}>
+            {isPositiveChange ? "+" : "-"}{changeAmount} tiket
+          </div>
+          <p className="text-sm text-gray-600">
+            Sekarang kamu punya <strong>{ticketChange?.current ?? ticketCount} tiket</strong>.
+            {isPositiveChange ? " Bisa langsung dipakai untuk daftar tryout premium." : " Gunakan sisa tiketmu dengan bijak untuk tryout berikutnya."}
+          </p>
+          <button
+            type="button"
+            onClick={() => setTicketChange(null)}
+            className="w-full rounded-xl bg-[#004AAB] py-3 text-sm font-bold text-white transition-colors hover:bg-[#003B8A]"
+          >
+            Mengerti
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

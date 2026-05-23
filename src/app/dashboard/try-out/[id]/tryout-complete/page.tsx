@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useFinishTryout } from "@/http/tryout/finish-tryout";
 import { useGetTryoutResult } from "@/http/tryout/get-tryout-result";
 import { Calendar, FileText, Clock, Trophy } from "lucide-react";
+import { formatJakartaDate } from "@/utils/date-time";
 
 export default function TryoutCompletePage({
   params,
@@ -67,7 +68,7 @@ export default function TryoutCompletePage({
   
   if (beReleaseDate) {
     const rd = new Date(beReleaseDate);
-    releaseDateStr = `${rd.toLocaleDateString("id-ID", {
+    releaseDateStr = `${formatJakartaDate(rd, {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -77,7 +78,7 @@ export default function TryoutCompletePage({
     // Optimistic fallback before data loads
     const releaseDate = new Date();
     releaseDate.setDate(releaseDate.getDate() + 15);
-    releaseDateStr = `${releaseDate.toLocaleDateString("id-ID", {
+    releaseDateStr = `${formatJakartaDate(releaseDate, {
       weekday: "long",
       year: "numeric",
       month: "long",

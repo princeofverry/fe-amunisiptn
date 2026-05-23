@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Medal, Trophy, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useGetTryoutLeaderboard } from "@/http/tryout/get-tryout-leaderboard";
+import { formatJakartaDateTime } from "@/utils/date-time";
 import type { LeaderboardEntry } from "@/types/exam/exam";
 
 export default function TryoutLeaderboardPage({
@@ -74,13 +75,7 @@ export default function TryoutLeaderboardPage({
 
 function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   const finishedAt = entry.finished_at
-    ? new Date(entry.finished_at).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+    ? formatJakartaDateTime(entry.finished_at, { month: "short" })
     : "-";
 
   return (

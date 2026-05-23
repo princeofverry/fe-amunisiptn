@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ChevronLeft, Trophy, Target, CheckCircle2, XCircle, MinusCircle, Clock, BarChart3 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useGetTryoutResult } from "@/http/tryout/get-tryout-result";
+import { formatJakartaDate } from "@/utils/date-time";
 
 export default function ResultPage({
   params,
@@ -144,7 +145,7 @@ export default function ResultPage({
           <p className="text-amber-600 text-sm mt-2">
             Skor IRT akan tersedia setelah tryout berakhir dan cukup peserta menyelesaikan ujian.
             {irt_result?.release_date && (
-              <span className="block mt-1">Perkiraan rilis: {new Date(irt_result.release_date).toLocaleDateString("id-ID")}</span>
+              <span className="block mt-1">Perkiraan rilis: {formatJakartaDate(irt_result.release_date)}</span>
             )}
           </p>
         </div>

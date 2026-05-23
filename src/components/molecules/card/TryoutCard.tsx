@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Radio, Calendar, Clock, Users } from "lucide-react";
 import Link from "next/link";
 import { getTryoutButtonState, TRYOUT_BUTTON_CLASS } from "@/utils/tryout-button-state";
+import { formatJakartaDate } from "@/utils/date-time";
 
 interface TryoutCardProps {
   id: number | string;
@@ -51,7 +52,7 @@ export default function TryoutCard({
       const phaseEnd = new Date(endDate).getTime();
 
       const formatDate = (date: Date) => {
-        return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        return formatJakartaDate(date, { day: "2-digit", month: "long", year: "numeric" });
       };
 
       setDateRangeText(`${formatDate(new Date(phaseStart))} - ${formatDate(new Date(phaseEnd))}`);
@@ -121,6 +122,14 @@ export default function TryoutCard({
 
       {/* Content */}
       <div className="p-4 md:p-5 flex flex-col flex-1">
+        <div className="mb-3 flex gap-2 sm:hidden">
+          <span className="bg-blue-50 border border-blue-100 text-[#004AAB] text-xs px-3 py-1 rounded-full font-semibold">
+            {category || "-"}
+          </span>
+          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${type === "Gratis" ? "bg-green-50 border border-green-100 text-green-700" : "bg-amber-50 border border-amber-100 text-amber-700"}`}>
+            {type}
+          </span>
+        </div>
         <h3 className="font-bold text-gray-900 text-[17px] mb-3 line-clamp-1">
           {title}
         </h3>
