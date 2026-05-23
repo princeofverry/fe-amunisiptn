@@ -30,11 +30,12 @@ export default function ReviewPage({
   const reviewItems = useMemo(() => beReview?.data?.review ?? [], [beReview]);
   const subtests = useMemo(() => {
     const map = new Map<string, string>();
-    reviewItems.forEach((item) => map.set(item.subtest.id, item.subtest.name));
-    return Array.from(map.entries()).map(([id, rawName]) => {
+    reviewItems.forEach((item) => {
+      const rawName = item.subtest.name;
       const displayName = rawName.includes("_") ? rawName.split("_").slice(1).join("_") : rawName;
-      return { id, name: displayName };
+      map.set(item.subtest.id, displayName);
     });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [reviewItems]);
 
   const filteredItems = useMemo(() => {
