@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetDetailPackage } from "@/http/pembelian/get-detail-package";
 import { useCreateOrder } from "@/http/pembelian/create-order";
-import { useCancelOrder } from "@/http/pembelian/cancel-order";
 import { useVerifyPayment } from "@/http/pembelian/verify-payment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,7 +30,6 @@ export default function DetailPaketPage() {
   const currentOrderId = useRef<string | null>(null);
   const paymentCompleted = useRef(false);
 
-  const { mutate: cancelOrder } = useCancelOrder();
   const { mutate: verifyPayment } = useVerifyPayment();
 
   const createOrderMutation = useCreateOrder({
@@ -82,11 +80,8 @@ export default function DetailPaketPage() {
             toast.error("Pembayaran gagal. Silakan coba lagi.");
           },
           onClose: () => {
-            if (!paymentCompleted.current && currentOrderId.current) {
-              cancelOrder({ orderId: currentOrderId.current, token });
-            }
             setPaymentState("idle");
-            toast.info("Pembayaran dibatalkan.");
+            toast.info("Pembayaran ditutup. Kamu bisa lanjut bayar dari paket ini atau riwayat pembelian.");
           },
         });
       },

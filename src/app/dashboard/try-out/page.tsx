@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, History, Search, KeyRound } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, History, Search, KeyRound } from "lucide-react";
 import Link from "next/link";
 import TryoutCard from "@/components/molecules/card/TryoutCard";
 import { useSession } from "next-auth/react";
@@ -17,6 +17,7 @@ const FILTER_OPTIONS = [
 ];
 
 const INITIAL_TIME = Date.now();
+const ITEMS_PER_PAGE = 9;
 
 export default function TryoutPage() {
   const { data: session } = useSession();
@@ -25,6 +26,7 @@ export default function TryoutPage() {
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
   const [searchQuery, setSearchQuery] = useState("");
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: tryoutsData } = useGetUserTryouts({ token });
   const tryouts = tryoutsData?.data || [];
@@ -41,20 +43,39 @@ export default function TryoutPage() {
     return 2;
   };
 
-  const filteredData = tryouts
-    .filter(
-      (item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        (activeFilter === "Semua Tryout" ||
-          (activeFilter === "Tryout Premium" && item.type === "Premium") ||
-          (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
-          (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
-    )
-    .sort((a, b) => {
-      const statusDiff = getStatusOrder(a) - getStatusOrder(b);
-      if (statusDiff !== 0) return statusDiff;
-      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-    });
+  const filteredData = useMemo(() => {
+    return tryouts
+      .filter(
+        (item) =>
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          (activeFilter === "Semua Tryout" ||
+            (activeFilter === "Tryout Premium" && item.type === "Premium") ||
+            (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
+            (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
+      )
+      .sort((a, b) => {
+        const statusDiff = getStatusOrder(a) - getStatusOrder(b);
+        if (statusDiff !== 0) return statusDiff;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      });
+  }, [activeFilter, enrolledTryoutIds, searchQuery, tryouts]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedData = filteredData.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE,
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -104,7 +125,7 @@ export default function TryoutPage() {
             type="text"
             placeholder="Mau tryout seperti apa?"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAB]/20 focus:border-[#004AAB] transition-all shadow-sm"
           />
         </div>
@@ -114,7 +135,7 @@ export default function TryoutPage() {
           {FILTER_OPTIONS.map((filter) => (
             <button
               key={filter}
-              onClick={() => setActiveFilter(filter)}
+              onClick={() => handleFilterChange(filter)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeFilter === filter
                   ? "bg-[#004AAB] text-white"
@@ -129,7 +150,7 @@ export default function TryoutPage() {
 
       {/* Tryout Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 pt-4">
-        {filteredData.map((item) => (
+        {paginatedData.map((item) => (
           <TryoutCard
             key={item.id}
             id={item.id}
@@ -149,6 +170,55 @@ export default function TryoutPage() {
       {filteredData.length === 0 && (
         <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
           <p>Tidak ada tryout yang ditemukan.</p>
+        </div>
+      )}
+
+      {filteredData.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+          <p className="text-sm text-gray-500">
+            Menampilkan {(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}-
+            {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filteredData.length)} dari {filteredData.length} tryout
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={safeCurrentPage === 1}
+              className="h-10 w-10 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center"
+              aria-label="Halaman sebelumnya"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {Array.from({ length: totalPages }).map((_, index) => {
+              const page = index + 1;
+              return (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-10 min-w-10 rounded-lg px-3 text-sm font-bold transition-colors ${
+                    page === safeCurrentPage
+                      ? "bg-[#004AAB] text-white"
+                      : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={safeCurrentPage === totalPages}
+              className="h-10 w-10 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center"
+              aria-label="Halaman berikutnya"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

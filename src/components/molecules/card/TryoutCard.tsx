@@ -100,7 +100,7 @@ export default function TryoutCard({
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
       {/* Background Image Header */}
-      <div className="relative w-full h-40">
+      <div className="relative hidden sm:block w-full h-40">
         <Image
           src={thumbnailSrc}
           alt={title}

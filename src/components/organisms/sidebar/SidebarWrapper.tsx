@@ -29,6 +29,7 @@ import {
   Shield,
   GraduationCap,
   TrendingUp,
+  Gift,
 } from "lucide-react";
 import { SidebarUser } from "./SidebarUser";
 import { DASHBOARD_MENU } from "@/constants/dashboard-menu";
@@ -165,6 +166,17 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       <Link href="/dashboard/admin/packages">
                         <BookCopy />
                         <span>Paket</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={buttonClass("/dashboard/admin/redeem-code")}
+                    >
+                      <Link href="/dashboard/admin/redeem-code">
+                        <Gift />
+                        <span>Kode Redeem</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

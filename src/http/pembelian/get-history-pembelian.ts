@@ -5,6 +5,8 @@ import type { OrderBE } from "@/types/package/package";
 
 export interface TransactionData {
   id: string;
+  orderId: string;
+  packageId: string | null;
   orderDate: string;
   packageName: string;
   amount: number;
@@ -20,6 +22,8 @@ function mapBEStatusToFE(status: string): "success" | "pending" | "failed" {
 function mapOrderBEtoFE(order: OrderBE): TransactionData {
   return {
     id: order.order_code,
+    orderId: order.id,
+    packageId: order.items?.[0]?.package_id ?? null,
     orderDate: order.created_at,
     packageName: order.items?.[0]?.package_name_snapshot || "Paket",
     amount: order.grand_total,

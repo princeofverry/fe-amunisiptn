@@ -51,7 +51,17 @@ export default function RiwayatPembelianPage() {
                     <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">Berhasil</span>
                   )}
                   {trx.status === "pending" && (
-                    <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider">Menunggu</span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider">Menunggu</span>
+                      {trx.packageId && (
+                        <Link
+                          href={`/dashboard/pembelian/${trx.packageId}`}
+                          className="text-sm font-semibold text-white bg-[#004AAB] px-4 py-1.5 rounded-lg hover:bg-[#003B8A] transition-colors"
+                        >
+                          Lanjut Bayar
+                        </Link>
+                      )}
+                    </div>
                   )}
                   {trx.status === "failed" && (
                     <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold uppercase tracking-wider">Gagal</span>

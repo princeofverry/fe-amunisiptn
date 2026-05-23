@@ -5,8 +5,11 @@ import { api } from "@/lib/axios";
 interface RedeemResponse {
   message: string;
   data: {
-    tryout_id: string;
-    tryout_title: string;
+    type?: "tryout" | "ticket";
+    tryout_id?: string;
+    tryout_title?: string;
+    ticket_amount?: number;
+    ticket_balance?: number;
   };
 }
 

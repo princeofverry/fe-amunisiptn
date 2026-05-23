@@ -32,7 +32,7 @@ export interface OrderBE {
   user_id: string;
   grand_total: number;
   currency: string;
-  status: "pending" | "paid" | "cancelled" | "rejected" | "waiting_approval";
+  status: "pending" | "paid" | "cancelled" | "rejected" | "waiting_approval" | "expired";
   payment_method: string;
   payment_reference: string | null;
   midtrans_transaction_id: string | null;
