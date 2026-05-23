@@ -8,36 +8,40 @@ interface ExamTimerProps {
 }
 
 export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps) {
-  const [seconds, setSeconds] = useState(remainingSeconds);
+  const [displaySeconds, setDisplaySeconds] = useState(remainingSeconds);
 
   useEffect(() => {
-    setSeconds(remainingSeconds);
-  }, [remainingSeconds]);
-
-  useEffect(() => {
-    if (seconds <= 0) {
+    if (remainingSeconds <= 0) {
+      setDisplaySeconds(0);
       onTimeUp();
       return;
     }
 
+    // Set target end time
+    const endTime = Date.now() + remainingSeconds * 1000;
+    
+    // Immediate sync
+    setDisplaySeconds(remainingSeconds);
+
     const timer = setInterval(() => {
-      setSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          onTimeUp();
-          return 0;
-        }
-        return prev - 1;
-      });
+      const now = Date.now();
+      const diff = Math.ceil((endTime - now) / 1000);
+      
+      if (diff <= 0) {
+        clearInterval(timer);
+        setDisplaySeconds(0);
+        onTimeUp();
+      } else {
+        setDisplaySeconds(diff);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [seconds <= 0]); // eslint-disable-line
+  }, [remainingSeconds]); // Sync with prop changes (like subtest change or refresh)
 
-  const validSeconds = Math.max(0, Math.floor(seconds));
-  const mins = Math.floor(validSeconds / 60);
-  const secs = validSeconds % 60;
-  const isLow = validSeconds < 300; // Less than 5 minutes
+  const mins = Math.floor(displaySeconds / 60);
+  const secs = displaySeconds % 60;
+  const isLow = displaySeconds < 300; // Less than 5 minutes
 
   return (
     <div
