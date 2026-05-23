@@ -157,7 +157,11 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
   return (
     <Card>
       <CardContent>
-        <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          key={defaultData?.id ?? "loading"}
+          className="space-y-6"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
           <FieldGroup>
             <Controller
               control={form.control}
@@ -195,7 +199,7 @@ export default function FormEditTryout({ tryoutId }: FormEditTryoutProps) {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Kategori</FieldLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>
