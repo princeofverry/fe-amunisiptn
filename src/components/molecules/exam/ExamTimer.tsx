@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface ExamTimerProps {
   remainingSeconds: number;
@@ -9,19 +9,27 @@ interface ExamTimerProps {
 
 export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps) {
   const [displaySeconds, setDisplaySeconds] = useState(remainingSeconds);
+  const [prevRemainingSeconds, setPrevRemainingSeconds] = useState(remainingSeconds);
+
+  // Use ref to avoid dependency issues with the callback
+  const onTimeUpRef = useRef(onTimeUp);
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp;
+  }, [onTimeUp]);
+
+  // Sync state with prop if it changes (e.g. next subtest)
+  if (remainingSeconds !== prevRemainingSeconds) {
+    setPrevRemainingSeconds(remainingSeconds);
+    setDisplaySeconds(remainingSeconds);
+  }
 
   useEffect(() => {
     if (remainingSeconds <= 0) {
-      setDisplaySeconds(0);
-      onTimeUp();
+      onTimeUpRef.current();
       return;
     }
 
-    // Set target end time
     const endTime = Date.now() + remainingSeconds * 1000;
-    
-    // Immediate sync
-    setDisplaySeconds(remainingSeconds);
 
     const timer = setInterval(() => {
       const now = Date.now();
@@ -30,14 +38,14 @@ export default function ExamTimer({ remainingSeconds, onTimeUp }: ExamTimerProps
       if (diff <= 0) {
         clearInterval(timer);
         setDisplaySeconds(0);
-        onTimeUp();
+        onTimeUpRef.current();
       } else {
         setDisplaySeconds(diff);
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [remainingSeconds]); // Sync with prop changes (like subtest change or refresh)
+  }, [remainingSeconds]);
 
   const mins = Math.floor(displaySeconds / 60);
   const secs = displaySeconds % 60;
