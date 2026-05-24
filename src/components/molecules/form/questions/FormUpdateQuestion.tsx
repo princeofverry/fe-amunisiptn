@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import RichTextEditor from "@/components/atoms/rich-text/RichTextEditor";
 import {
@@ -73,7 +72,6 @@ export default function FormEditQuestion({
     defaultValues: {
       order_no: 1,
       question_type: "multiple_choice",
-      randomize_options: false,
       question_text: "",
       delete_question_image: false,
       discussion: "",
@@ -111,7 +109,6 @@ export default function FormEditQuestion({
     form.reset({
       order_no: defaultData.order_no,
       question_type: normalizedQuestionType,
-      randomize_options: defaultData.randomize_options ?? false,
       question_text: defaultData.question_text,
       delete_question_image: false,
       discussion: defaultData.discussion ?? "",
@@ -287,25 +284,6 @@ export default function FormEditQuestion({
 
             {questionType === "multiple_choice" && (
               <>
-                <Controller
-                  control={form.control}
-                  name="randomize_options"
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>Acak Opsi Jawaban</FieldLabel>
-                      <div className="flex items-center gap-3">
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          {field.value ? "Opsi akan diacak per sesi peserta" : "Opsi tampil berurutan"}
-                        </span>
-                      </div>
-                    </Field>
-                  )}
-                />
-
                 <div className="md:col-span-2 space-y-4">
                   <div className="flex justify-between items-center">
                     <FieldLabel>Opsi Jawaban</FieldLabel>

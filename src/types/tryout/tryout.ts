@@ -8,6 +8,7 @@ export interface Tryout {
   is_published: boolean;
   is_free: boolean;
   use_irt: boolean;
+  randomize_options: boolean;
   created_at: Date;
   updated_at: Date;
   creator: User;

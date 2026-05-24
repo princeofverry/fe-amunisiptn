@@ -50,6 +50,10 @@ export const CreateTryoutHandler = async (
     formData.append("use_irt", body.use_irt ? "1" : "0");
   }
 
+  if (body.randomize_options !== undefined) {
+    formData.append("randomize_options", body.randomize_options ? "1" : "0");
+  }
+
   const { data } = await api.post("/admin/tryouts", formData, {
     headers: {
       Authorization: `Bearer ${token}`,

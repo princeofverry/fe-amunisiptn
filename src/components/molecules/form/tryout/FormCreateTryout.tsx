@@ -53,6 +53,7 @@ export default function FormCreateTryout() {
       is_published: false,
       is_free: false,
       use_irt: true,
+      randomize_options: false,
       image: null,
     },
     mode: "onChange",
@@ -355,6 +356,29 @@ export default function FormCreateTryout() {
                       {field.value
                         ? "IRT — skor dihitung berdasarkan tingkat kesulitan soal"
                         : "Tanpa IRT — hanya tampilkan jumlah benar/salah"}
+                    </span>
+                  </div>
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="randomize_options"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Acak Opsi Jawaban</FieldLabel>
+
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+
+                    <span className="text-sm text-muted-foreground">
+                      {field.value
+                        ? "Opsi jawaban diacak untuk setiap sesi peserta"
+                        : "Opsi jawaban tampil berurutan A-E"}
                     </span>
                   </div>
                 </Field>

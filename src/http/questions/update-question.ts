@@ -46,11 +46,6 @@ export const updateQuestionHandler = async (
     formData.append("correct_answer", body.correct_answer);
   }
 
-  formData.append(
-    "randomize_options",
-    body.question_type === "multiple_choice" && body.randomize_options ? "1" : "0",
-  );
-
   if (body.is_active !== undefined) {
     formData.append("is_active", body.is_active ? "1" : "0");
   }

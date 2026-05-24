@@ -12,7 +12,6 @@ export interface Question {
   subtest_id: string;
   order_no: number;
   question_type: "multiple_choice" | "essay";
-  randomize_options: boolean;
   question_text: string;
   question_image?: string | null;
   question_image_url?: string | null;

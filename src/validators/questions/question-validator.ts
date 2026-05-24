@@ -13,7 +13,6 @@ export const questionSchema = z
   .object({
     order_no: z.number().min(1, "Urutan minimal 1"),
     question_type: z.enum(["multiple_choice", "essay"]),
-    randomize_options: z.boolean(),
     question_text: z.string().min(1, "Soal wajib diisi"),
 
     question_image: z.instanceof(File).optional().nullable(),
