@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useGetAuditLogs } from "@/http/audit/get-audit-logs";
+import { GetAuditLogsForExportHandler, useGetAuditLogs } from "@/http/audit/get-audit-logs";
 import {
   exportAdminRowsToExcel,
   exportAdminRowsToPdf,
@@ -65,6 +65,7 @@ export default function AuditLogPage() {
   const [action, setAction]   = useState("");
   const [date, setDate]       = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -90,6 +91,15 @@ export default function AuditLogPage() {
   };
 
   const hasFilter = search || module || action || date;
+  const exportRows = async () => {
+    setIsExporting(true);
+
+    try {
+      return await GetAuditLogsForExportHandler({ token, search, module, action, date });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <main className="space-y-6">
@@ -169,7 +179,8 @@ export default function AuditLogPage() {
               type="button"
               variant="outline"
               className="border-green-200 text-green-700 hover:bg-green-50"
-              onClick={() => exportAdminRowsToExcel({ rows: data?.data ?? [], columns: auditExportColumns, title: "laporan-audit-log" })}
+              disabled={isExporting}
+              onClick={async () => exportAdminRowsToExcel({ rows: await exportRows(), columns: auditExportColumns, title: "laporan-audit-log" })}
             >
               <FileSpreadsheet className="h-4 w-4" />
               Excel
@@ -178,7 +189,8 @@ export default function AuditLogPage() {
               type="button"
               variant="outline"
               className="border-blue-200 text-blue-700 hover:bg-blue-50"
-              onClick={() => exportAdminRowsToPdf({ rows: data?.data ?? [], columns: auditExportColumns, title: "laporan-audit-log", filterSummary: `Search: ${search || "-"}; Modul: ${module || "Semua"}; Aksi: ${action || "Semua"}; Tanggal: ${date || "Semua"}` })}
+              disabled={isExporting}
+              onClick={async () => exportAdminRowsToPdf({ rows: await exportRows(), columns: auditExportColumns, title: "laporan-audit-log", filterSummary: `Search: ${search || "-"}; Modul: ${module || "Semua"}; Aksi: ${action || "Semua"}; Tanggal: ${date || "Semua"}` })}
             >
               <FileText className="h-4 w-4" />
               PDF

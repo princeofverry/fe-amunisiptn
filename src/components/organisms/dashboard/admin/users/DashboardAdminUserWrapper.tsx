@@ -6,6 +6,7 @@ import {
   AdminExportColumn,
   AdminFilterOption,
   AdminSortOption,
+  getControlledAdminRows,
   useAdminTableControls,
 } from "@/components/molecules/datatable/AdminDataControls";
 import { userColumns } from "@/components/atoms/datacolumn/DataUser";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useDeleteUser } from "@/http/users/delete-user";
-import { useGetAllUsers } from "@/http/users/get-all-users";
+import { GetAllUsersForExportHandler, useGetAllUsers } from "@/http/users/get-all-users";
 import type { User } from "@/types/user/user";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -81,6 +82,19 @@ export default function DashboardAdminUserWrapper() {
     sortOptions: userSortOptions,
     defaultSort: "newest",
   });
+  const getExportRows = async () => {
+    const rows = await GetAllUsersForExportHandler(session?.access_token as string, search);
+
+    return getControlledAdminRows({
+      data: rows,
+      search: controls.search,
+      filterValues: controls.filterValues,
+      sortKey: controls.sortKey,
+      searchFields: [(row) => row.name, (row) => row.email, (row) => row.school_origin, (row) => row.grade_level],
+      filters: userFilters,
+      sortOptions: userSortOptions,
+    });
+  };
 
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser({
     onError: (error) => {
@@ -139,9 +153,10 @@ export default function DashboardAdminUserWrapper() {
                 onReset={controls.reset}
                 hasActiveControls={controls.hasActiveControls}
                 rows={controls.rows}
+                exportRows={getExportRows}
                 exportColumns={userExportColumns}
                 exportTitle="laporan-pengguna"
-                filterSummary={`Search server: ${search || "-"}; hasil halaman: ${controls.rows.length}`}
+                filterSummary={`Search server: ${search || "-"}; filter toolbar diterapkan ke semua data`}
               />
             </div>
 

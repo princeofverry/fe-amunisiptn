@@ -16,6 +16,7 @@ export const createQuestionHandler = async (
 ): Promise<CreateQuestionResponse> => {
   const formData = new FormData();
 
+  formData.append("question_type", body.question_type);
   formData.append("question_text", body.question_text);
 
   if (body.question_image) {
@@ -34,16 +35,25 @@ export const createQuestionHandler = async (
     formData.append("order_no", body.order_no.toString());
   }
 
-  formData.append("correct_answer", body.correct_answer);
+  if (body.question_type === "multiple_choice" && body.correct_answer) {
+    formData.append("correct_answer", body.correct_answer);
+  }
+
+  formData.append(
+    "randomize_options",
+    body.question_type === "multiple_choice" && body.randomize_options ? "1" : "0",
+  );
 
   if (body.is_active !== undefined) {
     formData.append("is_active", body.is_active ? "1" : "0");
   }
 
-  body.options.forEach((option, index) => {
-    formData.append(`options[${index}][option_key]`, option.option_key);
-    formData.append(`options[${index}][option_text]`, option.option_text);
-  });
+  if (body.question_type === "multiple_choice") {
+    body.options.forEach((option, index) => {
+      formData.append(`options[${index}][option_key]`, option.option_key);
+      formData.append(`options[${index}][option_text]`, option.option_text);
+    });
+  }
 
   const { data } = await api.post(`/admin/subtests/${id}/questions`, formData, {
     headers: {

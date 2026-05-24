@@ -86,6 +86,9 @@ export default function CardQuestionDetail({
             <span className="font-medium text-muted-foreground uppercase tracking-widest">
               Soal #{data?.order_no}
             </span>
+            <Badge variant="secondary" className="rounded-full">
+              {data?.question_type === "essay" ? "Essay" : "Pilihan Ganda"}
+            </Badge>
           </div>
           <Badge
             variant="outline"
@@ -176,7 +179,7 @@ export default function CardQuestionDetail({
               </span>
             </div>
             <Badge className="rounded-full bg-muted text-muted-foreground border-0">
-              Kunci: {data?.correct_answer}
+              {data?.question_type === "essay" ? "Otomatis Benar" : `Kunci: ${data?.correct_answer ?? "-"}`}
             </Badge>
           </div>
           <RichTextRenderer

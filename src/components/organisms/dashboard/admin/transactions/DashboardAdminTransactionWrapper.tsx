@@ -7,6 +7,7 @@ import {
   AdminExportColumn,
   AdminFilterOption,
   AdminSortOption,
+  getControlledAdminRows,
   useAdminTableControls,
 } from "@/components/molecules/datatable/AdminDataControls";
 import { DataTable } from "@/components/molecules/datatable/DataTable";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGetAllTransaction } from "@/http/transactions/get-all-transactions";
+import { GetAllTransactionsForExportHandler, useGetAllTransaction } from "@/http/transactions/get-all-transactions";
 import { Transaction } from "@/types/transactions/transaction";
 import { formatPrice } from "@/utils/format-price";
 import { useSession } from "next-auth/react";
@@ -81,6 +82,19 @@ export default function DashboardAdminTransactionWrapper() {
     sortOptions: transactionSortOptions,
     defaultSort: "newest",
   });
+  const getExportRows = async () => {
+    const rows = await GetAllTransactionsForExportHandler(session?.access_token as string, search);
+
+    return getControlledAdminRows({
+      data: rows,
+      search: controls.search,
+      filterValues: controls.filterValues,
+      sortKey: controls.sortKey,
+      searchFields: [(row) => row.order_code, (row) => row.user?.name, (row) => row.user?.email],
+      filters: transactionFilters,
+      sortOptions: transactionSortOptions,
+    });
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,9 +129,10 @@ export default function DashboardAdminTransactionWrapper() {
               onReset={controls.reset}
               hasActiveControls={controls.hasActiveControls}
               rows={controls.rows}
+              exportRows={getExportRows}
               exportColumns={transactionExportColumns}
               exportTitle="laporan-transaksi"
-              filterSummary={`Search server: ${search || "-"}; hasil halaman: ${controls.rows.length}`}
+              filterSummary={`Search server: ${search || "-"}; filter toolbar diterapkan ke semua data`}
             />
 
             <DataTable

@@ -182,16 +182,16 @@ function ExamContent({ tryoutId }: { tryoutId: string }) {
   const unansweredCount = questions.length - answeredQuestions.size;
 
   // --- Handlers ---
-  const handleSelectAnswer = (answer: string | null) => {
-    if (!currentQuestion) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
+  const handleSelectAnswer = (answer: string | null, questionId = currentQuestion?.id) => {
+    if (!currentQuestion || !questionId) return;
+    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
 
     // Submit to API
     if (currentSubtest) {
       submitAnswerMutation.mutate({
         tryoutId,
         subtestId: currentSubtest.id,
-        questionId: currentQuestion.id,
+        questionId,
         answer,
       });
     }

@@ -232,6 +232,7 @@ export default function ReviewPage({
 function mapReviewQuestionToExamQuestion(item: ReviewQuestion): ExamQuestion {
   return {
     id: item.question.id,
+    question_type: item.question.question_type,
     question_text: item.question.question_text,
     question_image: item.question.question_image,
     question_image_url: item.question.question_image_url,

@@ -24,6 +24,22 @@ export const GetAllTransactionHandler = async (
   return data;
 };
 
+export const GetAllTransactionsForExportHandler = async (
+  token: string,
+  search = "",
+): Promise<Transaction[]> => {
+  const perPage = 100;
+  const firstPage = await GetAllTransactionHandler(token, 1, perPage, search);
+  const rows = [...firstPage.data];
+
+  for (let page = 2; page <= firstPage.last_page; page += 1) {
+    const nextPage = await GetAllTransactionHandler(token, page, perPage, search);
+    rows.push(...nextPage.data);
+  }
+
+  return rows;
+};
+
 export const useGetAllTransaction = ({
   token,
   page = 1,

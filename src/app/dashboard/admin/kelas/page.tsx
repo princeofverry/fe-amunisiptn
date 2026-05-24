@@ -6,13 +6,14 @@ import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useGetAllKelasAdmin } from "@/http/kelas/get-all-kelas-admin";
+import { GetAllKelasAdminForExportHandler, useGetAllKelasAdmin } from "@/http/kelas/get-all-kelas-admin";
 import { useDeleteKelasAdmin } from "@/http/kelas/delete-kelas-admin";
 import {
   AdminDataToolbar,
   AdminExportColumn,
   AdminFilterOption,
   AdminSortOption,
+  getControlledAdminRows,
   useAdminTableControls,
 } from "@/components/molecules/datatable/AdminDataControls";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,19 @@ export default function AdminKelasPage() {
     sortOptions: kelasSortOptions,
     defaultSort: "newest",
   });
+  const getExportRows = async () => {
+    const rows = await GetAllKelasAdminForExportHandler(token, search);
+
+    return getControlledAdminRows({
+      data: rows,
+      search: controls.search,
+      filterValues: controls.filterValues,
+      sortKey: controls.sortKey,
+      searchFields: [(row) => row.name, (row) => row.description],
+      filters: kelasFilters,
+      sortOptions: kelasSortOptions,
+    });
+  };
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -153,9 +167,10 @@ export default function AdminKelasPage() {
         onReset={controls.reset}
         hasActiveControls={controls.hasActiveControls}
         rows={controls.rows}
+        exportRows={getExportRows}
         exportColumns={kelasExportColumns}
         exportTitle="laporan-kelas"
-        filterSummary={`Search server: ${search || "-"}; hasil halaman: ${controls.rows.length}`}
+        filterSummary={`Search server: ${search || "-"}; filter toolbar diterapkan ke semua data`}
       />
 
       {/* Table */}

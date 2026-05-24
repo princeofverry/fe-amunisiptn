@@ -7,12 +7,13 @@ export interface ExamOption {
 
 export interface ExamQuestion {
   id: string;
+  question_type: "multiple_choice" | "essay";
   question_text: string;
   question_image: string | null;
   question_image_url: string | null;
   order_no: number;
   options: ExamOption[];
-  my_answer: string | null; // A, B, C, D, E or null
+  my_answer: string | null; // A, B, C, D, E, essay HTML, or null
   correct_answer?: string | null;
   discussion?: string | null;
   discussion_image_url?: string | null;
@@ -109,6 +110,7 @@ export interface ReviewQuestion {
   };
   question: {
     id: string;
+    question_type: "multiple_choice" | "essay";
     question_text: string;
     question_image: string | null;
     question_image_url: string | null;

@@ -44,6 +44,46 @@ type UseAdminTableControlsProps<T> = {
   defaultSort?: string;
 };
 
+type GetControlledAdminRowsProps<T> = UseAdminTableControlsProps<T> & {
+  search: string;
+  filterValues: Record<string, string>;
+  sortKey: string;
+};
+
+export function getControlledAdminRows<T>({
+  data,
+  search,
+  filterValues,
+  sortKey,
+  searchFields = [],
+  filters = [],
+  sortOptions = [],
+}: GetControlledAdminRowsProps<T>) {
+  const normalizedSearch = search.trim().toLowerCase();
+  const selectedSort = sortOptions.find((option) => option.key === sortKey);
+
+  return data
+    .filter((row) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        searchFields.some((field) =>
+          String(field(row) ?? "")
+            .toLowerCase()
+            .includes(normalizedSearch),
+        );
+
+      if (!matchesSearch) return false;
+
+      return filters.every((filter) => {
+        const selected = filterValues[filter.key];
+        if (!selected || selected === ALL_VALUE) return true;
+        return String(filter.getValue(row) ?? "") === selected;
+      });
+    })
+    .slice()
+    .sort((a, b) => (selectedSort ? selectedSort.compare(a, b) : 0));
+}
+
 export function useAdminTableControls<T>({
   data,
   searchFields = [],
@@ -56,29 +96,15 @@ export function useAdminTableControls<T>({
   const [sortKey, setSortKey] = useState(defaultSort || sortOptions[0]?.key || "");
 
   const rows = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-    const selectedSort = sortOptions.find((option) => option.key === sortKey);
-
-    return data
-      .filter((row) => {
-        const matchesSearch =
-          !normalizedSearch ||
-          searchFields.some((field) =>
-            String(field(row) ?? "")
-              .toLowerCase()
-              .includes(normalizedSearch),
-          );
-
-        if (!matchesSearch) return false;
-
-        return filters.every((filter) => {
-          const selected = filterValues[filter.key];
-          if (!selected || selected === ALL_VALUE) return true;
-          return String(filter.getValue(row) ?? "") === selected;
-        });
-      })
-      .slice()
-      .sort((a, b) => (selectedSort ? selectedSort.compare(a, b) : 0));
+    return getControlledAdminRows({
+      data,
+      search,
+      filterValues,
+      sortKey,
+      searchFields,
+      filters,
+      sortOptions,
+    });
   }, [data, filterValues, filters, search, searchFields, sortKey, sortOptions]);
 
   const setFilter = (key: string, value: string) => {
@@ -133,6 +159,33 @@ function buildExportRows<T>(rows: T[], columns: AdminExportColumn<T>[]) {
   );
 }
 
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+async function loadImageAsDataUrl(src: string) {
+  const response = await fetch(src);
+  const blob = await response.blob();
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+  const image = await loadImage(dataUrl);
+
+  return {
+    dataUrl,
+    width: image.naturalWidth || image.width,
+    height: image.naturalHeight || image.height,
+  };
+}
+
 export async function exportAdminRowsToExcel<T>({
   rows,
   columns,
@@ -176,6 +229,16 @@ export async function exportAdminRowsToPdf<T>({
   ]);
   const autoTable = autoTableModule.default;
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  try {
+    const logo = await loadImageAsDataUrl("/images/logo/amunisiptn.png");
+    const logoWidth = 96;
+    const logoHeight = logo.height > 0 ? (logoWidth * logo.height) / logo.width : 32;
+    doc.addImage(logo.dataUrl, "PNG", pageWidth - 40 - logoWidth, 24, logoWidth, logoHeight);
+  } catch {
+    // Logo is optional for export generation; keep the PDF downloadable if the asset fails to load.
+  }
 
   doc.setFontSize(14);
   doc.text(title, 40, 40);
@@ -215,6 +278,7 @@ type AdminDataToolbarProps<T> = {
   onReset: () => void;
   hasActiveControls: boolean;
   rows: T[];
+  exportRows?: T[] | (() => Promise<T[]>);
   exportColumns: AdminExportColumn<T>[];
   exportTitle: string;
   filterSummary?: string;
@@ -234,6 +298,7 @@ export function AdminDataToolbar<T>({
   onReset,
   hasActiveControls,
   rows,
+  exportRows,
   exportColumns,
   exportTitle,
   filterSummary,
@@ -244,11 +309,14 @@ export function AdminDataToolbar<T>({
   const runExport = async (type: "excel" | "pdf") => {
     setIsExporting(true);
     try {
+      const rowsToExport =
+        typeof exportRows === "function" ? await exportRows() : exportRows ?? rows;
+
       if (type === "excel") {
-        await exportAdminRowsToExcel({ rows, columns: exportColumns, title: exportTitle });
+        await exportAdminRowsToExcel({ rows: rowsToExport, columns: exportColumns, title: exportTitle });
       } else {
         await exportAdminRowsToPdf({
-          rows,
+          rows: rowsToExport,
           columns: exportColumns,
           title: exportTitle,
           filterSummary,

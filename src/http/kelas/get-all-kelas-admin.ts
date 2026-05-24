@@ -24,6 +24,22 @@ export const GetAllKelasAdminHandler = async (
   return data;
 };
 
+export const GetAllKelasAdminForExportHandler = async (
+  token: string,
+  search = "",
+): Promise<Kelas[]> => {
+  const perPage = 100;
+  const firstPage = await GetAllKelasAdminHandler(token, 1, perPage, search);
+  const rows = [...firstPage.data];
+
+  for (let page = 2; page <= firstPage.last_page; page += 1) {
+    const nextPage = await GetAllKelasAdminHandler(token, page, perPage, search);
+    rows.push(...nextPage.data);
+  }
+
+  return rows;
+};
+
 export const useGetAllKelasAdmin = ({
   token,
   page = 1,

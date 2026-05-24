@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import RichTextEditor from "@/components/atoms/rich-text/RichTextEditor";
 import {
@@ -71,6 +72,8 @@ export default function FormEditQuestion({
     mode: "onChange",
     defaultValues: {
       order_no: 1,
+      question_type: "multiple_choice",
+      randomize_options: false,
       question_text: "",
       delete_question_image: false,
       discussion: "",
@@ -83,6 +86,7 @@ export default function FormEditQuestion({
       ],
     },
   });
+  const questionType = form.watch("question_type");
 
   const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
@@ -92,8 +96,10 @@ export default function FormEditQuestion({
   useEffect(() => {
     if (!defaultData) return;
 
-    const normalizedCorrectAnswer = isOptionKey(defaultData.correct_answer)
-      ? defaultData.correct_answer
+    const normalizedQuestionType = defaultData.question_type === "essay" ? "essay" : "multiple_choice";
+    const rawCorrectAnswer = defaultData.correct_answer ?? "";
+    const normalizedCorrectAnswer: OptionKey = isOptionKey(rawCorrectAnswer)
+      ? rawCorrectAnswer
       : "A";
 
     const normalizedOptions =
@@ -104,11 +110,13 @@ export default function FormEditQuestion({
 
     form.reset({
       order_no: defaultData.order_no,
+      question_type: normalizedQuestionType,
+      randomize_options: defaultData.randomize_options ?? false,
       question_text: defaultData.question_text,
       delete_question_image: false,
       discussion: defaultData.discussion ?? "",
       delete_discussion_image: false,
-      correct_answer: normalizedCorrectAnswer,
+      correct_answer: normalizedQuestionType === "essay" ? null : normalizedCorrectAnswer,
       is_active: defaultData.is_active,
       options: normalizedOptions,
     });
@@ -118,7 +126,7 @@ export default function FormEditQuestion({
     setQuestionPreview(defaultData.question_image_url ?? null);
     setDiscussionPreview(defaultData.discussion_image_url ?? null);
 
-    form.setValue("correct_answer", normalizedCorrectAnswer);
+    form.setValue("correct_answer", normalizedQuestionType === "essay" ? null : normalizedCorrectAnswer);
   }, [defaultData, form, replace]);
 
   const queryClient = useQueryClient();
@@ -169,6 +177,25 @@ export default function FormEditQuestion({
       <CardContent>
         <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="grid md:grid-cols-2 gap-6">
+            <Controller
+              control={form.control}
+              name="question_type"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>Tipe Soal</FieldLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih tipe soal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="multiple_choice">Pilihan Ganda</SelectItem>
+                      <SelectItem value="essay">Essay</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            />
+
             <Controller
               control={form.control}
               name="order_no"
@@ -258,82 +285,105 @@ export default function FormEditQuestion({
               )}
             />
 
-            <div className="md:col-span-2 space-y-4">
-              <div className="flex justify-between items-center">
-                <FieldLabel>Opsi Jawaban</FieldLabel>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    append({
-                      option_key: optionKeys[fields.length],
-                      option_text: "",
-                    })
-                  }
-                  disabled={fields.length >= 5}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Tambah
-                </Button>
-              </div>
+            {questionType === "multiple_choice" && (
+              <>
+                <Controller
+                  control={form.control}
+                  name="randomize_options"
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>Acak Opsi Jawaban</FieldLabel>
+                      <div className="flex items-center gap-3">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {field.value ? "Opsi akan diacak per sesi peserta" : "Opsi tampil berurutan"}
+                        </span>
+                      </div>
+                    </Field>
+                  )}
+                />
 
-              {fields.map((item, index) => (
-                <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3">
-                  <Controller
-                    control={form.control}
-                    name={`options.${index}.option_text`}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder={`Opsi ${optionKeys[index]}`}
+                <div className="md:col-span-2 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <FieldLabel>Opsi Jawaban</FieldLabel>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        append({
+                          option_key: optionKeys[fields.length],
+                          option_text: "",
+                        })
+                      }
+                      disabled={fields.length >= 5}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Tambah
+                    </Button>
+                  </div>
+
+                  {fields.map((item, index) => (
+                    <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3">
+                      <Controller
+                        control={form.control}
+                        name={`options.${index}.option_text`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            placeholder={`Opsi ${optionKeys[index]}`}
+                          />
+                        )}
                       />
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="destructive"
-                    onClick={() => remove(index)}
-                    disabled={fields.length <= 2}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        onClick={() => remove(index)}
+                        disabled={fields.length <= 2}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            <Controller
-              control={form.control}
-              name="correct_answer"
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Jawaban Benar</FieldLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
-                    key={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih jawaban benar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fields.map((option, index) => {
-                        const text =
-                          stripHtmlToPreviewText(form.watch(`options.${index}.option_text`)) ||
-                          "(belum diisi)";
-                        return (
-                          <SelectItem key={option.id} value={optionKeys[index]}>
-                            {optionKeys[index]} - {text}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              )}
-            />
+                <Controller
+                  control={form.control}
+                  name="correct_answer"
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>Jawaban Benar</FieldLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? undefined}
+                        defaultValue={field.value ?? undefined}
+                        key={field.value ?? "empty"}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih jawaban benar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fields.map((option, index) => {
+                            const text =
+                              stripHtmlToPreviewText(form.watch(`options.${index}.option_text`)) ||
+                              "(belum diisi)";
+                            return (
+                              <SelectItem key={option.id} value={optionKeys[index]}>
+                                {optionKeys[index]} - {text}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                />
+              </>
+            )}
 
             <div className="md:col-span-2">
               <Controller

@@ -6,6 +6,9 @@ export type ReviewOptionState = "correct_answer" | "user_wrong_answer" | "neutra
 
 export function getReviewQuestionStatus(question: ReviewQuestion): ReviewQuestionStatus {
   if (!question.my_answer) return "unanswered";
+  if (question.question.question_type === "essay") {
+    return question.is_correct ? "correct" : "incorrect";
+  }
   if (!question.question.correct_answer) return "unanswered";
 
   return question.my_answer === question.question.correct_answer ? "correct" : "incorrect";

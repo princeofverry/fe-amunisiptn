@@ -24,6 +24,22 @@ export const GetAllUsersHandler = async (
   return data;
 };
 
+export const GetAllUsersForExportHandler = async (
+  token: string,
+  search = "",
+): Promise<User[]> => {
+  const perPage = 100;
+  const firstPage = await GetAllUsersHandler(token, 1, search, perPage);
+  const rows = [...firstPage.data];
+
+  for (let page = 2; page <= firstPage.last_page; page += 1) {
+    const nextPage = await GetAllUsersHandler(token, page, search, perPage);
+    rows.push(...nextPage.data);
+  }
+
+  return rows;
+};
+
 export const useGetAllUsers = ({
   token,
   page = 1,

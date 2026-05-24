@@ -11,13 +11,15 @@ export interface Question {
   id: string;
   subtest_id: string;
   order_no: number;
+  question_type: "multiple_choice" | "essay";
+  randomize_options: boolean;
   question_text: string;
   question_image?: string | null;
   question_image_url?: string | null;
   discussion: string;
   discussion_image?: string | null;
   discussion_image_url?: string | null;
-  correct_answer: string;
+  correct_answer: string | null;
   difficulty: string;
   is_active: boolean;
   user_answers_count?: number;

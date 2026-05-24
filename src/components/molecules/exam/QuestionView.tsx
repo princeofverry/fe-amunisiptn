@@ -1,13 +1,15 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { ExamQuestion } from "@/types/exam/exam";
 import RichTextRenderer from "@/components/atoms/rich-text/RichTextRenderer";
+import RichTextEditor from "@/components/atoms/rich-text/RichTextEditor";
 import { getReviewOptionState, type TryoutLayoutMode } from "@/utils/tryout-review";
 
 interface QuestionViewProps {
   question: ExamQuestion;
   selectedAnswer: string | null;
-  onSelectAnswer: (answer: string | null) => void;
+  onSelectAnswer: (answer: string | null, questionId?: string) => void;
   onPrev: () => void;
   onNext: () => void;
   onFinish: () => void;
@@ -28,6 +30,14 @@ export default function QuestionView({
   mode = "attempt",
 }: QuestionViewProps) {
   const isReviewMode = mode === "review";
+  const isEssay = question.question_type === "essay";
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleOptionClick = (optionKey: string) => {
     if (isReviewMode) return;
@@ -37,6 +47,15 @@ export default function QuestionView({
     } else {
       onSelectAnswer(optionKey);
     }
+  };
+
+  const handleEssayChange = (value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      const hasContent = value.replace(/<[^>]*>/g, "").trim().length > 0;
+      onSelectAnswer(hasContent ? value : null, question.id);
+    }, 650);
   };
 
   return (
@@ -59,9 +78,34 @@ export default function QuestionView({
           className="mb-6 text-gray-800 font-medium"
         />
 
+        {isEssay ? (
+          <div className="space-y-4">
+            {isReviewMode ? (
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-5">
+                <div className="mb-3 inline-flex rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+                  Essay: Otomatis Benar
+                </div>
+                {selectedAnswer ? (
+                  <RichTextRenderer html={selectedAnswer} className="text-gray-800" />
+                ) : (
+                  <p className="text-sm text-gray-500">Tidak ada jawaban.</p>
+                )}
+              </div>
+            ) : (
+              <RichTextEditor
+                key={question.id}
+                value={selectedAnswer ?? ""}
+                onChange={handleEssayChange}
+                placeholder="Tulis jawaban essay..."
+                minHeightClassName="min-h-48"
+              />
+            )}
+          </div>
+        ) : (
         <div className="flex flex-col gap-3">
-          {question.options.map((option) => {
+          {question.options.map((option, index) => {
             const isSelected = selectedAnswer === option.option_key;
+            const visualOptionKey = String.fromCharCode(65 + index);
             const reviewState = getReviewOptionState({
               optionKey: option.option_key,
               userAnswer: selectedAnswer,
@@ -111,7 +155,7 @@ export default function QuestionView({
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${markerClass}`}
                 >
-                  {option.option_key}
+                  {visualOptionKey}
                 </div>
                 <div className="flex-1 min-w-0">
                   <RichTextRenderer
@@ -143,6 +187,7 @@ export default function QuestionView({
             );
           })}
         </div>
+        )}
 
         {isReviewMode && (
           <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-5">
@@ -161,7 +206,7 @@ export default function QuestionView({
                 className="mt-4 max-h-[240px] rounded-lg object-contain"
               />
             )}
-            {!question.correct_answer && (
+            {!isEssay && !question.correct_answer && (
               <p className="mt-3 text-xs font-medium text-amber-700">
                 Kunci jawaban belum tersedia.
               </p>

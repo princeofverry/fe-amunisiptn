@@ -12,6 +12,8 @@ export const questionOptionSchema = z.object({
 export const questionSchema = z
   .object({
     order_no: z.number().min(1, "Urutan minimal 1"),
+    question_type: z.enum(["multiple_choice", "essay"]),
+    randomize_options: z.boolean(),
     question_text: z.string().min(1, "Soal wajib diisi"),
 
     question_image: z.instanceof(File).optional().nullable(),
@@ -22,15 +24,32 @@ export const questionSchema = z
     discussion_image: z.instanceof(File).optional().nullable(),
     delete_discussion_image: z.boolean().optional(),
 
-    correct_answer: z.enum(optionKeys, {
-      message: "Jawaban benar harus A-E",
-    }),
+    correct_answer: z.enum(optionKeys).optional().nullable(),
 
     is_active: z.boolean().optional(),
 
-    options: z.array(questionOptionSchema).min(2, "Minimal 2 opsi jawaban"),
+    options: z.array(questionOptionSchema),
   })
   .superRefine((data, ctx) => {
+    if (data.question_type === "essay") return;
+
+    if (data.options.length < 2) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Minimal 2 opsi jawaban",
+        path: ["options"],
+      });
+    }
+
+    if (!data.correct_answer) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Jawaban benar wajib diisi",
+        path: ["correct_answer"],
+      });
+      return;
+    }
+
     const keys = data.options.map((o) => o.option_key);
 
     const unique = new Set(keys);

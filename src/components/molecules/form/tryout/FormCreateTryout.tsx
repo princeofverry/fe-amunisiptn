@@ -51,6 +51,7 @@ export default function FormCreateTryout() {
       start_date: "",
       end_date: "",
       is_published: false,
+      is_free: false,
       use_irt: true,
       image: null,
     },
