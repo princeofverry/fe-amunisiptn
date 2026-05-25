@@ -16,6 +16,7 @@ export default function TryoutLeaderboardPage({
   const { id: tryoutId } = use(params);
   const { data: session } = useSession();
   const token = session?.access_token || "";
+  const currentUserId = session?.user?.id || "";
 
   const { data, isLoading } = useGetTryoutLeaderboard({
     tryoutId,
@@ -24,6 +25,8 @@ export default function TryoutLeaderboardPage({
 
   const leaderboardData = data?.data;
   const entries = leaderboardData?.leaderboard ?? [];
+
+  const myEntry = entries.find((e) => e.user_id === currentUserId);
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-in fade-in duration-500 pb-12">
@@ -49,6 +52,30 @@ export default function TryoutLeaderboardPage({
             </p>
           </div>
         </div>
+
+        {/* My rank summary */}
+        {myEntry && (
+          <div className="mt-5 pt-5 border-t border-white/20 flex flex-wrap items-center gap-4">
+            <div>
+              <p className="text-xs text-white/60 mb-0.5">Peringkat Anda</p>
+              <p className="text-3xl font-extrabold text-yellow-300">
+                #{myEntry.rank}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-white/60 mb-0.5">Skor</p>
+              <p className="text-3xl font-extrabold">
+                {myEntry.score.final_score}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-white/60 mb-0.5">Benar</p>
+              <p className="text-3xl font-extrabold">
+                {myEntry.summary.correct}/{myEntry.summary.total_questions}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -64,7 +91,11 @@ export default function TryoutLeaderboardPage({
         ) : (
           <div className="divide-y divide-slate-100">
             {entries.map((entry) => (
-              <LeaderboardRow key={entry.user_id} entry={entry} />
+              <LeaderboardRow
+                key={entry.user_id}
+                entry={entry}
+                isMe={entry.user_id === currentUserId}
+              />
             ))}
           </div>
         )}
@@ -73,14 +104,28 @@ export default function TryoutLeaderboardPage({
   );
 }
 
-function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+function LeaderboardRow({
+  entry,
+  isMe,
+}: {
+  entry: LeaderboardEntry;
+  isMe: boolean;
+}) {
   const finishedAt = entry.finished_at
     ? formatJakartaDateTime(entry.finished_at, { month: "short" })
     : "-";
 
   return (
-    <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_auto_auto] gap-4 items-center p-5">
-      <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700">
+    <div
+      className={`grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_auto_auto] gap-4 items-center p-5 transition-colors ${
+        isMe ? "bg-blue-50 border-l-4 border-l-[#004AAB]" : ""
+      }`}
+    >
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+          isMe ? "bg-[#004AAB] text-white" : "bg-slate-100 text-slate-700"
+        }`}
+      >
         {entry.rank <= 3 ? (
           <Medal
             className={`w-5 h-5 ${
@@ -89,7 +134,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
                 : entry.rank === 2
                   ? "text-slate-400"
                   : "text-orange-500"
-            }`}
+            } ${isMe ? "brightness-0 invert" : ""}`}
           />
         ) : (
           entry.rank
@@ -97,7 +142,14 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
       </div>
 
       <div className="min-w-0">
-        <p className="font-bold text-slate-900 truncate">{entry.user_name}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-bold text-slate-900 truncate">{entry.user_name}</p>
+          {isMe && (
+            <span className="shrink-0 text-[0.65rem] font-bold text-white bg-[#004AAB] px-2 py-0.5 rounded-full">
+              Anda
+            </span>
+          )}
+        </div>
         <p className="text-xs text-slate-500">
           Attempt {entry.attempt_number} selesai {finishedAt}
         </p>
