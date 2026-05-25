@@ -30,8 +30,12 @@ export default function DialogPackageDetail({
     },
   });
 
+  const storageUrl =
+    process.env.NEXT_PUBLIC_STORAGE_URL ??
+    "https://dev-api.amunisiptn.com/storage";
+
   const thumbnailUrl = data?.data?.thumbnail
-    ? `http://127.0.0.1:8000/storage/${data.data.thumbnail}`
+    ? `${storageUrl}/${data.data.thumbnail}`
     : null;
 
   return (
