@@ -22,17 +22,29 @@ function mapBEtoFE(pkg: PackageBE): PackageData {
     discountPercent,
     description: pkg.description || "",
     ticketAmount: pkg.ticket_amount,
+    thumbnail: pkg.thumbnail,
   };
 }
 
-export const GetDetailPackageHandler = async (id: string, token: string): Promise<GetDetailPackageResponse> => {
+export const GetDetailPackageHandler = async (
+  id: string,
+  token: string,
+): Promise<GetDetailPackageResponse> => {
   const { data } = await api.get<{ data: PackageBE }>(`/packages/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return { data: mapBEtoFE(data.data) };
 };
 
-export const useGetDetailPackage = ({ id, token, options }: { id: string; token: string; options?: Partial<UseQueryOptions<GetDetailPackageResponse, AxiosError>> }) => {
+export const useGetDetailPackage = ({
+  id,
+  token,
+  options,
+}: {
+  id: string;
+  token: string;
+  options?: Partial<UseQueryOptions<GetDetailPackageResponse, AxiosError>>;
+}) => {
   return useQuery({
     queryKey: ["get-detail-package", id],
     queryFn: () => GetDetailPackageHandler(id, token),

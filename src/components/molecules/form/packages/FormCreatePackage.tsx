@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/get-error-message";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCreatePackage } from "@/http/packages/create-package";
 import {
   PackageFormInput,
@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CURRENCIES } from "@/constants/currency";
+import { ImagePlus, X } from "lucide-react";
 
 export default function FormCreatePackage() {
   const form = useForm<PackageFormInput>({
@@ -45,6 +46,7 @@ export default function FormCreatePackage() {
       currency: "IDR",
       ticket_amount: 1,
       is_active: true,
+      thumbnail: null,
     },
   });
 
@@ -64,6 +66,10 @@ export default function FormCreatePackage() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  // Thumbnail preview state
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { mutate: createPackageHandler, isPending } = useCreatePackage({
     onError: (error: unknown) => {
       const message = getErrorMessage(error, "Terjadi kesalahan.");
@@ -78,6 +84,23 @@ export default function FormCreatePackage() {
 
   const onSubmit = (body: PackageFormInput) => {
     createPackageHandler(body);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    form.setValue("thumbnail", file, { shouldValidate: true });
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setThumbnailPreview(url);
+    } else {
+      setThumbnailPreview(null);
+    }
+  };
+
+  const removeThumbnail = () => {
+    form.setValue("thumbnail", null, { shouldValidate: true });
+    setThumbnailPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -137,6 +160,74 @@ export default function FormCreatePackage() {
               />
             </div>
 
+            {/* Thumbnail Upload */}
+            <div className="md:col-span-2">
+              <Controller
+                control={form.control}
+                name="thumbnail"
+                render={({ fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Thumbnail</FieldLabel>
+                    <div className="flex flex-col gap-3">
+                      {thumbnailPreview ? (
+                        <div className="relative w-full max-w-sm">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={thumbnailPreview}
+                            alt="Preview thumbnail"
+                            className="w-full h-48 object-cover rounded-lg border"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeThumbnail}
+                            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex flex-col items-center justify-center w-full max-w-sm h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors gap-2 text-muted-foreground"
+                        >
+                          <ImagePlus className="w-8 h-8" />
+                          <span className="text-sm font-medium">
+                            Pilih Gambar
+                          </span>
+                          <span className="text-xs">
+                            JPG, JPEG, PNG, WEBP · Maks 2MB
+                          </span>
+                        </button>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                      {!thumbnailPreview && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-fit"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <ImagePlus className="w-4 h-4 mr-2" />
+                          Upload Thumbnail
+                        </Button>
+                      )}
+                    </div>
+                    {fieldState.error && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+
             <Controller
               control={form.control}
               name="price"
@@ -173,7 +264,7 @@ export default function FormCreatePackage() {
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : e.target.valueAsNumber
+                        e.target.value === "" ? null : e.target.valueAsNumber,
                       )
                     }
                     placeholder="Kosongkan jika tidak ada diskon"

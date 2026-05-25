@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, History, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useGetAllPackages } from "@/http/pembelian/get-all-packages";
+import PackageCard from "@/components/molecules/card/PackageCard";
 
 const categories = [
   "Semua Paket",
@@ -25,14 +26,19 @@ export default function PembelianPage() {
   const packages = data?.data || [];
 
   const filteredPackages = packages.filter((pkg) => {
-    const matchesSearch = pkg.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Simple filter logic mapping category to keyword
+    const matchesSearch = pkg.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
     let matchesCategory = true;
-    if (activeCategory === "Paket Try Out") matchesCategory = pkg.title.toLowerCase().includes("try out");
-    if (activeCategory === "Paket Live Class") matchesCategory = pkg.title.toLowerCase().includes("live class");
-    if (activeCategory === "Paket Konsultasi") matchesCategory = pkg.title.toLowerCase().includes("konsultasi");
-    if (activeCategory === "Mega Paket") matchesCategory = pkg.title.toLowerCase().includes("mega");
+    if (activeCategory === "Paket Try Out")
+      matchesCategory = pkg.title.toLowerCase().includes("try out");
+    if (activeCategory === "Paket Live Class")
+      matchesCategory = pkg.title.toLowerCase().includes("live class");
+    if (activeCategory === "Paket Konsultasi")
+      matchesCategory = pkg.title.toLowerCase().includes("konsultasi");
+    if (activeCategory === "Mega Paket")
+      matchesCategory = pkg.title.toLowerCase().includes("mega");
 
     return matchesSearch && matchesCategory;
   });
@@ -41,7 +47,6 @@ export default function PembelianPage() {
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        {/* Title and Subtitle */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-1">
             <Link
@@ -50,14 +55,15 @@ export default function PembelianPage() {
             >
               <ChevronLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Pembelian</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              Pembelian
+            </h1>
           </div>
           <p className="text-gray-600 text-sm pl-9">
             Amunisian, pilih paket yang paling cocok untuk persiapanmu!
           </p>
         </div>
 
-        {/* History Button */}
         <Link
           href="/dashboard/pembelian/riwayat"
           className="flex items-center gap-2 bg-[#3C8D60] hover:bg-[#327851] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit md:mt-0"
@@ -69,7 +75,6 @@ export default function PembelianPage() {
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 mt-2">
-        {/* Search Bar */}
         <div className="relative w-full max-w-xl">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="w-5 h-5 text-slate-400" />
@@ -83,7 +88,6 @@ export default function PembelianPage() {
           />
         </div>
 
-        {/* Categories */}
         <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
           {categories.map((category) => (
             <button
@@ -104,53 +108,37 @@ export default function PembelianPage() {
       {/* Packages Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
         {isLoading ? (
-          <div className="col-span-full py-12 text-center text-slate-500">Memuat paket...</div>
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm animate-pulse"
+            >
+              <div className="w-full h-40 bg-slate-200" />
+              <div className="p-4 flex flex-col gap-3">
+                <div className="h-3 bg-slate-200 rounded w-3/4" />
+                <div className="h-3 bg-slate-200 rounded w-1/2" />
+                <div className="h-8 bg-slate-200 rounded mt-2" />
+              </div>
+            </div>
+          ))
         ) : filteredPackages.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-500">
             Tidak ada paket yang cocok dengan pencarian atau kategori Anda.
           </div>
         ) : (
           filteredPackages.map((pkg) => (
-          <div
-            key={pkg.id}
-            className="flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all group"
-          >
-            {/* Top Blue section */}
-            <div className="bg-[#004AAB] min-h-35 flex items-center justify-center p-6 text-center">
-              <h3 className="text-white font-bold text-lg leading-snug">
-                {pkg.title}
-              </h3>
-            </div>
-
-            {/* Bottom White section */}
-            <div className="flex flex-col p-5 gap-4">
-              <div className="flex items-start justify-between">
-                <div className="flex flex-col">
-                  <span className="font-bold text-xl text-[#004AAB]">
-                    Rp{pkg.price.toLocaleString("id-ID")}
-                  </span>
-                  {pkg.originalPrice != null && (
-                    <span className="text-sm font-medium text-slate-500 line-through">
-                      Rp{pkg.originalPrice.toLocaleString("id-ID")}
-                    </span>
-                  )}
-                </div>
-                {pkg.discountPercent != null && (
-                  <div className="bg-[#EBF4FF] text-[#004AAB] px-2.5 py-1 rounded-sm text-xs font-bold">
-                    Diskon {pkg.discountPercent}%
-                  </div>
-                )}
-              </div>
-
-              <Link 
-                href={`/dashboard/pembelian/${pkg.id}`}
-                className="w-full flex justify-center py-2.5 bg-[#004AAB] hover:bg-[#003B8A] text-white font-semibold rounded-lg transition-colors mt-2 text-sm shadow-sm"
-              >
-                Beli Paket
-              </Link>
-            </div>
-          </div>
-        ))
+            <PackageCard
+              key={pkg.id}
+              id={pkg.id}
+              title={pkg.title}
+              thumbnail={pkg.thumbnail}
+              price={pkg.price}
+              originalPrice={pkg.originalPrice}
+              discountPercent={pkg.discountPercent}
+              description={pkg.description}
+              ticketAmount={pkg.ticketAmount}
+            />
+          ))
         )}
       </div>
     </div>
