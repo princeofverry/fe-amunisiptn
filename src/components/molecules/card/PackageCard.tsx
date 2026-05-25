@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Package, Tag, Ticket } from "lucide-react";
 
 const STORAGE_BASE_URL =
-  process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://127.0.0.1:8000/storage";
+  process.env.NEXT_PUBLIC_STORAGE_URL ??
+  "https://dev-api.amunisiptn.com/storage";
 
 interface PackageCardProps {
   id: string;
