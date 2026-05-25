@@ -126,20 +126,6 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    id: "approved_by",
-    header: "Disetujui Oleh",
-    cell: ({ row }) => (
-      <p
-        suppressHydrationWarning
-        className="text-sm text-gray-600 truncate max-w-[120px]"
-      >
-        {row.original.approved_by?.name ?? (
-          <span className="text-gray-400 text-xs">-</span>
-        )}
-      </p>
-    ),
-  },
-  {
     id: "actions",
     header: "Aksi",
     cell: ({ row }) => {
