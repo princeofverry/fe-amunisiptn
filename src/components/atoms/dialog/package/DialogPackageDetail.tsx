@@ -30,6 +30,10 @@ export default function DialogPackageDetail({
     },
   });
 
+  const thumbnailUrl = data?.data?.thumbnail
+    ? `http://127.0.0.1:8000/storage/${data.data.thumbnail}`
+    : null;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-xl overflow-visible">
@@ -37,6 +41,17 @@ export default function DialogPackageDetail({
           <DialogTitle>Detail Paket</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
+          {thumbnailUrl && (
+            <div className="flex flex-col gap-1">
+              <h3 className="text-muted-foreground">Thumbnail</h3>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={thumbnailUrl}
+                alt={data?.data?.name ?? "Thumbnail"}
+                className="w-full h-48 object-cover rounded-lg border"
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <h3 className="text-muted-foreground">Nama Paket</h3>
             <span>{data?.data?.name}</span>

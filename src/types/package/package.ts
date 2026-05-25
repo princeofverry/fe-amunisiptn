@@ -4,6 +4,7 @@ export interface PackageBE {
   name: string;
   slug: string;
   description: string | null;
+  thumbnail: string | null;
   price: number;
   discount_price: number | null;
   ticket_amount: number;
@@ -32,7 +33,13 @@ export interface OrderBE {
   user_id: string;
   grand_total: number;
   currency: string;
-  status: "pending" | "paid" | "cancelled" | "rejected" | "waiting_approval" | "expired";
+  status:
+    | "pending"
+    | "paid"
+    | "cancelled"
+    | "rejected"
+    | "waiting_approval"
+    | "expired";
   payment_method: string;
   payment_reference: string | null;
   midtrans_transaction_id: string | null;

@@ -3,6 +3,7 @@ export interface Package {
   name: string;
   slug: string;
   description: string;
+  thumbnail: string | null;
   price: number;
   discount_price: number | null;
   ticket_amount: number;

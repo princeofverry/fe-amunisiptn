@@ -14,6 +14,22 @@ export const packageSchema = z
 
     description: z.string().optional().nullable(),
 
+    thumbnail: z
+      .custom<File>((v) => v instanceof File || v == null || v === undefined)
+      .optional()
+      .nullable()
+      .refine(
+        (file) =>
+          !file ||
+          ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+            file.type,
+          ),
+        { message: "Format gambar harus jpg, jpeg, png, atau webp" },
+      )
+      .refine((file) => !file || file.size <= 2 * 1024 * 1024, {
+        message: "Ukuran gambar maksimal 2MB",
+      }),
+
     price: z.number().min(0, "Harga tidak boleh negatif").default(10000),
 
     discount_price: z.number().min(0).nullable().optional(),
@@ -33,7 +49,7 @@ export const packageSchema = z
     {
       message: "Harga diskon harus lebih kecil dari harga asli",
       path: ["discount_price"],
-    }
+    },
   );
 
 // ✅ ini untuk form (input user)

@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/get-error-message";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGetDetailPackage } from "@/http/packages/get-detail-package";
 import {
   PackageFormInput,
@@ -34,6 +34,9 @@ import {
 import { CURRENCIES } from "@/constants/currency";
 import { useSession } from "next-auth/react";
 import { useUpdatePackage } from "@/http/packages/update-package";
+import { ImagePlus, X } from "lucide-react";
+
+const STORAGE_BASE_URL = "http://127.0.0.1:8000/storage";
 
 interface FormUpdatePackageProps {
   packageId: string;
@@ -63,8 +66,17 @@ export default function FormUpdatePackage({
       currency: "IDR",
       ticket_amount: 1,
       is_active: true,
+      thumbnail: null,
     },
   });
+
+  // existing thumbnail path from server (string)
+  const [existingThumbnail, setExistingThumbnail] = useState<string | null>(
+    null,
+  );
+  // new file preview (object URL)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!defaultData) return;
@@ -78,7 +90,11 @@ export default function FormUpdatePackage({
       currency: defaultData.currency ?? "IDR",
       ticket_amount: defaultData.ticket_amount ?? 1,
       is_active: defaultData.is_active ?? true,
+      thumbnail: null,
     });
+
+    setExistingThumbnail(defaultData.thumbnail ?? null);
+    setThumbnailPreview(null);
   }, [defaultData, form]);
 
   const nameValue = form.watch("name");
@@ -117,6 +133,31 @@ export default function FormUpdatePackage({
   const onSubmit = (body: PackageFormInput) => {
     updatePackageHandler({ id: packageId, body });
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    form.setValue("thumbnail", file, { shouldValidate: true });
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setThumbnailPreview(url);
+      setExistingThumbnail(null); // hide old one when new is selected
+    } else {
+      setThumbnailPreview(null);
+    }
+  };
+
+  const removeNewThumbnail = () => {
+    form.setValue("thumbnail", null, { shouldValidate: true });
+    setThumbnailPreview(null);
+    // restore existing thumbnail view
+    setExistingThumbnail(defaultData?.thumbnail ?? null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // The preview src to show: new file > existing from server
+  const displayPreview =
+    thumbnailPreview ??
+    (existingThumbnail ? `${STORAGE_BASE_URL}/${existingThumbnail}` : null);
 
   if (isLoadingDetail) {
     return (
@@ -193,6 +234,86 @@ export default function FormUpdatePackage({
               />
             </div>
 
+            {/* Thumbnail Upload */}
+            <div className="md:col-span-2">
+              <Controller
+                control={form.control}
+                name="thumbnail"
+                render={({ fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Thumbnail</FieldLabel>
+                    <div className="flex flex-col gap-3">
+                      {displayPreview ? (
+                        <div className="relative w-full max-w-sm">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={displayPreview}
+                            alt="Preview thumbnail"
+                            className="w-full h-48 object-cover rounded-lg border"
+                          />
+                          {/* Only show remove when a NEW file is selected */}
+                          {thumbnailPreview && (
+                            <button
+                              type="button"
+                              onClick={removeNewThumbnail}
+                              className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                          {/* Allow replacing existing thumbnail */}
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="absolute bottom-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-md px-2 py-1 text-xs transition-colors flex items-center gap-1"
+                          >
+                            <ImagePlus className="w-3 h-3" />
+                            Ganti
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex flex-col items-center justify-center w-full max-w-sm h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors gap-2 text-muted-foreground"
+                        >
+                          <ImagePlus className="w-8 h-8" />
+                          <span className="text-sm font-medium">
+                            Pilih Gambar
+                          </span>
+                          <span className="text-xs">
+                            JPG, JPEG, PNG, WEBP · Maks 2MB
+                          </span>
+                        </button>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                      {!displayPreview && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-fit"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <ImagePlus className="w-4 h-4 mr-2" />
+                          Upload Thumbnail
+                        </Button>
+                      )}
+                    </div>
+                    {fieldState.error && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+
             <Controller
               control={form.control}
               name="price"
@@ -229,7 +350,7 @@ export default function FormUpdatePackage({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : e.target.valueAsNumber
+                        e.target.value === "" ? null : e.target.valueAsNumber,
                       )
                     }
                     placeholder="Kosongkan jika tidak ada diskon"

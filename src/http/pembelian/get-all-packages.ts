@@ -6,6 +6,7 @@ import type { PackageBE } from "@/types/package/package";
 export interface PackageData {
   id: string;
   title: string;
+  thumbnail: string | null;
   price: number;
   originalPrice: number | null;
   discountPercent: number | null;
@@ -22,6 +23,7 @@ function mapBEtoFE(pkg: PackageBE): PackageData {
   return {
     id: pkg.id,
     title: pkg.name,
+    thumbnail: pkg.thumbnail ?? null,
     price: pkg.discount_price ?? pkg.price,
     originalPrice: pkg.discount_price != null ? pkg.price : null,
     discountPercent,
@@ -34,14 +36,22 @@ export interface GetAllPackagesResponse {
   data: PackageData[];
 }
 
-export const GetAllPackagesHandler = async (token: string): Promise<GetAllPackagesResponse> => {
+export const GetAllPackagesHandler = async (
+  token: string,
+): Promise<GetAllPackagesResponse> => {
   const { data } = await api.get<{ data: PackageBE[] }>("/packages", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return { data: data.data.map(mapBEtoFE) };
 };
 
-export const useGetAllPackages = ({ token, options }: { token: string; options?: Partial<UseQueryOptions<GetAllPackagesResponse, AxiosError>> }) => {
+export const useGetAllPackages = ({
+  token,
+  options,
+}: {
+  token: string;
+  options?: Partial<UseQueryOptions<GetAllPackagesResponse, AxiosError>>;
+}) => {
   return useQuery({
     queryKey: ["get-all-packages"],
     queryFn: () => GetAllPackagesHandler(token),

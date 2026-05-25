@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
         hostname: "dev-api.amunisiptn.com",
         pathname: "/storage/**",
       },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
+        pathname: "/storage/**",
+      },
     ],
   },
 };
