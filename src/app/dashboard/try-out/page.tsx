@@ -29,7 +29,7 @@ const INITIAL_TIME = Date.now();
 const PER_PAGE_OPTIONS = [3, 6, 9];
 
 export default function TryoutPage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const token = session?.access_token || "";
 
   const [activeFilter, setActiveFilter] = useState("Semua Tryout");
@@ -40,12 +40,24 @@ export default function TryoutPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
 
-  const { data: tryoutsData, isFetching: isLoading } = useGetUserTryouts({
+  const {
+    data: tryoutsData,
+    isLoading: isTryoutsLoading,
+    isFetching: isTryoutsFetching,
+  } = useGetUserTryouts({
     token,
   });
+
   const tryouts = tryoutsData?.data || [];
 
-  const { data: historyData } = useGetHistoryTryout({ token });
+  const {
+    data: historyData,
+    isLoading: isHistoryLoading,
+    isFetching: isHistoryFetching,
+  } = useGetHistoryTryout({
+    token,
+  });
+
   const enrolledTryoutIds = useMemo(
     () => new Set(historyData?.data?.map((t) => t.id) || []),
     [historyData],
@@ -54,6 +66,13 @@ export default function TryoutPage() {
     () => new Map(historyData?.data?.map((t) => [t.id, t]) || []),
     [historyData],
   );
+
+  const isPageLoading =
+    sessionStatus === "loading" ||
+    isTryoutsLoading ||
+    isTryoutsFetching ||
+    isHistoryLoading ||
+    isHistoryFetching;
 
   const getStatusOrder = (item: { startDate: string; endDate: string }) => {
     const start = new Date(item.startDate).getTime();
@@ -239,13 +258,13 @@ export default function TryoutPage() {
       </div>
 
       <div className="pt-4">
-        {isLoading ? (
+        {isPageLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
             {Array.from({ length: itemsPerPage }).map((_, index) => (
               <TryoutCardSkeleton key={index} />
             ))}
           </div>
-        ) : (
+        ) : filteredData.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
               {paginatedData.map((item) => (
@@ -269,24 +288,20 @@ export default function TryoutPage() {
               ))}
             </div>
 
-            {filteredData.length === 0 && (
-              <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
-                <p>Tidak ada tryout yang ditemukan.</p>
-              </div>
-            )}
-
-            {filteredData.length > 0 && (
-              <SmartPagination
-                page={safeCurrentPage}
-                totalItems={filteredData.length}
-                perPage={itemsPerPage}
-                perPageOptions={PER_PAGE_OPTIONS}
-                itemLabel="tryout"
-                onPageChange={setCurrentPage}
-                onPerPageChange={handleItemsPerPageChange}
-              />
-            )}
+            <SmartPagination
+              page={safeCurrentPage}
+              totalItems={filteredData.length}
+              perPage={itemsPerPage}
+              perPageOptions={PER_PAGE_OPTIONS}
+              itemLabel="tryout"
+              onPageChange={setCurrentPage}
+              onPerPageChange={handleItemsPerPageChange}
+            />
           </>
+        ) : (
+          <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
+            <p>Tidak ada tryout yang ditemukan.</p>
+          </div>
         )}
       </div>
 
