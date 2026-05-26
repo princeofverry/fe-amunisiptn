@@ -16,6 +16,8 @@ export default function HeroBanner({ userName }: HeroBannerProps) {
         src="/images/background/bg_dashboard.png"
         alt="Dashboard Background"
         fill
+        quality={100}
+        unoptimized
         className="object-cover"
         priority
       />
@@ -42,6 +44,8 @@ export default function HeroBanner({ userName }: HeroBannerProps) {
             src="/images/background/icon_dashboard.png"
             alt="Students Illustration"
             fill
+            quality={100}
+            unoptimized
             className="object-contain object-bottom"
             priority
           />

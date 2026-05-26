@@ -1,62 +1,84 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import Autoplay from "embla-carousel-autoplay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
 
 const INFO_CARDS = [
-  { src: "/images/background/info_to1.png", alt: "Info UTBK 1" },
-  { src: "/images/background/info_to2.png", alt: "Info UTBK 2" },
-  { src: "/images/background/info_to3.png", alt: "Info UTBK 3" },
-  { src: "/images/background/info_to4.png", alt: "Info UTBK 4" },
+  {
+    src: "/images/tryout/tryout-01.webp",
+    alt: "Tryout 01",
+    href: "/dashboard/try-out",
+  },
+  {
+    src: "/images/tryout/tryout-02.webp",
+    alt: "Tryout 02",
+    href: "/dashboard/try-out",
+  },
+  {
+    src: "/images/tryout/tryout-03.webp",
+    alt: "Tryout 03",
+    href: "/dashboard/try-out",
+  },
+  {
+    src: "/images/ticket/starter.webp",
+    alt: "Info UTBK Starter",
+    href: "/dashboard/pembelian",
+  },
+  {
+    src: "/images/ticket/ambis.webp",
+    alt: "Info UTBK Ambis",
+    href: "/dashboard/pembelian",
+  },
+  {
+    src: "/images/ticket/booster.webp",
+    alt: "Info UTBK Booster",
+    href: "/dashboard/pembelian",
+  },
+  {
+    src: "/images/ticket/ultimate.webp",
+    alt: "Info UTBK Ultimate",
+    href: "/dashboard/pembelian",
+  },
 ];
 
 export default function InfoCardCarousel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [api, setApi] = useState<CarouselApi>();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isAutoScrollPaused, setIsAutoScrollPaused] = useState(false);
+  const [snapCount, setSnapCount] = useState(0);
 
-  const scrollToIndex = useCallback((index: number) => {
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const cardWidth = container.children[0]?.clientWidth ?? 0;
-    const gap = 16;
-    container.scrollTo({
-      left: index * (cardWidth + gap),
-      behavior: "smooth",
-    });
-  }, []);
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setActiveIndex(api.selectedScrollSnap());
+    setSnapCount(api.scrollSnapList().length);
+  }, [api]);
 
-  // Handle scroll to update dot indicator
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
+    if (!api) return;
+    onSelect();
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
 
-    const handleScroll = () => {
-      const cardWidth = container.children[0]?.clientWidth ?? 0;
-      const gap = 16;
-      const scrollPosition = container.scrollLeft;
-      const index = Math.round(scrollPosition / (cardWidth + gap));
-      setActiveIndex(Math.min(index, INFO_CARDS.length - 1));
+    return () => {
+      api.off("select", onSelect);
+      api.off("reInit", onSelect);
     };
+  }, [api, onSelect]);
 
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Auto-scroll every 5 seconds
-  useEffect(() => {
-    if (isAutoScrollPaused) return;
-
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => {
-        const next = (prev + 1) % INFO_CARDS.length;
-        scrollToIndex(next);
-        return next;
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoScrollPaused, scrollToIndex]);
+  const scrollTo = useCallback(
+    (index: number) => {
+      api?.scrollTo(index);
+    },
+    [api],
+  );
 
   return (
     <section className="flex flex-col gap-4">
@@ -64,46 +86,59 @@ export default function InfoCardCarousel() {
         Buat amunisian yang mau kejar UTBK
       </h2>
 
-      {/* Scrollable Cards */}
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 scrollbar-hide"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        onMouseEnter={() => setIsAutoScrollPaused(true)}
-        onMouseLeave={() => setIsAutoScrollPaused(false)}
+      <Carousel
+        setApi={setApi}
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+        plugins={[
+          Autoplay({
+            delay: 4000,
+            stopOnInteraction: false,
+            stopOnMouseEnter: true,
+          }),
+        ]}
+        className="w-full"
       >
-        {INFO_CARDS.map((card, index) => (
-          <div
-            key={index}
-            className="shrink-0 w-[260px] md:w-[280px] snap-start rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-          >
-            <div className="relative w-full aspect-[4/3]">
-              <Image
-                src={card.src}
-                alt={card.alt}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 260px, 280px"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+        <CarouselContent className="-ml-3">
+          {INFO_CARDS.map((card, index) => (
+            <CarouselItem
+              key={index}
+              className="pl-3 basis-[75%] sm:basis-[55%] md:basis-[40%] lg:basis-[30%]"
+            >
+              <Link
+                href={card.href}
+                className="block group relative w-full h-[280px] rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+              >
+                <Image
+                  src={card.src}
+                  alt={card.alt}
+                  width={1080}
+                  height={1920}
+                  quality={100}
+                  unoptimized
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </Link>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
 
-      {/* Dot Indicators */}
-      <div className="flex justify-center gap-2">
-        {INFO_CARDS.map((_, index) => (
+      {/* Animated Dot Indicators */}
+      <div className="flex justify-center items-center gap-1.5">
+        {Array.from({ length: snapCount }).map((_, index) => (
           <button
             key={index}
-            onClick={() => {
-              setActiveIndex(index);
-              scrollToIndex(index);
-            }}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+            onClick={() => scrollTo(index)}
+            className={cn(
+              "rounded-full transition-all duration-300 ease-out",
               index === activeIndex
-                ? "bg-primary scale-110"
-                : "bg-gray-300 hover:bg-gray-400"
-            }`}
+                ? "w-6 h-2 bg-primary"
+                : "w-2 h-2 bg-gray-300 hover:bg-gray-400",
+            )}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
