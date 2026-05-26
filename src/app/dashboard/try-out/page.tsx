@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import TryoutCardSkeleton from "@/components/molecules/card/TryoutCardSkeleton";
 
 const FILTER_OPTIONS = [
   "Semua Tryout",
@@ -39,7 +40,9 @@ export default function TryoutPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
 
-  const { data: tryoutsData } = useGetUserTryouts({ token });
+  const { data: tryoutsData, isFetching: isLoading } = useGetUserTryouts({
+    token,
+  });
   const tryouts = tryoutsData?.data || [];
 
   const { data: historyData } = useGetHistoryTryout({ token });
@@ -65,23 +68,40 @@ export default function TryoutPage() {
       .filter(
         (item) =>
           item.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          (categoryFilter === "Semua" || item.category?.toUpperCase() === categoryFilter) &&
+          (categoryFilter === "Semua" ||
+            item.category?.toUpperCase() === categoryFilter) &&
           (activeFilter === "Semua Tryout" ||
             (activeFilter === "Tryout Premium" && item.type === "Premium") ||
             (activeFilter === "Tryout Gratis" && item.type === "Gratis") ||
-            (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id)))
+            (activeFilter === "Terdaftar" && enrolledTryoutIds.has(item.id))),
       )
       .sort((a, b) => {
-        if (sortBy === "newest") return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
-        if (sortBy === "oldest") return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+        if (sortBy === "newest")
+          return (
+            new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+          );
+        if (sortBy === "oldest")
+          return (
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          );
         if (sortBy === "title") return a.title.localeCompare(b.title);
-        if (sortBy === "participants") return b.participantsCount - a.participantsCount;
+        if (sortBy === "participants")
+          return b.participantsCount - a.participantsCount;
 
         const statusDiff = getStatusOrder(a) - getStatusOrder(b);
         if (statusDiff !== 0) return statusDiff;
-        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+        return (
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
       });
-  }, [activeFilter, categoryFilter, enrolledTryoutIds, searchQuery, sortBy, tryouts]);
+  }, [
+    activeFilter,
+    categoryFilter,
+    enrolledTryoutIds,
+    searchQuery,
+    sortBy,
+    tryouts,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -122,7 +142,10 @@ export default function TryoutPage() {
         {/* Title and Subtitle */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/dashboard" className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer text-gray-800">
+            <Link
+              href="/dashboard"
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer text-gray-800"
+            >
               <ChevronLeft className="w-6 h-6" />
             </Link>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">
@@ -144,7 +167,7 @@ export default function TryoutPage() {
             <KeyRound className="w-4 h-4" />
             <span>Kode Akses</span>
           </button>
-          <Link 
+          <Link
             href="/dashboard/try-out/riwayat"
             className="flex items-center gap-2 bg-[#3C8D60] hover:bg-[#327851] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors w-fit md:mt-0"
           >
@@ -186,7 +209,10 @@ export default function TryoutPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+          <Select
+            value={categoryFilter}
+            onValueChange={handleCategoryFilterChange}
+          >
             <SelectTrigger className="h-10 w-full bg-white sm:w-36">
               <SelectValue placeholder="Jenis TO" />
             </SelectTrigger>
@@ -212,46 +238,63 @@ export default function TryoutPage() {
         </div>
       </div>
 
-      {/* Tryout Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 pt-4">
-        {paginatedData.map((item) => (
-          <TryoutCard
-            key={item.id}
-            id={item.id}
-            title={item.title}
-            type={item.type}
-            category={item.category}
-            startDate={item.startDate}
-            endDate={item.endDate}
-            imageUrl={item.image_url}
-            participantsCount={item.participantsCount}
-            isEnrolled={item.isEnrolled || enrolledTryoutIds.has(item.id)}
-            hasAttempted={item.hasAttempted || historyMap.get(item.id)?.hasAttempted || false}
-          />
-        ))}
-      </div>
-      
-      {filteredData.length === 0 && (
-        <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
-          <p>Tidak ada tryout yang ditemukan.</p>
-        </div>
-      )}
+      <div className="pt-4">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+            {Array.from({ length: itemsPerPage }).map((_, index) => (
+              <TryoutCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+              {paginatedData.map((item) => (
+                <TryoutCard
+                  key={item.id}
+                  id={item.id}
+                  title={item.title}
+                  type={item.type}
+                  category={item.category}
+                  startDate={item.startDate}
+                  endDate={item.endDate}
+                  imageUrl={item.image_url}
+                  participantsCount={item.participantsCount}
+                  isEnrolled={item.isEnrolled || enrolledTryoutIds.has(item.id)}
+                  hasAttempted={
+                    item.hasAttempted ||
+                    historyMap.get(item.id)?.hasAttempted ||
+                    false
+                  }
+                />
+              ))}
+            </div>
 
-      {filteredData.length > 0 && (
-        <SmartPagination
-          page={safeCurrentPage}
-          totalItems={filteredData.length}
-          perPage={itemsPerPage}
-          perPageOptions={PER_PAGE_OPTIONS}
-          itemLabel="tryout"
-          onPageChange={setCurrentPage}
-          onPerPageChange={handleItemsPerPageChange}
-        />
-      )}
+            {filteredData.length === 0 && (
+              <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
+                <p>Tidak ada tryout yang ditemukan.</p>
+              </div>
+            )}
+
+            {filteredData.length > 0 && (
+              <SmartPagination
+                page={safeCurrentPage}
+                totalItems={filteredData.length}
+                perPage={itemsPerPage}
+                perPageOptions={PER_PAGE_OPTIONS}
+                itemLabel="tryout"
+                onPageChange={setCurrentPage}
+                onPerPageChange={handleItemsPerPageChange}
+              />
+            )}
+          </>
+        )}
+      </div>
 
       {/* Redeem Code Dialog */}
-      <DialogRedeemCode open={showRedeemDialog} onOpenChange={setShowRedeemDialog} />
+      <DialogRedeemCode
+        open={showRedeemDialog}
+        onOpenChange={setShowRedeemDialog}
+      />
     </div>
   );
 }
-
