@@ -10,7 +10,7 @@ import { useGetSubtestByTryout } from "@/http/subtest/get-subtest-by-tryout";
 import { DataTable } from "@/components/molecules/datatable/DataTable";
 import { subtestTryoutColumns } from "@/components/atoms/datacolumn/DataSubtestByTryout";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { useState } from "react";
 import DialogCreateSubtestTryout from "@/components/atoms/dialog/subtest/DialogCreateSubtestTryout";
 import Image from "next/image";
@@ -19,6 +19,7 @@ import AlertDialogDeleteSubtest from "@/components/atoms/alert-dialog/subtest/Al
 import { SubtestByTryout } from "@/types/subtest/subtest";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface DashboardAdminTryoutDetailWrapperProps {
   id: string;
@@ -31,19 +32,23 @@ export default function DashboardAdminTryoutDetailWrapper({
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedSubtest, setSelectedSubtest] = useState<SubtestByTryout | null>(null);
+  const [selectedSubtest, setSelectedSubtest] =
+    useState<SubtestByTryout | null>(null);
 
-  const { mutate: deleteSubtest, isPending: isDeleting } = useDeleteSubtestFromTryout({
-    onSuccess: () => {
-      toast.success("Subtes berhasil dihapus dari tryout.");
-      setDeleteDialogOpen(false);
-      setSelectedSubtest(null);
-      queryClient.invalidateQueries({ queryKey: ["get-subtest-by-tryout", id] });
-    },
-    onError: () => {
-      toast.error("Gagal menghapus subtes dari tryout.");
-    },
-  });
+  const { mutate: deleteSubtest, isPending: isDeleting } =
+    useDeleteSubtestFromTryout({
+      onSuccess: () => {
+        toast.success("Subtes berhasil dihapus dari tryout.");
+        setDeleteDialogOpen(false);
+        setSelectedSubtest(null);
+        queryClient.invalidateQueries({
+          queryKey: ["get-subtest-by-tryout", id],
+        });
+      },
+      onError: () => {
+        toast.error("Gagal menghapus subtes dari tryout.");
+      },
+    });
 
   const handleDeleteClick = (data: SubtestByTryout) => {
     setSelectedSubtest(data);
@@ -173,12 +178,21 @@ export default function DashboardAdminTryoutDetailWrapper({
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-4">
               <h3 className="font-medium text-lg">Subtes</h3>
-              <Button size={"lg"} onClick={handleOpenDialog}>
-                <Plus /> Tambahkan Subtes
-              </Button>
+              <div className="flex gap-3 items-center">
+                <Button size={"lg"} variant={"outline"} asChild>
+                  <Link href={`/dashboard/admin/try-out/${id}/result`}>
+                    <Eye /> Lihat Hasil
+                  </Link>
+                </Button>
+                <Button size={"lg"} onClick={handleOpenDialog}>
+                  <Plus /> Tambahkan Subtes
+                </Button>
+              </div>
             </div>
             <DataTable
-              columns={subtestTryoutColumns({ deleteHandler: handleDeleteClick })}
+              columns={subtestTryoutColumns({
+                deleteHandler: handleDeleteClick,
+              })}
               data={subtest?.data ?? []}
               isLoading={isPendingSubtest}
             />
