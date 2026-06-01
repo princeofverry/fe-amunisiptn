@@ -4,7 +4,10 @@ import { useEffect, useRef } from "react";
 import type { ExamQuestion } from "@/types/exam/exam";
 import RichTextRenderer from "@/components/atoms/rich-text/RichTextRenderer";
 import RichTextEditor from "@/components/atoms/rich-text/RichTextEditor";
-import { getReviewOptionState, type TryoutLayoutMode } from "@/utils/tryout-review";
+import {
+  getReviewOptionState,
+  type TryoutLayoutMode,
+} from "@/utils/tryout-review";
 
 interface QuestionViewProps {
   question: ExamQuestion;
@@ -29,7 +32,7 @@ export default function QuestionView({
   hasNext,
   mode = "attempt",
 }: QuestionViewProps) {
-  const isReviewMode = mode === "review";
+  const isReviewMode = mode === "review" || mode === "admin-review";
   const isEssay = question.question_type === "essay";
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,7 +89,10 @@ export default function QuestionView({
                   Essay: Otomatis Benar
                 </div>
                 {selectedAnswer ? (
-                  <RichTextRenderer html={selectedAnswer} className="text-gray-800" />
+                  <RichTextRenderer
+                    html={selectedAnswer}
+                    className="text-gray-800"
+                  />
                 ) : (
                   <p className="text-sm text-gray-500">Tidak ada jawaban.</p>
                 )}
@@ -102,98 +108,105 @@ export default function QuestionView({
             )}
           </div>
         ) : (
-        <div className="flex flex-col gap-3">
-          {question.options.map((option, index) => {
-            const isSelected = selectedAnswer === option.option_key;
-            const visualOptionKey = String.fromCharCode(65 + index);
-            const reviewState = getReviewOptionState({
-              optionKey: option.option_key,
-              userAnswer: selectedAnswer,
-              correctAnswer: question.correct_answer,
-            });
-            const isCorrectAnswer = reviewState === "correct_answer";
-            const isUserWrongAnswer = reviewState === "user_wrong_answer";
+          <div className="flex flex-col gap-3">
+            {question.options.map((option, index) => {
+              const isSelected = selectedAnswer === option.option_key;
+              const visualOptionKey = String.fromCharCode(65 + index);
+              const reviewState = getReviewOptionState({
+                optionKey: option.option_key,
+                userAnswer: selectedAnswer,
+                correctAnswer: question.correct_answer,
+              });
+              const isCorrectAnswer = reviewState === "correct_answer";
+              const isUserWrongAnswer = reviewState === "user_wrong_answer";
 
-            const optionClass = isReviewMode
-              ? isCorrectAnswer
-                ? "border-green-500 bg-green-100 text-green-900"
-                : isUserWrongAnswer
-                ? "border-red-400 bg-red-100 text-red-900"
-                : "border-gray-200 bg-white text-gray-900"
-              : isSelected
-              ? "border-[#004AAB] bg-[#EBF4FF]"
-              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50";
+              const optionClass = isReviewMode
+                ? isCorrectAnswer
+                  ? "border-green-500 bg-green-100 text-green-900"
+                  : isUserWrongAnswer
+                    ? "border-red-400 bg-red-100 text-red-900"
+                    : "border-gray-200 bg-white text-gray-900"
+                : isSelected
+                  ? "border-[#004AAB] bg-[#EBF4FF]"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50";
 
-            const markerClass = isReviewMode
-              ? isCorrectAnswer
-                ? "bg-green-600 text-white"
-                : isUserWrongAnswer
-                ? "bg-red-500 text-white"
-                : "bg-gray-100 text-gray-600"
-              : isSelected
-              ? "bg-[#004AAB] text-white"
-              : "bg-gray-100 text-gray-600";
+              const markerClass = isReviewMode
+                ? isCorrectAnswer
+                  ? "bg-green-600 text-white"
+                  : isUserWrongAnswer
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-100 text-gray-600"
+                : isSelected
+                  ? "bg-[#004AAB] text-white"
+                  : "bg-gray-100 text-gray-600";
 
-            const textClass = isReviewMode
-              ? isCorrectAnswer
-                ? "text-green-900 font-semibold"
-                : isUserWrongAnswer
-                ? "text-red-900 font-semibold"
-                : "text-gray-700"
-              : isSelected
-              ? "text-[#004AAB] font-semibold"
-              : "text-gray-700";
+              const textClass = isReviewMode
+                ? isCorrectAnswer
+                  ? "text-green-900 font-semibold"
+                  : isUserWrongAnswer
+                    ? "text-red-900 font-semibold"
+                    : "text-gray-700"
+                : isSelected
+                  ? "text-[#004AAB] font-semibold"
+                  : "text-gray-700";
 
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => handleOptionClick(option.option_key)}
-                disabled={isReviewMode}
-                className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all disabled:cursor-default ${optionClass}`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${markerClass}`}
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => handleOptionClick(option.option_key)}
+                  disabled={isReviewMode}
+                  className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all disabled:cursor-default ${optionClass}`}
                 >
-                  {visualOptionKey}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <RichTextRenderer
-                    html={option.option_text}
-                    className={`pt-1 ${textClass}`}
-                  />
-                  {isReviewMode && (isCorrectAnswer || isUserWrongAnswer) && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {isCorrectAnswer && (
-                        <span className="rounded-full bg-green-600 px-2.5 py-1 text-xs font-bold text-white">
-                          Kunci Jawaban
-                        </span>
-                      )}
-                      {isSelected && (
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                            isUserWrongAnswer
-                              ? "bg-red-600 text-white"
-                              : "bg-green-700 text-white"
-                          }`}
-                        >
-                          Jawaban Kamu
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${markerClass}`}
+                  >
+                    {visualOptionKey}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <RichTextRenderer
+                      html={option.option_text}
+                      className={`pt-1 ${textClass}`}
+                    />
+                    {isReviewMode && (isCorrectAnswer || isUserWrongAnswer) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {isCorrectAnswer && (
+                          <span className="rounded-full bg-green-600 px-2.5 py-1 text-xs font-bold text-white">
+                            Kunci Jawaban
+                          </span>
+                        )}
+                        {isSelected && (
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                              isUserWrongAnswer
+                                ? "bg-red-600 text-white"
+                                : "bg-green-700 text-white"
+                            }`}
+                          >
+                            {mode === "admin-review"
+                              ? "Jawaban Pengguna"
+                              : "Jawaban Kamu"}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         )}
 
         {isReviewMode && (
           <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-5">
-            <h3 className="mb-3 text-sm font-bold text-[#004AAB]">Pembahasan</h3>
+            <h3 className="mb-3 text-sm font-bold text-[#004AAB]">
+              Pembahasan
+            </h3>
             {question.discussion ? (
-              <RichTextRenderer html={question.discussion} className="text-gray-700" />
+              <RichTextRenderer
+                html={question.discussion}
+                className="text-gray-700"
+              />
             ) : (
               <p className="text-sm leading-relaxed text-gray-600">
                 Pembahasan belum tersedia untuk soal ini.
@@ -220,7 +233,9 @@ export default function QuestionView({
           onClick={onPrev}
           disabled={!hasPrev}
           className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-            hasPrev ? "text-gray-600 hover:text-gray-900" : "text-gray-300 cursor-not-allowed"
+            hasPrev
+              ? "text-gray-600 hover:text-gray-900"
+              : "text-gray-300 cursor-not-allowed"
           }`}
         >
           <span>{"<"}</span>

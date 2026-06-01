@@ -21,7 +21,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Trophy,
@@ -299,7 +298,7 @@ function LeaderboardTableRow({
       <TableCell className="text-right">
         <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
           <Link
-            href={`/dashboard/admin/try-out/${tryoutId}/result/${entry.user_id}`}
+            href={`/dashboard/admin/try-out/${tryoutId}/result/${entry.user_id}?attempt=${entry.attempt_number}`}
           >
             <Eye className="w-3 h-3 mr-1" />
             Detail
@@ -362,13 +361,13 @@ function LeaderboardSkeleton() {
           </Card>
         ))}
       </div>
-      <Card>
+      <Card className="overflow-hidden w-full">
         <CardHeader>
           <Skeleton className="h-5 w-44" />
           <Skeleton className="h-3.5 w-60" />
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[900px] w-full">
             <TableBody>
               {Array.from({ length: 5 }).map((_, i) => (
                 <TableRowSkeleton key={i} />
@@ -497,12 +496,12 @@ export default function DashboardAdminTryoutLeaderboardWrapper({
       )}
 
       {/* Table */}
-      <Card>
+      <Card className="overflow-hidden w-full">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Peringkat Peserta</CardTitle>
+            <CardTitle className="text-base">Hasil Tryout Peserta</CardTitle>
             <CardDescription>
-              Daftar peringkat peserta berdasarkan skor akhir tryout
+              Daftar hasil tryout berdasarkan skor
             </CardDescription>
           </div>
           <Badge variant="secondary" className="shrink-0 text-xs">
@@ -510,34 +509,32 @@ export default function DashboardAdminTryoutLeaderboardWrapper({
           </Badge>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <ScrollArea className="max-h-[600px]">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-[60px] text-center">#</TableHead>
-                  <TableHead>Peserta</TableHead>
-                  <TableHead className="text-center">Total Soal</TableHead>
-                  <TableHead className="text-center">Dijawab</TableHead>
-                  <TableHead className="text-center">Tdk Dijawab</TableHead>
-                  <TableHead className="text-center">Benar</TableHead>
-                  <TableHead className="text-center">Salah</TableHead>
-                  <TableHead className="text-center">Akurasi</TableHead>
-                  <TableHead className="text-right">Skor</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaderboard.map((entry) => (
-                  <LeaderboardTableRow
-                    key={entry.user_id}
-                    entry={entry}
-                    tryoutId={tryoutId}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[900px] w-full">
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="w-[60px] text-center">#</TableHead>
+                <TableHead>Peserta</TableHead>
+                <TableHead className="text-center">Total Soal</TableHead>
+                <TableHead className="text-center">Dijawab</TableHead>
+                <TableHead className="text-center">Tdk Dijawab</TableHead>
+                <TableHead className="text-center">Benar</TableHead>
+                <TableHead className="text-center">Salah</TableHead>
+                <TableHead className="text-center">Akurasi</TableHead>
+                <TableHead className="text-right">Skor</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {leaderboard.map((entry, index) => (
+                <LeaderboardTableRow
+                  key={`${entry.user_id}-${entry.attempt_number}-${index}`}
+                  entry={entry}
+                  tryoutId={tryoutId}
+                />
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </section>

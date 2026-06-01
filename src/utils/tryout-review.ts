@@ -1,17 +1,24 @@
 import type { ReviewQuestion } from "@/types/exam/exam";
 
-export type TryoutLayoutMode = "attempt" | "review";
+export type TryoutLayoutMode = "attempt" | "review" | "admin-review";
 export type ReviewQuestionStatus = "correct" | "incorrect" | "unanswered";
-export type ReviewOptionState = "correct_answer" | "user_wrong_answer" | "neutral";
+export type ReviewOptionState =
+  | "correct_answer"
+  | "user_wrong_answer"
+  | "neutral";
 
-export function getReviewQuestionStatus(question: ReviewQuestion): ReviewQuestionStatus {
+export function getReviewQuestionStatus(
+  question: ReviewQuestion,
+): ReviewQuestionStatus {
   if (!question.my_answer) return "unanswered";
   if (question.question.question_type === "essay") {
     return question.is_correct ? "correct" : "incorrect";
   }
   if (!question.question.correct_answer) return "unanswered";
 
-  return question.my_answer === question.question.correct_answer ? "correct" : "incorrect";
+  return question.my_answer === question.question.correct_answer
+    ? "correct"
+    : "incorrect";
 }
 
 export function getReviewOptionState({
