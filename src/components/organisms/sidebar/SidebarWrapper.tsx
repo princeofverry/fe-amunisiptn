@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,6 +17,15 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Users,
@@ -41,6 +51,7 @@ interface SidebarWrapperProps {
 
 export function SidebarWrapper({ session }: SidebarWrapperProps) {
   const pathname = usePathname();
+  const [waModalOpen, setWaModalOpen] = useState(false);
 
   const role = session?.user.role as keyof typeof DASHBOARD_MENU;
 
@@ -303,18 +314,11 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
 
                   <SidebarMenuItem className="w-full relative">
                     <SidebarMenuButton
-                      asChild
-                      className="h-11 justify-start px-4 rounded-xl transition-all w-full flex items-center text-[#9695A5] hover:bg-[#EBF4FF] hover:text-[#004AAB]"
+                      className="h-11 justify-start px-4 rounded-xl transition-all w-full flex items-center text-[#9695A5] hover:bg-[#EBF4FF] hover:text-[#004AAB] cursor-pointer"
+                      onClick={() => setWaModalOpen(true)}
                     >
-                      <a
-                        href="https://wa.me/6281398169073"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center w-full gap-3"
-                      >
-                        <LifeBuoy className="w-5 h-5 shrink-0" />
-                        <span>Pusat Bantuan</span>
-                      </a>
+                      <LifeBuoy className="w-5 h-5 shrink-0" />
+                      <span>Pusat Bantuan</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -331,6 +335,34 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
           <SidebarUser session={session} />
         </SidebarFooter>
       )}
+
+      <Dialog open={waModalOpen} onOpenChange={setWaModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LifeBuoy className="w-5 h-5 text-[#004AAB]" />
+              Pusat Bantuan
+            </DialogTitle>
+            <DialogDescription>
+              Kamu akan diarahkan ke WhatsApp untuk menghubungi tim kami. Lanjutkan?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row justify-end gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setWaModalOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              className="bg-[#25D366] hover:bg-[#1ebe5d] text-white"
+              onClick={() => {
+                window.open("https://wa.me/6281398169073", "_blank", "noopener,noreferrer");
+                setWaModalOpen(false);
+              }}
+            >
+              Ya, Buka WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }
