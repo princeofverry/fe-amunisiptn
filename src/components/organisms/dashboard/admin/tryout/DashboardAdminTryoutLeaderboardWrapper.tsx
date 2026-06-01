@@ -298,7 +298,7 @@ function LeaderboardTableRow({
       <TableCell className="text-right">
         <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
           <Link
-            href={`/dashboard/admin/try-out/${tryoutId}/result/${entry.user_id}`}
+            href={`/dashboard/admin/try-out/${tryoutId}/result/${entry.user_id}?attempt=${entry.attempt_number}`}
           >
             <Eye className="w-3 h-3 mr-1" />
             Detail
