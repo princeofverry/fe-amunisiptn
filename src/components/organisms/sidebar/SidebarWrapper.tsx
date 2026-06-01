@@ -41,6 +41,7 @@ import {
   TrendingUp,
   Gift,
   LifeBuoy,
+  Ticket,
 } from "lucide-react";
 import { SidebarUser } from "./SidebarUser";
 import { DASHBOARD_MENU } from "@/constants/dashboard-menu";
@@ -308,6 +309,22 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       <Link href="/dashboard/pembelian" className="flex items-center w-full gap-3">
                         <ShoppingCart className="w-5 h-5 shrink-0" />
                         <span>Pembelian</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem className="w-full relative">
+                    <SidebarMenuButton
+                      asChild
+                      className={`h-11 justify-start px-4 rounded-xl transition-all w-full flex items-center ${
+                        pathname.startsWith("/dashboard/tiket")
+                          ? "bg-[#EBF4FF] text-[#004AAB] font-semibold"
+                          : "text-[#9695A5] hover:bg-[#EBF4FF] hover:text-[#004AAB]"
+                      }`}
+                    >
+                      <Link href="/dashboard/tiket/riwayat" className="flex items-center w-full gap-3">
+                        <Ticket className="w-5 h-5 shrink-0" />
+                        <span>Riwayat Tiket</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
