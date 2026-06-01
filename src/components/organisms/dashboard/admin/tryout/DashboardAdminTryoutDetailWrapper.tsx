@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetDetailTryout } from "@/http/tryout/get-detail-tryout";
+import { useExportTryoutPdf } from "@/http/tryout/export-tryout-pdf";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { id as IdLocale } from "date-fns/locale";
@@ -10,7 +11,7 @@ import { useGetSubtestByTryout } from "@/http/subtest/get-subtest-by-tryout";
 import { DataTable } from "@/components/molecules/datatable/DataTable";
 import { subtestTryoutColumns } from "@/components/atoms/datacolumn/DataSubtestByTryout";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, Download } from "lucide-react";
 import { useState } from "react";
 import DialogCreateSubtestTryout from "@/components/atoms/dialog/subtest/DialogCreateSubtestTryout";
 import Image from "next/image";
@@ -34,6 +35,30 @@ export default function DashboardAdminTryoutDetailWrapper({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSubtest, setSelectedSubtest] =
     useState<SubtestByTryout | null>(null);
+  const { mutate: exportPdf, isPending: isDownloadingPdf } = useExportTryoutPdf(
+    {
+      onSuccess: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Tryout_${data?.data.title?.replace(/\s+/g, "_") ?? "Package"}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        toast.success("PDF berhasil diunduh");
+      },
+      onError: (error) => {
+        console.error(error);
+        toast.error("Gagal mengunduh PDF");
+      },
+    },
+  );
+
+  const handleDownloadPdf = () => {
+    if (!session?.access_token) return;
+    exportPdf({ tryoutId: id, token: session.access_token });
+  };
 
   const { mutate: deleteSubtest, isPending: isDeleting } =
     useDeleteSubtestFromTryout({
@@ -183,6 +208,17 @@ export default function DashboardAdminTryoutDetailWrapper({
                   <Link href={`/dashboard/admin/try-out/${id}/result`}>
                     <Eye /> Lihat Hasil
                   </Link>
+                </Button>
+                <Button
+                  size={"lg"}
+                  variant={"outline"}
+                  onClick={handleDownloadPdf}
+                  disabled={isDownloadingPdf}
+                >
+                  <Download
+                    className={isDownloadingPdf ? "animate-pulse" : ""}
+                  />{" "}
+                  Download PDF
                 </Button>
                 <Button size={"lg"} onClick={handleOpenDialog}>
                   <Plus /> Tambahkan Subtes
