@@ -29,6 +29,7 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
   const kelas = data?.data;
 
   const [paymentState, setPaymentState] = useState<PaymentState>("idle");
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const currentOrderId = useRef<string | null>(null);
   const paymentCompleted = useRef(false);
 
@@ -81,6 +82,21 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
             paymentCompleted.current = true;
             setPaymentState("pending");
             queryClient.invalidateQueries({ queryKey: ["get-my-kelas"] });
+            // Safety net untuk QRIS: verifyPayment agar tiket masuk
+            // meski webhook terlambat atau gagal dikirim Midtrans
+            if (currentOrderId.current) {
+              verifyKelasPayment(
+                { orderId: currentOrderId.current, token },
+                {
+                  onSuccess: (res) => {
+                    if (res.status === "paid") {
+                      setPaymentState("success");
+                      queryClient.invalidateQueries({ queryKey: ["get-my-kelas"] });
+                    }
+                  },
+                }
+              );
+            }
           },
           onError: () => {
             paymentCompleted.current = true;
@@ -178,12 +194,39 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
           Pembayaranmu sedang diproses. Pendaftaran kelas akan aktif otomatis
           setelah pembayaran dikonfirmasi.
         </p>
-        <Link
-          href="/dashboard/kelas/saya"
-          className="w-full py-3 bg-[#004AAB] hover:bg-[#003B8A] text-white font-semibold rounded-lg transition-colors text-center block"
-        >
-          Lihat Kelas Saya
-        </Link>
+        <div className="flex flex-col gap-3 w-full">
+          <button
+            disabled={isCheckingStatus}
+            onClick={() => {
+              if (!currentOrderId.current) return;
+              setIsCheckingStatus(true);
+              verifyKelasPayment(
+                { orderId: currentOrderId.current, token },
+                {
+                  onSuccess: (res) => {
+                    if (res.status === "paid") {
+                      setPaymentState("success");
+                      queryClient.invalidateQueries({ queryKey: ["get-my-kelas"] });
+                    } else {
+                      toast.info("Pembayaran belum terkonfirmasi. Coba beberapa saat lagi.");
+                    }
+                  },
+                  onError: () => toast.error("Gagal mengecek status. Coba lagi."),
+                  onSettled: () => setIsCheckingStatus(false),
+                }
+              );
+            }}
+            className="w-full py-3 border border-[#004AAB] text-[#004AAB] font-semibold rounded-lg hover:bg-[#EBF4FF] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isCheckingStatus ? "Mengecek..." : "Cek Status Pembayaran"}
+          </button>
+          <Link
+            href="/dashboard/kelas/saya"
+            className="w-full py-3 bg-[#004AAB] hover:bg-[#003B8A] text-white font-semibold rounded-lg transition-colors text-center block"
+          >
+            Lihat Kelas Saya
+          </Link>
+        </div>
       </div>
     );
   }

@@ -34,6 +34,8 @@ export default function RiwayatTiketPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
 
+  const realBalance = session?.user?.ticket_balance ?? 0;
+
   const { data, isLoading } = useGetTicketLogs({ token });
   const logs = useMemo(() => data?.data || [], [data?.data]);
 
@@ -62,12 +64,6 @@ export default function RiwayatTiketPage() {
   );
 
   const resetPage = () => setCurrentPage(1);
-
-  const totalBalance = useMemo(() => {
-    return logs.reduce((acc: number, log: TicketLog) => {
-      return log.type === "credit" ? acc + log.amount : acc - log.amount;
-    }, 0);
-  }, [logs]);
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -98,7 +94,7 @@ export default function RiwayatTiketPage() {
           </div>
           <div className="bg-[#EBF4FF] rounded-2xl border border-[#004AAB]/20 p-5 text-center shadow-sm">
             <p className="text-sm text-[#004AAB] mb-1">Saldo Tiket</p>
-            <p className="text-2xl font-bold text-[#004AAB]">{totalBalance}</p>
+            <p className="text-2xl font-bold text-[#004AAB]">{realBalance}</p>
           </div>
         </div>
       )}
@@ -184,6 +180,10 @@ export default function RiwayatTiketPage() {
           </div>
         )}
       </div>
+
+      <p className="text-xs text-slate-400 text-center">
+        Riwayat hanya mencakup transaksi setelah sistem log diaktifkan.
+      </p>
 
       {filtered.length > 0 && (
         <SmartPagination
