@@ -2,6 +2,7 @@
 
 import { useGetTryoutLeaderboard } from "@/http/tryout/get-tryout-leaderboard";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 import type { LeaderboardEntry } from "@/types/exam/exam";
 import {
   Card,
@@ -23,6 +24,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Trophy,
   Medal,
   Target,
@@ -35,6 +43,8 @@ import {
   Users,
   Clock,
   BarChart2,
+  Images,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { formatJakartaDateTime } from "@/utils/date-time";
@@ -164,9 +174,11 @@ function StatPip({
 function LeaderboardTableRow({
   entry,
   tryoutId,
+  onViewProof,
 }: {
   entry: LeaderboardEntry;
   tryoutId: string;
+  onViewProof: (entry: LeaderboardEntry) => void;
 }) {
   const rankStyle = getRankStyle(entry.rank);
   const finishedAt = entry.finished_at
@@ -296,16 +308,84 @@ function LeaderboardTableRow({
 
       {/* Aksi */}
       <TableCell className="text-right">
-        <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-          <Link
-            href={`/dashboard/admin/try-out/${tryoutId}/result/${entry.user_id}?attempt=${entry.attempt_number}`}
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Detail
-          </Link>
-        </Button>
+        <div className="flex justify-end gap-2">
+          {(entry.proof_image_urls?.length ?? 0) > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => onViewProof(entry)}
+            >
+              <Images className="w-3 h-3 mr-1" />
+              Bukti
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+            <Link
+              href={`/dashboard/admin/try-out/${tryoutId}/result/${entry.user_id}?attempt=${entry.attempt_number}`}
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Detail
+            </Link>
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+function ProofImagesDialog({
+  entry,
+  open,
+  onOpenChange,
+}: {
+  entry: LeaderboardEntry | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const proofUrls = entry?.proof_image_urls ?? [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Bukti Follow Instagram</DialogTitle>
+          <DialogDescription>
+            {entry?.user_name ?? "Peserta"} mengunggah {proofUrls.length} gambar bukti.
+          </DialogDescription>
+        </DialogHeader>
+
+        {proofUrls.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-1">
+            {proofUrls.map((url, index) => (
+              <div key={`${url}-${index}`} className="overflow-hidden rounded-lg border bg-background">
+                <img
+                  src={url}
+                  alt={`Bukti follow ${index + 1}`}
+                  className="h-64 w-full object-contain bg-muted"
+                />
+                <div className="flex items-center justify-between gap-3 border-t px-3 py-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Bukti {index + 1}
+                  </span>
+                  <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Buka
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border bg-muted/40 px-4 py-8 text-center text-sm text-muted-foreground">
+            Belum ada bukti gambar.
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -414,6 +494,7 @@ export default function DashboardAdminTryoutLeaderboardWrapper({
   tryoutId,
 }: DashboardAdminTryoutLeaderboardWrapperProps) {
   const { data: session } = useSession();
+  const [selectedProofEntry, setSelectedProofEntry] = useState<LeaderboardEntry | null>(null);
 
   const { data, isPending } = useGetTryoutLeaderboard({
     token: session?.access_token ?? "",
@@ -531,12 +612,21 @@ export default function DashboardAdminTryoutLeaderboardWrapper({
                   key={`${entry.user_id}-${entry.attempt_number}-${index}`}
                   entry={entry}
                   tryoutId={tryoutId}
+                  onViewProof={setSelectedProofEntry}
                 />
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <ProofImagesDialog
+        entry={selectedProofEntry}
+        open={!!selectedProofEntry}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProofEntry(null);
+        }}
+      />
     </section>
   );
 }

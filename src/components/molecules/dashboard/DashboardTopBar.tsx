@@ -113,7 +113,7 @@ export default function DashboardTopBar({ userName }: DashboardTopBarProps) {
               <Bell className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[300px] p-2" sideOffset={8}>
+          <DropdownMenuContent align="end" className="w-75 p-2" sideOffset={8}>
             <DropdownMenuLabel className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-2">
               Notifikasi
             </DropdownMenuLabel>

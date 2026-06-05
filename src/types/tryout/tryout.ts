@@ -24,6 +24,18 @@ export interface Tryout {
   user_started_at?: Date | string | null;
   user_finished_at?: Date | string | null;
   user_attempts?: TryoutAttemptHistory[];
+  user_accesses?: UserTryoutAccess[];
+}
+
+export interface UserTryoutAccess {
+  id: string;
+  user_id: string;
+  tryout_id: string;
+  proof_image?: string | null;
+  proof_images?: string[] | null;
+  proof_image_urls?: string[];
+  granted_at?: Date | string | null;
+  user?: User;
 }
 
 export interface TryoutAttemptHistory {

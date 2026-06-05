@@ -91,6 +91,8 @@ export interface LeaderboardEntry {
     raw_score: number;
     final_score: number;
   };
+  proof_images?: string[];
+  proof_image_urls?: string[];
 }
 
 export interface TryoutLeaderboardData {

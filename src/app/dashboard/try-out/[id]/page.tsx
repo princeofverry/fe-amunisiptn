@@ -2,7 +2,7 @@
 
 import { useState, use } from "react";
 import Link from "next/link";
-import { ChevronLeft, FileText, Clock, Ticket, Upload, X } from "lucide-react";
+import { ChevronLeft, FileText, Clock, Ticket, Upload, X, Instagram, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -119,6 +119,7 @@ export default function TryoutDetailPage({
 
   const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
   const MAX_FILE_SIZE_MB = 2;
+  const MIN_PROOF_IMAGES = 2;
   const MAX_PROOF_IMAGES = 5;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,9 +324,31 @@ export default function TryoutDetailPage({
                 <div>
                   <label className="font-semibold text-gray-800 text-sm mb-2 block">Bukti Follow Instagram</label>
                   <p className="text-xs text-gray-500 mb-3">
-                    Upload bukti follow akun Instagram https://www.instagram.com/amunisiptn/ dan https://www.instagram.com/aristyasheza/.
-                    Bisa upload lebih dari 1 foto.
+                    Follow kedua akun Instagram berikut, lalu upload minimal 2 foto bukti follow.
                   </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                    <a
+                      href="https://www.instagram.com/amunisiptn/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-pink-50 px-3 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
+                    >
+                      <Instagram className="w-4 h-4" />
+                      @amunisiptn
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <a
+                      href="https://www.instagram.com/aristyasheza/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-pink-50 px-3 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
+                    >
+                      <Instagram className="w-4 h-4" />
+                      @aristyasheza
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                   {proofPreviews.length > 0 && (
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       {proofPreviews.map((preview, index) => (
@@ -348,7 +371,7 @@ export default function TryoutDetailPage({
                       <Upload className="w-8 h-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-500 font-medium">Klik untuk upload bukti follow</span>
                       <span className="text-xs text-gray-400 mt-1 text-center px-4">
-                        Bukti follow https://www.instagram.com/amunisiptn/ dan https://www.instagram.com/aristyasheza/
+                        Minimal 2 foto bukti follow, maksimal {MAX_PROOF_IMAGES} foto
                       </span>
                       <span className="text-xs text-gray-400 mt-1">JPG, PNG, WebP, maks 2MB per foto</span>
                       <input
@@ -383,7 +406,7 @@ export default function TryoutDetailPage({
                 onClick={handleEnroll}
                 disabled={
                   enrollMutation.isPending || 
-                  (isFree && proofImages.length === 0) || 
+                  (isFree && proofImages.length < MIN_PROOF_IMAGES) || 
                   (!isFree && (ticketCount || 0) < 1)
                 }
                 className="flex-1 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
