@@ -16,7 +16,7 @@ import { notifyTicketBalanceUpdated } from "@/hooks/useTickets";
 type PaymentState = "idle" | "loading" | "success" | "pending" | "error";
 
 export default function DetailPaketPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const token = session?.access_token || "";
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -62,12 +62,19 @@ export default function DetailPaketPage() {
               verifyPayment(
                 { orderId: currentOrderId.current, token },
                 {
-                  onSettled: () => {
+                  onSuccess: (res) => {
                     queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
-                    notifyTicketBalanceUpdated({
-                      ticketBalance: (session?.user?.ticket_balance ?? 0) + (pkg?.ticketAmount ?? 0),
-                      suppressModal: true,
-                    });
+                    if (res.status === "paid") {
+                      // Gunakan nilai asli dari DB, bukan optimistic guess
+                      if (res.ticket_balance !== undefined) {
+                        notifyTicketBalanceUpdated({
+                          ticketBalance: res.ticket_balance,
+                          suppressModal: true,
+                        });
+                      }
+                      // Refresh session agar ticket_balance di JWT sync dengan DB
+                      update();
+                    }
                   },
                 }
               );

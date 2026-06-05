@@ -21,7 +21,7 @@ interface DetailKelasPageProps {
 
 export default function DetailKelasPage({ params }: DetailKelasPageProps) {
   const { id: kelasId } = use(params);
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const token = session?.access_token || "";
   const queryClient = useQueryClient();
 
@@ -64,14 +64,17 @@ export default function DetailKelasPage({ params }: DetailKelasPageProps) {
               verifyKelasPayment(
                 { orderId: currentOrderId.current, token },
                 {
-                  onSettled: () => {
-                    queryClient.invalidateQueries({
-                      queryKey: ["get-my-kelas"],
-                    });
-                    notifyTicketBalanceUpdated({
-                      ticketBalance: (session?.user?.ticket_balance ?? 0) + (kelas?.ticket_amount ?? 0),
-                      suppressModal: true,
-                    });
+                  onSuccess: (res) => {
+                    queryClient.invalidateQueries({ queryKey: ["get-my-kelas"] });
+                    if (res.status === "paid") {
+                      if (res.ticket_balance !== undefined) {
+                        notifyTicketBalanceUpdated({
+                          ticketBalance: res.ticket_balance,
+                          suppressModal: true,
+                        });
+                      }
+                      update();
+                    }
                   },
                 }
               );

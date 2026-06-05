@@ -10,6 +10,7 @@ interface VerifyPaymentPayload {
 interface VerifyPaymentResponse {
   message: string;
   status: string;
+  ticket_balance?: number;
 }
 
 export const VerifyPaymentHandler = async ({

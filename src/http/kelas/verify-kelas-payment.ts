@@ -10,6 +10,7 @@ interface VerifyKelasPaymentPayload {
 interface VerifyKelasPaymentResponse {
   message: string;
   status: string;
+  ticket_balance?: number;
 }
 
 export const VerifyKelasPaymentHandler = async ({
