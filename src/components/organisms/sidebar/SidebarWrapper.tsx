@@ -42,6 +42,7 @@ import {
   Gift,
   LifeBuoy,
   Ticket,
+  Images,
 } from "lucide-react";
 import { SidebarUser } from "./SidebarUser";
 import { DASHBOARD_MENU } from "@/constants/dashboard-menu";
@@ -138,6 +139,17 @@ export function SidebarWrapper({ session }: SidebarWrapperProps) {
                       <Link href="/dashboard/admin/try-out">
                         <BookOpen />
                         <span>Try Out</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={buttonClass("/dashboard/admin/bukti-follow")}
+                    >
+                      <Link href="/dashboard/admin/bukti-follow">
+                        <Images />
+                        <span>Bukti Follow</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
