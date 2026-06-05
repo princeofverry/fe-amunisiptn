@@ -190,6 +190,13 @@ export default function DetailPaketPage() {
                 {
                   onSuccess: (res) => {
                     if (res.status === "paid") {
+                      if (res.ticket_balance !== undefined) {
+                        notifyTicketBalanceUpdated({
+                          ticketBalance: res.ticket_balance,
+                          suppressModal: true,
+                        });
+                      }
+                      update();
                       setPaymentState("success");
                       queryClient.invalidateQueries({ queryKey: ["get-history-pembelian"] });
                     } else {
