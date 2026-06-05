@@ -11,13 +11,14 @@ interface EnrollResponse {
 export const EnrollTryoutHandler = async (
   tryoutId: string,
   token: string,
-  proofImage?: File
+  proofImages?: File[]
 ): Promise<EnrollResponse> => {
-  if (proofImage) {
-    // Free tryout — need to upload proof image
+  if (proofImages?.length) {
     const formData = new FormData();
-    formData.append("proof_image", proofImage);
-    
+    proofImages.forEach((proofImage) => {
+      formData.append("proof_images[]", proofImage);
+    });
+
     const { data } = await api.post<EnrollResponse>(
       `/tryouts/${tryoutId}/enroll`,
       formData,
@@ -28,15 +29,14 @@ export const EnrollTryoutHandler = async (
       }
     );
     return data;
-  } else {
-    // Premium tryout — just enroll with ticket
-    const { data } = await api.post<EnrollResponse>(
-      `/tryouts/${tryoutId}/enroll`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return data;
   }
+
+  const { data } = await api.post<EnrollResponse>(
+    `/tryouts/${tryoutId}/enroll`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return data;
 };
 
 export const useEnrollTryout = ({
@@ -44,11 +44,11 @@ export const useEnrollTryout = ({
   options,
 }: {
   token: string;
-  options?: Partial<UseMutationOptions<EnrollResponse, AxiosError, { tryoutId: string; proofImage?: File }>>;
+  options?: Partial<UseMutationOptions<EnrollResponse, AxiosError, { tryoutId: string; proofImages?: File[] }>>;
 }) => {
   return useMutation({
-    mutationFn: ({ tryoutId, proofImage }: { tryoutId: string; proofImage?: File }) =>
-      EnrollTryoutHandler(tryoutId, token, proofImage),
+    mutationFn: ({ tryoutId, proofImages }: { tryoutId: string; proofImages?: File[] }) =>
+      EnrollTryoutHandler(tryoutId, token, proofImages),
     ...options,
   });
 };

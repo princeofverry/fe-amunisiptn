@@ -2,7 +2,7 @@
 
 import { useState, use } from "react";
 import Link from "next/link";
-import { ChevronLeft, FileText, Clock, Ticket, Upload } from "lucide-react";
+import { ChevronLeft, FileText, Clock, Ticket, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,8 +36,8 @@ export default function TryoutDetailPage({
   const { ticketCount } = useTickets();
 
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
-  const [proofImage, setProofImage] = useState<File | null>(null);
-  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [proofImages, setProofImages] = useState<File[]>([]);
+  const [proofPreviews, setProofPreviews] = useState<string[]>([]);
 
   const { data: tryoutDetail, isLoading } = useGetUserTryoutDetail({
     id: tryoutId,
@@ -94,8 +94,8 @@ export default function TryoutDetailPage({
     options: {
       onSuccess: () => {
         setShowEnrollDialog(false);
-        setProofImage(null);
-        setProofPreview(null);
+        setProofImages([]);
+        setProofPreviews([]);
         toast.success(isFree ? "Berhasil mendaftar tryout!" : "Tiket berhasil digunakan! Kamu terdaftar untuk tryout ini.");
         updateSession();
         queryClient.invalidateQueries({ queryKey: ["get-user-tryouts"] });
@@ -113,33 +113,58 @@ export default function TryoutDetailPage({
   const handleEnroll = () => {
     enrollMutation.mutate({
       tryoutId,
-      proofImage: isFree ? proofImage || undefined : undefined,
+      proofImages: isFree ? proofImages : undefined,
     });
   };
 
   const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
   const MAX_FILE_SIZE_MB = 2;
+  const MAX_PROOF_IMAGES = 5;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const remainingSlots = MAX_PROOF_IMAGES - proofImages.length;
+    if (remainingSlots <= 0) {
+      toast.error(`Maksimal upload ${MAX_PROOF_IMAGES} gambar.`);
+      e.target.value = "";
+      return;
+    }
+
+    const files = selectedFiles.slice(0, remainingSlots);
+    if (selectedFiles.length > remainingSlots) {
+      toast.warning(`Hanya ${remainingSlots} gambar yang ditambahkan. Maksimal ${MAX_PROOF_IMAGES} gambar.`);
+    }
+
+    const invalidType = files.find((file) => !ALLOWED_TYPES.includes(file.type));
+    if (invalidType) {
       toast.error("Format gambar tidak didukung. Gunakan JPG, PNG, atau WebP.");
       e.target.value = "";
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    const oversizedFile = files.find((file) => file.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+    if (oversizedFile) {
       toast.error(`Ukuran gambar melebihi batas ${MAX_FILE_SIZE_MB}MB.`);
       e.target.value = "";
       return;
     }
 
-    setProofImage(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setProofPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    setProofImages((current) => [...current, ...files]);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofPreviews((current) => [...current, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const removeProofImage = (index: number) => {
+    setProofImages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setProofPreviews((current) => current.filter((_, itemIndex) => itemIndex !== index));
   };
 
   if (sessionStatus === "loading" || isLoading || historyLoading) {
@@ -286,7 +311,7 @@ export default function TryoutDetailPage({
             </DialogTitle>
             <DialogDescription className="text-white/80 text-sm mt-1">
               {isFree
-                ? "Upload bukti follow akun sosial media kami untuk mendaftar"
+                ? "Upload bukti follow Instagram untuk mendaftar"
                 : `Kamu akan menggunakan 1 tiket. Sisa tiket: ${ticketCount}`
               }
             </DialogDescription>
@@ -296,27 +321,45 @@ export default function TryoutDetailPage({
             {isFree ? (
               <>
                 <div>
-                  <label className="font-semibold text-gray-800 text-sm mb-3 block">Bukti Follow Sosial Media</label>
-                  <div className="relative">
-                    {proofPreview ? (
-                      <div className="relative rounded-xl overflow-hidden border-2 border-green-400">
-                        <img src={proofPreview} alt="Preview" className="w-full h-48 object-cover" />
-                        <button
-                          onClick={() => { setProofImage(null); setProofPreview(null); }}
-                          className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#004AAB] transition-colors">
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500 font-medium">Klik untuk upload gambar</span>
-                        <span className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — Maks 2MB</span>
-                        <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
-                      </label>
-                    )}
-                  </div>
+                  <label className="font-semibold text-gray-800 text-sm mb-2 block">Bukti Follow Instagram</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload bukti follow akun Instagram https://www.instagram.com/amunisiptn/ dan https://www.instagram.com/aristyasheza/.
+                    Bisa upload lebih dari 1 foto.
+                  </p>
+                  {proofPreviews.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      {proofPreviews.map((preview, index) => (
+                        <div key={`${preview}-${index}`} className="relative rounded-xl overflow-hidden border-2 border-green-400">
+                          <img src={preview} alt={`Preview bukti follow ${index + 1}`} className="w-full h-32 object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeProofImage(index)}
+                            className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                            aria-label={`Hapus bukti follow ${index + 1}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {proofImages.length < MAX_PROOF_IMAGES && (
+                    <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-[#004AAB] transition-colors">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-500 font-medium">Klik untuk upload bukti follow</span>
+                      <span className="text-xs text-gray-400 mt-1 text-center px-4">
+                        Bukti follow https://www.instagram.com/amunisiptn/ dan https://www.instagram.com/aristyasheza/
+                      </span>
+                      <span className="text-xs text-gray-400 mt-1">JPG, PNG, WebP, maks 2MB per foto</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  )}
                 </div>
               </>
             ) : (
@@ -340,7 +383,7 @@ export default function TryoutDetailPage({
                 onClick={handleEnroll}
                 disabled={
                   enrollMutation.isPending || 
-                  (isFree && !proofImage) || 
+                  (isFree && proofImages.length === 0) || 
                   (!isFree && (ticketCount || 0) < 1)
                 }
                 className="flex-1 bg-[#004AAB] hover:bg-[#003B8A] text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
